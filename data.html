@@ -214,14 +214,17 @@ function sort(key) {
 
   render();
 }
+
 function pagination() {
   const p = document.getElementById('pagination');
   p.innerHTML = '';
 
   if (rowsPerPage === 0) return;
 
-  const total = Math.ceil(filtered.length / rowsPerPage);
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const maxButtons = 5;
 
+  // PREV
   const prev = document.createElement('button');
   prev.textContent = '« Prev';
   prev.disabled = page === 1;
@@ -231,16 +234,41 @@ function pagination() {
   };
   p.appendChild(prev);
 
-  for (let i = 1; i <= total; i++) {
+  // HITUNG RANGE HALAMAN
+  let start = Math.max(1, page - Math.floor(maxButtons / 2));
+  let end = start + maxButtons - 1;
+
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - maxButtons + 1);
+  }
+
+  // BUTTON NOMOR
+  for (let i = start; i <= end; i++) {
     const b = document.createElement('button');
     b.textContent = i;
-    if (i === page) b.style.fontWeight = 'bold';
+    if (i === page) {
+      b.style.fontWeight = 'bold';
+      b.style.background = '#e5e7eb';
+    }
     b.onclick = () => {
       page = i;
       render();
     };
     p.appendChild(b);
   }
+
+  // NEXT
+  const next = document.createElement('button');
+  next.textContent = 'Next »';
+  next.disabled = page === totalPages;
+  next.onclick = () => {
+    page++;
+    render();
+  };
+  p.appendChild(next);
+}
+
 
   const next = document.createElement('button');
   next.textContent = 'Next »';
@@ -256,6 +284,7 @@ function pagination() {
 
 </body>
 </html>
+
 
 
 
