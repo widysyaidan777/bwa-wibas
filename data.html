@@ -90,7 +90,17 @@ footer {
 
 <div class="container">
   <input id="search" placeholder="Search data...">
-
+<div class="controls">
+  Rows:
+  <select id="rowsSelect">
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="20" selected>20</option>
+    <option value="30">30</option>
+    <option value="50">50</option>
+    <option value="0">All</option>
+  </select>
+</div>
   <table>
     <thead>
       <tr id="thead"></tr>
@@ -148,7 +158,13 @@ search.oninput = () => {
   page = 1;
   render();
 };
-
+const rowsSelect = document.getElementById('rowsSelect');
+rowsSelect.onchange = () => {
+  rowsPerPage = Number(rowsSelect.value);
+  page = 1;
+  render();
+};
+  
 function render() {
   const headers = Object.keys(filtered[0] || {});
   const thead = document.getElementById('thead');
@@ -164,8 +180,11 @@ function render() {
     thead.appendChild(th);
   });
 
-  const start = (page - 1) * rowsPerPage;
-  const slice = filtered.slice(start, start + rowsPerPage);
+const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
+const slice = rowsPerPage === 0
+  ? filtered
+  : filtered.slice(start, start + rowsPerPage);
+
 
   slice.forEach(r => {
     const tr = document.createElement('tr');
@@ -188,21 +207,47 @@ function sort(key) {
 
   render();
 }
-
 function pagination() {
-  const total = Math.ceil(filtered.length / rowsPerPage);
   const p = document.getElementById('pagination');
   p.innerHTML = '';
+
+  if (rowsPerPage === 0) return;
+
+  const total = Math.ceil(filtered.length / rowsPerPage);
+
+  const prev = document.createElement('button');
+  prev.textContent = '« Prev';
+  prev.disabled = page === 1;
+  prev.onclick = () => {
+    page--;
+    render();
+  };
+  p.appendChild(prev);
 
   for (let i = 1; i <= total; i++) {
     const b = document.createElement('button');
     b.textContent = i;
-    b.onclick = () => { page = i; render(); };
+    if (i === page) b.style.fontWeight = 'bold';
+    b.onclick = () => {
+      page = i;
+      render();
+    };
     p.appendChild(b);
   }
-}
+
+  const next = document.createElement('button');
+  next.textContent = 'Next »';
+  next.disabled = page === total;
+  next.onclick = () => {
+    page++;
+    render();
+  };
+  p.appendChild(next);
+  }
+  
 </script>
 
 </body>
 </html>
+
 
