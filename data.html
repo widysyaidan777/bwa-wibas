@@ -1,201 +1,91 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Data BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+import React, { useState } from "react";
+import Papa from "papaparse";
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
+export default function BwaWibasWebsite() {
+  const [data, setData] = useState([]);
+  const [search, setSearch] = useState("");
 
-header {
-  background: linear-gradient(90deg,#0f172a,#020617);
-  color: white;
-  padding: 24px;
-}
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-nav {
-  background: #1e293b;
-  padding: 10px 24px;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  margin-right: 20px;
-  font-weight: bold;
-}
-
-.container {
-  padding: 24px;
-}
-
-input {
-  padding: 10px;
-  width: 300px;
-  margin-bottom: 15px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-th, td {
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-}
-
-th {
-  cursor: pointer;
-  background: #f1f5f9;
-}
-
-.pagination {
-  margin-top: 15px;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  margin-right: 4px;
-}
-
-footer {
-  margin-top: 30px;
-  padding: 16px;
-  text-align: center;
-  background: #020617;
-  color: white;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <h1>Data BWA WiBAS</h1>
-  <p>Data berbasis CSV</p>
-</header>
-
-<nav>
-  <a href="index.html">Profil</a>
-  <a href="data.html">Data</a>
-</nav>
-
-<div class="container">
-  <input id="search" placeholder="Search data...">
-
-  <table>
-    <thead>
-      <tr id="thead"></tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-
-  <div class="pagination" id="pagination"></div>
-</div>
-
-<footer>
-  © 2026 BWA WiBAS – GitHub Pages
-</footer>
-
-<script>
-const csvFile = 'data.csv';
-const rowsPerPage = 50;
-
-let data = [];
-let filtered = [];
-let page = 1;
-let sortKey = '';
-let sortAsc = true;
-
-fetch(csvFile)
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',');
-
-    data = lines.slice(1).map(l => {
-      const values = l.split(',');
-      const obj = {};
-      headers.forEach((h,i) => obj[h] = values[i] || '');
-      return obj;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        setData(results.data);
+      },
     });
+  };
 
-    filtered = [...data];
-    render();
-  })
-  .catch(err => alert('CSV tidak ditemukan'));
-
-const search = document.getElementById('search');
-search.oninput = () => {
-  const q = search.value.toLowerCase();
-  filtered = data.filter(r =>
-    Object.values(r).join(' ').toLowerCase().includes(q)
-  );
-  page = 1;
-  render();
-};
-
-function render() {
-  const headers = Object.keys(filtered[0] || {});
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
-
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
-
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    th.onclick = () => sort(h);
-    thead.appendChild(th);
-  });
-
-  const start = (page - 1) * rowsPerPage;
-  const slice = filtered.slice(start, start + rowsPerPage);
-
-  slice.forEach(r => {
-    const tr = document.createElement('tr');
-    headers.forEach(h => {
-      tr.innerHTML += `<td>${r[h]}</td>`;
-    });
-    tbody.appendChild(tr);
-  });
-
-  pagination();
-}
-
-function sort(key) {
-  sortAsc = sortKey === key ? !sortAsc : true;
-  sortKey = key;
-
-  filtered.sort((a,b) =>
-    (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
+  const filteredData = data.filter((row) =>
+    Object.values(row).some((value) =>
+      String(value).toLowerCase().includes(search.toLowerCase())
+    )
   );
 
-  render();
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto space-y-10">
+        {/* Header */}
+        <header className="space-y-4">
+          <h1 className="text-3xl font-bold">BWA WiBAS</h1>
+          <p className="text-gray-600">
+            Broadband Wireless Access – Wireless Broadband Access System
+          </p>
+        </header>
+
+        {/* Upload CSV */}
+        <section className="bg-white rounded-2xl shadow p-6 space-y-4">
+          <h2 className="text-xl font-semibold">Data BWA WiBAS</h2>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            className="block"
+          />
+
+          {data.length > 0 && (
+            <>
+              <input
+                type="text"
+                placeholder="Search data..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border rounded px-3 py-2 w-full"
+              />
+
+              <div className="overflow-auto max-h-[400px]">
+                <table className="min-w-full border text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      {Object.keys(data[0]).map((key) => (
+                        <th
+                          key={key}
+                          className="border px-3 py-2 text-left"
+                        >
+                          {key}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((row, i) => (
+                      <tr key={i} className="hover:bg-gray-50">
+                        {Object.values(row).map((val, j) => (
+                          <td key={j} className="border px-3 py-2">
+                            {val}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+    </div>
+  );
 }
-
-function pagination() {
-  const total = Math.ceil(filtered.length / rowsPerPage);
-  const p = document.getElementById('pagination');
-  p.innerHTML = '';
-
-  for (let i = 1; i <= total; i++) {
-    const b = document.createElement('button');
-    b.textContent = i;
-    b.onclick = () => { page = i; render(); };
-    p.appendChild(b);
-  }
-}
-</script>
-
-</body>
-</html>
