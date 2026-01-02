@@ -31,10 +31,10 @@
 <div class="container">
   <input type="text" id="search" placeholder="🔍 Search...">
   <select id="filterStatus">
-    <option value="">Semua Status</option>
-    <option value="Active">Active</option>
-    <option value="In Active">In Active</option>
-  </select>
+  <option value="">Semua Status</option>
+  <option value="active">Active / Non-TS</option>
+  <option value="inactive">In Active</option>
+</select>
 
   <table id="table"></table>
   <div class="pagination" id="pagination"></div>
@@ -61,21 +61,25 @@ filterStatus.onchange = filter;
 
 function filter() {
   const q = search.value.toLowerCase();
-  const s = filterStatus.value.toLowerCase();
+  const s = filterStatus.value; // active | inactive | ''
 
   filtered = data.filter(r => {
-    const values = Object.values(r).join(' ').toLowerCase();
-    const statusValue = Object.values(r).find(v =>
-      String(v).toLowerCase().includes('active') ||
-      String(v).toLowerCase().includes('non')
-    ) || '';
+    const rowText = Object.values(r).join(' ').toLowerCase();
 
-    return values.includes(q) && (!s || statusValue.toLowerCase().includes(s));
+    // ambil value status dari semua kolom
+    const rawStatus = Object.values(r).find(v =>
+      normalizeStatus(v) !== 'unknown'
+    );
+
+    const status = normalizeStatus(rawStatus || '');
+
+    return rowText.includes(q) && (!s || status === s);
   });
 
   page = 1;
   render();
 }
+
 
 
 function render() {
@@ -89,20 +93,33 @@ function render() {
   filtered.slice((page-1)*rowsPerPage, page*rowsPerPage).forEach(r => {
     let tr = '<tr>';
     headers.forEach(h => {
-      let cls = '';
-      if (h.toLowerCase().includes('status')) {
-        cls = r[h] === 'Active' ? 'status-active' : 'status-inactive';
-      }
-      tr += `<td class="${cls}">${r[h]||''}</td>`;
-    });
-    tr += '</tr>';
-    table.innerHTML += tr;
-  });
+  let cls = '';
+
+  if (normalizeStatus(r[h]) === 'active') {
+    cls = 'status-active';
+  }
+  if (normalizeStatus(r[h]) === 'inactive') {
+    cls = 'status-inactive';
+  }
+
+  tr += `<td class="${cls}">${r[h] || ''}</td>`;
+});
+
 
   pagination.innerHTML = '';
   const pages = Math.ceil(filtered.length / rowsPerPage);
   for (let i=1;i<=pages;i++) pagination.innerHTML += `<button onclick="page=${i};render()">${i}</button>`;
 }
+
+  function normalizeStatus(value) {
+  const v = String(value).toLowerCase().replace(/\s+/g, '');
+
+  if (v === 'active' || v === 'non-ts' || v === 'nonts') return 'active';
+  if (v === 'inactive' || v === 'inaktif' || v === 'in active') return 'inactive';
+
+  return 'unknown';
+}
+
 
 function sortBy(k) {
   asc = sortKey === k ? !asc : true;
@@ -113,4 +130,5 @@ function sortBy(k) {
 </script>
 </body>
 </html>
+
 
