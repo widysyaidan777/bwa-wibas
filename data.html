@@ -61,14 +61,22 @@ filterStatus.onchange = filter;
 
 function filter() {
   const q = search.value.toLowerCase();
-  const s = filterStatus.value;
-  filtered = data.filter(r =>
-    Object.values(r).some(v => String(v).toLowerCase().includes(q)) &&
-    (!s || r.Status === s)
-  );
+  const s = filterStatus.value.toLowerCase();
+
+  filtered = data.filter(r => {
+    const values = Object.values(r).join(' ').toLowerCase();
+    const statusValue = Object.values(r).find(v =>
+      String(v).toLowerCase().includes('active') ||
+      String(v).toLowerCase().includes('non')
+    ) || '';
+
+    return values.includes(q) && (!s || statusValue.toLowerCase().includes(s));
+  });
+
   page = 1;
   render();
 }
+
 
 function render() {
   const table = document.getElementById('table');
@@ -105,3 +113,4 @@ function sortBy(k) {
 </script>
 </body>
 </html>
+
