@@ -189,11 +189,26 @@ fetch(csvFile)
       if (userCol && r[userCol]) users++;
 
       // STATUS (AMAN)
-      if (statusCol) {
-        const s = r[statusCol].toLowerCase();
-        if (s === 'Active') active++;
-        else if (s === 'Inactive' || s === 'Dismantle') inactive++;
-      }
+      if (statusCol && r[statusCol]) {
+  const s = r[statusCol].toLowerCase();
+
+  if (
+    s.includes('Active') &&
+    !s.includes('In')
+  ) {
+    active++;
+  } 
+  else if (
+    s.includes('Inactive') ||
+    s.includes('in active') ||
+    s.includes('down') ||
+    s.includes('Dismantle') ||
+    s.includes('non')
+  ) {
+    inactive++;
+  }
+}
+
 
       // USER PER AREA
       if (areaCol && userCol && r[userCol]) {
@@ -246,5 +261,6 @@ fetch(csvFile)
 
 </body>
 </html>
+
 
 
