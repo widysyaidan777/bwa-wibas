@@ -1,78 +1,81 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Data BWA WiBAS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Data BWA WiBAS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- CSV Parser -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f4f6f8;
-    }
-    header, footer {
-      background: #0f172a;
-      color: #fff;
-      padding: 20px;
-    }
-    nav {
-      background: #1e293b;
-      padding: 10px 20px;
-    }
-    nav a {
-      color: #fff;
-      margin-right: 15px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .container {
-      padding: 20px;
-    }
-    input {
-      padding: 8px;
-      width: 300px;
-      max-width: 100%;
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      font-size: 14px;
-    }
-    th {
-      background: #e5e7eb;
-      cursor: pointer;
-    }
-    tr:nth-child(even) {
-      background: #f9fafb;
-    }
-    .pagination {
-      margin-top: 15px;
-    }
-    .pagination button {
-      padding: 6px 10px;
-      margin: 2px;
-      border: none;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .pagination button.active {
-      background: #9ca3af;
-      cursor: default;
-    }
-  </style>
+header {
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  padding: 24px;
+}
+
+nav {
+  background: #1e293b;
+  padding: 10px 24px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+.container {
+  padding: 24px;
+}
+
+input {
+  padding: 10px;
+  width: 300px;
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+th {
+  cursor: pointer;
+  background: #f1f5f9;
+}
+
+.pagination {
+  margin-top: 15px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  margin-right: 4px;
+}
+
+footer {
+  margin-top: 30px;
+  padding: 16px;
+  text-align: center;
+  background: #020617;
+  color: white;
+}
+</style>
 </head>
+
 <body>
 
 <header>
@@ -86,11 +89,14 @@
 </nav>
 
 <div class="container">
-  <input type="text" id="search" placeholder="🔍 Search data...">
+  <input id="search" placeholder="Search data...">
 
-  <div style="overflow-x:auto">
-    <table id="table"></table>
-  </div>
+  <table>
+    <thead>
+      <tr id="thead"></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 
   <div class="pagination" id="pagination"></div>
 </div>
@@ -100,14 +106,96 @@
 </footer>
 
 <script>
-  const csvFile = 'data.csv';   // NAMA FILE CSV
-  const rowsPerPage = 50;
+const csvFile = 'data.csv';
+const rowsPerPage = 50;
 
-  let data = [];
-  let filtered = [];
-  let page = 1;
-  let sortKey = '';
-  let sortAsc = true;
+let data = [];
+let filtered = [];
+let page = 1;
+let sortKey = '';
+let sortAsc = true;
 
-  Papa.parse(csvFile, {
-    download: true,
+fetch(csvFile)
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+
+    data = lines.slice(1).map(l => {
+      const values = l.split(',');
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = values[i] || '');
+      return obj;
+    });
+
+    filtered = [...data];
+    render();
+  })
+  .catch(err => alert('CSV tidak ditemukan'));
+
+const search = document.getElementById('search');
+search.oninput = () => {
+  const q = search.value.toLowerCase();
+  filtered = data.filter(r =>
+    Object.values(r).join(' ').toLowerCase().includes(q)
+  );
+  page = 1;
+  render();
+};
+
+function render() {
+  const headers = Object.keys(filtered[0] || {});
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.onclick = () => sort(h);
+    thead.appendChild(th);
+  });
+
+  const start = (page - 1) * rowsPerPage;
+  const slice = filtered.slice(start, start + rowsPerPage);
+
+  slice.forEach(r => {
+    const tr = document.createElement('tr');
+    headers.forEach(h => {
+      tr.innerHTML += `<td>${r[h]}</td>`;
+    });
+    tbody.appendChild(tr);
+  });
+
+  pagination();
+}
+
+function sort(key) {
+  sortAsc = sortKey === key ? !sortAsc : true;
+  sortKey = key;
+
+  filtered.sort((a,b) =>
+    (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
+  );
+
+  render();
+}
+
+function pagination() {
+  const total = Math.ceil(filtered.length / rowsPerPage);
+  const p = document.getElementById('pagination');
+  p.innerHTML = '';
+
+  for (let i = 1; i <= total; i++) {
+    const b = document.createElement('button');
+    b.textContent = i;
+    b.onclick = () => { page = i; render(); };
+    p.appendChild(b);
+  }
+}
+</script>
+
+</body>
+</html>
