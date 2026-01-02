@@ -43,7 +43,7 @@
 
 <script>
 const csvFile = 'data.csv';
-const rowsPerPage = 50;
+const rowsPerPage = 25;
 let data = [], filtered = [], page = 1, sortKey = '', asc = true;
 
 Papa.parse(csvFile, {
@@ -130,5 +130,6 @@ function sortBy(k) {
 </script>
 </body>
 </html>
+
 
 
