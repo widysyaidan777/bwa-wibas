@@ -267,23 +267,12 @@ function pagination() {
     render();
   };
   p.appendChild(next);
-}
-
-
-  const next = document.createElement('button');
-  next.textContent = 'Next »';
-  next.disabled = page === total;
-  next.onclick = () => {
-    page++;
-    render();
-  };
-  p.appendChild(next);
-  }
-  
+}  
 </script>
 
 </body>
 </html>
+
 
 
 
