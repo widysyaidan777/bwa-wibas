@@ -1,135 +1,113 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Data BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSV Parser -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f8; }
-    header, footer { background: #0f172a; color: #fff; padding: 20px; }
-    nav { background: #1e293b; padding: 10px 20px; }
-    nav a { color: #fff; margin-right: 15px; text-decoration: none; font-weight: bold; }
-    .container { padding: 20px; }
-    input, select { padding: 8px; margin-right: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ddd; padding: 8px; cursor: pointer; }
-    th { background: #e5e7eb; }
-    .status-active { background: #dcfce7; color: #166534; font-weight: bold; }
-    .status-inactive { background: #fee2e2; color: #991b1b; font-weight: bold; }
-    .pagination button { margin: 3px; padding: 6px 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+    }
+    header, footer {
+      background: #0f172a;
+      color: #fff;
+      padding: 20px;
+    }
+    nav {
+      background: #1e293b;
+      padding: 10px 20px;
+    }
+    nav a {
+      color: #fff;
+      margin-right: 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+    }
+    input {
+      padding: 8px;
+      width: 300px;
+      max-width: 100%;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+    }
+    th {
+      background: #e5e7eb;
+      cursor: pointer;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .pagination {
+      margin-top: 15px;
+    }
+    .pagination button {
+      padding: 6px 10px;
+      margin: 2px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background: #9ca3af;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
+
 <header>
   <h1>Data BWA WiBAS</h1>
+  <p>Data berbasis CSV</p>
 </header>
+
 <nav>
   <a href="index.html">Profil</a>
   <a href="data.html">Data</a>
 </nav>
-<div class="container">
-  <input type="text" id="search" placeholder="🔍 Search...">
-  <select id="filterStatus">
-  <option value="">Semua Status</option>
-  <option value="active">Active / Non-TS</option>
-  <option value="inactive">In Active</option>
-</select>
 
-  <table id="table"></table>
+<div class="container">
+  <input type="text" id="search" placeholder="🔍 Search data...">
+
+  <div style="overflow-x:auto">
+    <table id="table"></table>
+  </div>
+
   <div class="pagination" id="pagination"></div>
 </div>
-<footer>© 2026 BWA WiBAS</footer>
+
+<footer>
+  © 2026 BWA WiBAS – GitHub Pages
+</footer>
 
 <script>
-const csvFile = 'data.csv';
-const rowsPerPage = 25;
-let data = [], filtered = [], page = 1, sortKey = '', asc = true;
+  const csvFile = 'data.csv';   // NAMA FILE CSV
+  const rowsPerPage = 50;
 
-Papa.parse(csvFile, {
-  download: true,
-  header: true,
-  complete: res => {
-    data = res.data.filter(r => Object.values(r).some(v => v));
-    filtered = data;
-    render();
-  }
-});
+  let data = [];
+  let filtered = [];
+  let page = 1;
+  let sortKey = '';
+  let sortAsc = true;
 
-search.oninput = filter;
-filterStatus.onchange = filter;
-
-function filter() {
-  const q = search.value.toLowerCase();
-  const s = filterStatus.value; // active | inactive | ''
-
-  filtered = data.filter(r => {
-    const rowText = Object.values(r).join(' ').toLowerCase();
-
-    // ambil value status dari semua kolom
-    const rawStatus = Object.values(r).find(v =>
-      normalizeStatus(v) !== 'unknown'
-    );
-
-    const status = normalizeStatus(rawStatus || '');
-
-    return rowText.includes(q) && (!s || status === s);
-  });
-
-  page = 1;
-  render();
-}
-
-
-
-function render() {
-  const table = document.getElementById('table');
-  table.innerHTML = '';
-  if (!filtered.length) return;
-
-  const headers = Object.keys(filtered[0]);
-  table.innerHTML += '<tr>' + headers.map(h => `<th onclick="sortBy('${h}')">${h}</th>`).join('') + '</tr>';
-
-  filtered.slice((page-1)*rowsPerPage, page*rowsPerPage).forEach(r => {
-    let tr = '<tr>';
-    headers.forEach(h => {
-  let cls = '';
-
-  if (normalizeStatus(r[h]) === 'active') {
-    cls = 'status-active';
-  }
-  if (normalizeStatus(r[h]) === 'inactive') {
-    cls = 'status-inactive';
-  }
-
-  tr += `<td class="${cls}">${r[h] || ''}</td>`;
-});
-
-
-  pagination.innerHTML = '';
-  const pages = Math.ceil(filtered.length / rowsPerPage);
-  for (let i=1;i<=pages;i++) pagination.innerHTML += `<button onclick="page=${i};render()">${i}</button>`;
-}
-
-  function normalizeStatus(value) {
-  const v = String(value).toLowerCase().replace(/\s+/g, '');
-
-  if (v === 'active' || v === 'non-ts' || v === 'nonts') return 'active';
-  if (v === 'inactive' || v === 'inaktif' || v === 'in active') return 'inactive';
-
-  return 'unknown';
-}
-
-
-function sortBy(k) {
-  asc = sortKey === k ? !asc : true;
-  sortKey = k;
-  filtered.sort((a,b)=> asc ? a[k].localeCompare(b[k]) : b[k].localeCompare(a[k]));
-  render();
-}
-</script>
-</body>
-</html>
-
-
-
+  Papa.parse(csvFile, {
+    download: true,
