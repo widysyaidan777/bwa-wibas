@@ -151,11 +151,30 @@ fetch(csvFile)
       if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
       if (userCol && r[userCol]) users++;
 
-      if (statusCol) {
-        const s = r[statusCol].toUpperCase();
-        if (s.includes('ACTIVE')) active++;
-        if (s.includes('INACTIVE') || s.includes('NON')) inactive++;
-      }
+     if (statusCol) {
+  const s = r[statusCol].toUpperCase();
+
+  // ===== ACTIVE =====
+  if (
+    s.includes('ACTIVE') ||
+    s.includes('UP') ||
+    s.includes('IN SERVICE') ||
+    s.includes('TS')
+  ) {
+    active++;
+  }
+
+  // ===== INACTIVE =====
+  else if (
+    s.includes('INACTIVE') ||
+    s.includes('NON') ||
+    s.includes('DOWN') ||
+    s.includes('SUSPEND') ||
+    s.includes('DISMANTLE')
+  ) {
+    inactive++;
+  }
+}
     });
 
     document.getElementById('totalSector').textContent = sectors.size;
@@ -170,6 +189,7 @@ fetch(csvFile)
 
 </body>
 </html>
+
 
 
 
