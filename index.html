@@ -2,11 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Home - BWA WiBAS</title>
+<title>Data BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {
@@ -18,12 +15,12 @@ body {
 header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
-  padding: 24px;
+  padding: 12px 24px;   /* DIPERKECIL */
 }
 
 nav {
   background: #1e293b;
-  padding: 10px 24px;
+  padding: 6px 24px;    /* DIPERKECIL */
 }
 
 nav a {
@@ -35,62 +32,111 @@ nav a {
 
 .container {
   padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-  gap: 20px;
+input {
+  padding: 10px;
+  width: 300px;
+  margin-bottom: 15px;
 }
 
-.card {
+table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,.08);
 }
 
-.card h2 {
-  margin: 0;
-  font-size: 28px;
-  color: #0f172a;
+th, td {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
 }
 
-.card p {
-  margin: 8px 0 0;
-  color: #475569;
-  font-weight: bold;
+th {
+  cursor: pointer;
+  background: #f1f5f9;
 }
 
-.charts {
-  margin-top: 40px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
-  gap: 30px;
+.pagination {
+  margin-top: 15px;
 }
 
-.chart-box {
+.pagination button {
+  padding: 6px 12px;
+  margin-right: 4px;
+}
+  .controls {
+  margin-bottom: 15px;
+}
+
+.controls select {
+  padding: 6px;
+}
+  .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,.08);
 }
 
 footer {
-  margin-top: 40px;
+  margin-top: 30px;
   padding: 16px;
   text-align: center;
   background: #020617;
   color: white;
 }
+  .status-active {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.status-nonts {
+  background: #dcfce7;
+}
+
 </style>
 </head>
+<script>
+function applyRowStyle(tr, row) {
+  const status = (row['State'] || row['Status'] || '').toLowerCase();
+
+  if (status === 'active') {
+    tr.querySelectorAll('td').forEach(td => td.classList.add('status-active'));
+  }
+
+  if (status === 'inactive' || status === 'dismantle') {
+    tr.querySelectorAll('td').forEach(td => td.classList.add('status-inactive'));
+  }
+
+  const terminal = (row['Total Terminal'] || '').toLowerCase();
+  if (terminal.includes('non')) {
+    tr.classList.add('status-nonts');
+  }
+}
+</script>
 
 <body>
 
 <header>
-  <h1>BWA WiBAS</h1>
-  <p>Overview Dashboard</p>
+  <h1>Data BWA WiBAS</h1>
+  <p>Lintasarta</p>
 </header>
 
 <nav>
@@ -99,55 +145,27 @@ footer {
 </nav>
 
 <div class="container">
-
-  <!-- OVERVIEW -->
-  <div class="cards">
-    <div class="card">
-      <h2 id="totalSector">0</h2>
-      <p>Total Sector</p>
-    </div>
-    <div class="card">
-      <h2 id="totalNode">0</h2>
-      <p>Total Node</p>
-    </div>
-    <div class="card">
-      <h2 id="totalUser">0</h2>
-      <p>Total User</p>
-    </div>
-    <div class="card">
-      <h2 id="activeCount">0</h2>
-      <p>Status Active</p>
-    </div>
-    <div class="card">
-      <h2 id="inactiveCount">0</h2>
-      <p>Status Inactive</p>
-    </div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="charts">
-    <div class="chart-box">
-      <h3>User per Area</h3>
-      <canvas id="userAreaChart"></canvas>
-    </div>
-
-    <div class="chart-box">
-      <h3>Node per Region</h3>
-      <canvas id="nodeRegionChart"></canvas>
-    </div>
-
-    <div class="chart-box">
-      <h3>Sector per Area</h3>
-      <canvas id="sectorAreaChart"></canvas>
-    </div>
-    <div class="chart-box">
-      <h3>User per Area</h3>
-      <button id="backUserArea" style="display:none;margin-bottom:10px;">⬅ Back</button>
-      <canvas id="userAreaChart"></canvas>
+  <input id="search" placeholder="Search data...">
+  <div class="controls" id="filters"></div>
+<div class="controls">
+  Rows:
+  <select id="rowsSelect">
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="20" selected>20</option>
+    <option value="30">30</option>
+    <option value="50">50</option>
+    <option value="0">All</option>
+  </select>
 </div>
+  <table>
+    <thead>
+      <tr id="thead"></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
 
-  </div>
-
+  <div class="pagination" id="pagination"></div>
 </div>
 
 <footer>
@@ -156,6 +174,15 @@ footer {
 
 <script>
 const csvFile = 'data.csv';
+let rowsPerPage = 20;
+
+let data = [];
+let filtered = [];
+let page = 1;
+let sortKey = '';
+let sortAsc = true;
+
+let activeFilters = {};
 
 fetch(csvFile)
   .then(res => res.text())
@@ -164,167 +191,205 @@ fetch(csvFile)
     const delimiter = lines[0].includes(';') ? ';' : ',';
     const headers = lines[0].split(delimiter).map(h => h.trim());
 
-    const rows = lines.slice(1).map(l => {
-      const values = l.split(delimiter);
+    data = lines.slice(1).map(line => {
+      const values = line.split(delimiter);
       const obj = {};
-      headers.forEach((h,i) => obj[h] = values[i]?.trim() || '');
+      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
       return obj;
     });
 
-    // === AUTO DETECT COLUMN ===
-    const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
-    const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
-    const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
-    const stateCol = headers.find(h => h.toLowerCase().includes('state'));
-    const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
-    const regionCol = headers.find(h => h.toLowerCase().includes('region'));
+    filtered = [...data];
+    initFilters();
+    render();
+  });
 
-    const sectors = new Set();
-    const nodes = new Set();
-    let users = 0;
-    let active = 0;
-    let inactive = 0;
-    let userAreaChartInstance;
-    let userAreaLevel = 'area'; // area | node
-  
-    const userArea = {};
-    const nodeRegion = {};
-    const sectorArea = {};
+/* ============================
+   INIT FILTER (SEMUA KOLOM)
+============================ */
+function initFilters() {
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  activeFilters = {};
 
-    rows.forEach(r => {
-      if (sectorCol && r[sectorCol]) sectors.add(r[sectorCol]);
-      if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
-      if (userCol && r[userCol]) users++;
+  Object.keys(data[0]).forEach(col => {
+    const select = document.createElement('select');
+    select.dataset.col = col;
+    select.innerHTML = `<option value="">All ${col}</option>`;
+    select.onchange = () => applyFilters(col);
+    box.appendChild(select);
+  });
 
-if (stateCol && r[stateCol]) {
-  const s = r[stateCol].toString().trim().toLowerCase();
-
-  if (s === 'active') {
-    active++;
-  } else {
-    inactive++;
-  }
+  rebuildFilters(data);
 }
 
+/* ============================
+   REBUILD FILTER OPTIONS
+============================ */
+function rebuildFilters(sourceData) {
+  document.querySelectorAll('#filters select').forEach(select => {
+    const col = select.dataset.col;
+    const currentValue = select.value;
 
-      // USER PER AREA
-      if (areaCol && userCol && r[userCol]) {
-        const a = r[areaCol] || 'Unknown';
-        userArea[a] = (userArea[a] || 0) + 1;
-      }
+    const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
 
-      // NODE PER REGION
-      if (regionCol && nodeCol && r[nodeCol]) {
-        const rg = r[regionCol] || 'Unknown';
-        nodeRegion[rg] = (nodeRegion[rg] || 0) + 1;
-      }
-
-      // SECTOR PER AREA
-      if (areaCol && sectorCol && r[sectorCol]) {
-        const a = r[areaCol] || 'Unknown';
-        sectorArea[a] = (sectorArea[a] || 0) + 1;
-      }
+    select.innerHTML = `<option value="">All ${col}</option>`;
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
     });
 
-    // OVERVIEW
-    document.getElementById('totalSector').textContent = sectors.size;
-    document.getElementById('totalNode').textContent = nodes.size;
-    document.getElementById('totalUser').textContent = users;
-    document.getElementById('activeCount').textContent = active;
-    document.getElementById('inactiveCount').textContent = inactive;
-
-    const makePie = (canvasId, labels, values, onClickHandler) => {
-  return new Chart(document.getElementById(canvasId), {
-    type: 'pie',
-    data: {
-      labels,
-      datasets: [{
-        data: values
-      }]
-    },
-    options: {
-      onClick: onClickHandler
+    if (values.includes(currentValue)) {
+      select.value = currentValue;
     }
   });
+}
+
+/* ============================
+   APPLY FILTER (CASCADING)
+============================ */
+function applyFilters(changedCol) {
+  activeFilters = {};
+  document.querySelectorAll('#filters select').forEach(s => {
+    if (s.value) activeFilters[s.dataset.col] = s.value;
+  });
+
+  filtered = data.filter(row => {
+    return Object.entries(activeFilters).every(
+      ([col, val]) => row[col] === val
+    );
+  });
+
+  rebuildFilters(filtered);
+  page = 1;
+  render();
+}
+
+/* ============================
+   SEARCH GLOBAL
+============================ */
+document.getElementById('search').oninput = () => {
+  const q = search.value.toLowerCase();
+
+  filtered = data.filter(row =>
+    Object.values(row).join(' ').toLowerCase().includes(q)
+  );
+
+  rebuildFilters(filtered);
+  page = 1;
+  render();
 };
 
+/* ============================
+   RENDER TABLE
+============================ */
+function render() {
+  if (filtered.length === 0) return;
 
-    userAreaChartInstance = makePie(
-  'userAreaChart',
-  Object.keys(userArea),
-  Object.values(userArea),
-  (evt, elements) => {
-    if (!elements.length) return;
+  const headers = Object.keys(filtered[0]);
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
 
-    const index = elements[0].index;
-    const selectedArea = userAreaChartInstance.data.labels[index];
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
 
-    drillDownUserByNode(selectedArea);
-  }
-);
-
-    makePie('nodeRegionChart', nodeRegion);
-    makePie('sectorAreaChart', sectorArea);
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Gagal membaca data.csv');
-  });
-  function drillDownUserByNode(areaName) {
-  userAreaLevel = 'node';
-
-  const nodeCount = {};
-
-  rows.forEach(r => {
-    if (r[areaCol] === areaName && r[userCol]) {
-      const node = r[nodeCol] || 'Unknown';
-      nodeCount[node] = (nodeCount[node] || 0) + 1;
-    }
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.onclick = () => sort(h);
+    thead.appendChild(th);
   });
 
-  userAreaChartInstance.destroy();
+  const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
+  const slice = rowsPerPage === 0
+    ? filtered
+    : filtered.slice(start, start + rowsPerPage);
 
-  userAreaChartInstance = makePie(
-    'userAreaChart',
-    Object.keys(nodeCount),
-    Object.values(nodeCount)
-  );
+  slice.forEach(row => {
+    const tr = document.createElement('tr');
 
-  document.getElementById('backUserArea').style.display = 'inline-block';
+    headers.forEach(h => {
+      const td = document.createElement('td');
+      td.textContent = row[h];
+      tr.appendChild(td);
+    });
+
+    applyRowStyle(tr, row); // ✅ INI BARU BENAR
+    tbody.appendChild(tr);
+  });
+
+  pagination();
 }
-document.getElementById('backUserArea').addEventListener('click', () => {
-  userAreaLevel = 'area';
 
-  userAreaChartInstance.destroy();
 
-  userAreaChartInstance = makePie(
-    'userAreaChart',
-    Object.keys(userArea),
-    Object.values(userArea),
-    (evt, elements) => {
-      if (!elements.length) return;
-      const index = elements[0].index;
-      const selectedArea = userAreaChartInstance.data.labels[index];
-      drillDownUserByNode(selectedArea);
-    }
+/* ============================
+   SORT
+============================ */
+function sort(key) {
+  sortAsc = sortKey === key ? !sortAsc : true;
+  sortKey = key;
+
+  filtered.sort((a, b) =>
+    (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
   );
+  render();
+}
 
-  document.getElementById('backUserArea').style.display = 'none';
-});
+/* ============================
+   PAGINATION
+============================ */
+function pagination() {
+  const p = document.getElementById('pagination');
+  p.innerHTML = '';
+
+  if (rowsPerPage === 0) return;
+
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const maxButtons = 5;
+
+  let start = Math.max(1, page - Math.floor(maxButtons / 2));
+  let end = start + maxButtons - 1;
+
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - maxButtons + 1);
+  }
+
+  // Prev
+  const prev = document.createElement('button');
+  prev.textContent = '« Prev';
+  prev.disabled = page === 1;
+  prev.onclick = () => { page--; render(); };
+  p.appendChild(prev);
+
+  // Page numbers
+  for (let i = start; i <= end; i++) {
+    const b = document.createElement('button');
+    b.textContent = i;
+    if (i === page) {
+      b.style.fontWeight = 'bold';
+      b.style.background = '#1e293b';
+      b.style.color = 'white';
+    }
+    b.onclick = () => { page = i; render(); };
+    p.appendChild(b);
+  }
+
+  // Next
+  const next = document.createElement('button');
+  next.textContent = 'Next »';
+  next.disabled = page === totalPages;
+  next.onclick = () => { page++; render(); };
+  p.appendChild(next);
+}
+document.getElementById('rowsSelect').onchange = e => {
+  rowsPerPage = Number(e.target.value);
+  page = 1;
+  render();
+};
 
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
