@@ -55,8 +55,8 @@ fetch(csvFile)
     const lines = text.trim().split(/\r?\n/);
     const headers = lines[0].split(',').map(h => h.trim());
 
-    const latitudeCol = headers.find(h => h.toLowerCase().includes('latitude'));
-    const longitudeCol = headers.find(h => h.toLowerCase().includes('longitude'));
+    const latCol = headers.find(h => h.toLowerCase().includes('lat'));
+    const lonCol = headers.find(h => h.toLowerCase().includes('lon'));
     const nodeCol = headers.find(h => h.toLowerCase().includes('node'));
     const areaCol = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
@@ -66,30 +66,40 @@ fetch(csvFile)
     lines.slice(1).forEach(line => {
       const v = line.split(',');
       const row = {};
-      headers.forEach((h,i) => row[h] = v[i]);
+      headers.forEach((h, i) => row[h] = v[i]);
 
-      const latitude = parseFloat(row[latitudeCol]);
-      const longitude = parseFloat(row[longitudeCol]);
+      // Ambil data latitude dan longitude
+      const lat = parseFloat(row[latCol]);
+      const lon = parseFloat(row[lonCol]);
+
+      // Cek jika lat dan lon valid (angka)
+      if (!lat || !lon) return;  // Skip jika latitude atau longitude tidak valid
+
       const node = row[nodeCol];
-
-      if (!latitude || !longitude || !node) return;
 
       // Hindari duplikat marker node
       if (nodes[node]) return;
 
       nodes[node] = true;
 
+      // Buat popup untuk marker
       const popup = `
         <b>Node:</b> ${node}<br>
         <b>Area:</b> ${row[areaCol] || '-'}<br>
         <b>Region:</b> ${row[regionCol] || '-'}
       `;
 
-      L.marker([latitude, longitude])
+      // Tambahkan marker ke peta hanya jika lat dan lon valid
+      L.marker([lat, lon])
         .addTo(map)
         .bindPopup(popup);
     });
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Gagal membaca data.csv');
   });
+
 </script>
 
 </body>
