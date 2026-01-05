@@ -178,8 +178,35 @@
 <footer>
   © 2026 BWA WiBAS – Hosted on GitHub Pages
 </footer>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  document.querySelectorAll('.accordion-header').forEach(header => {
+    header.addEventListener('click', function () {
+      const currentItem = this.parentElement;
+
+      // Tutup semua item lain
+      document.querySelectorAll('.accordion-item').forEach(item => {
+        if (item !== currentItem) {
+          item.classList.remove('active');
+          item.querySelector('.arrow').textContent = '▶';
+        }
+      });
+
+      // Toggle item yang diklik
+      const arrow = this.querySelector('.arrow');
+      const isOpen = currentItem.classList.contains('active');
+
+      currentItem.classList.toggle('active');
+      arrow.textContent = isOpen ? '▶' : '▼';
+    });
+  });
+
+});
+</script>
 
 </body>
 </html>
+
 
 
