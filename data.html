@@ -403,11 +403,32 @@ document.getElementById('rowsSelect').onchange = e => {
   page = 1;
   render();
 };
+<script>
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const currentItem = header.parentElement;
+
+    document.querySelectorAll('.accordion-item').forEach(item => {
+      if (item !== currentItem) {
+        item.classList.remove('active');
+        item.querySelector('.arrow').textContent = '▶';
+      }
+    });
+
+    const arrow = header.querySelector('.arrow');
+    const isActive = currentItem.classList.contains('active');
+
+    currentItem.classList.toggle('active');
+    arrow.textContent = isActive ? '▶' : '▼';
+  });
+});
+</script>
 
 </script>
 
 </body>
 </html>
+
 
 
 
