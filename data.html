@@ -15,12 +15,12 @@ body {
 header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
-  padding: 24px;
+  padding: 12px 24px;   /* DIPERKECIL */
 }
 
 nav {
   background: #1e293b;
-  padding: 10px 24px;
+  padding: 6px 24px;    /* DIPERKECIL */
 }
 
 nav a {
@@ -72,6 +72,20 @@ th {
 .controls select {
   padding: 6px;
 }
+  .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.controls select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: white;
+}
+
 
 footer {
   margin-top: 30px;
@@ -80,8 +94,40 @@ footer {
   background: #020617;
   color: white;
 }
+  .status-active {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.status-nonts {
+  background: #dcfce7;
+}
+
 </style>
 </head>
+<script>
+function applyRowStyle(tr, row) {
+  const status = (row['State'] || row['Status'] || '').toLowerCase();
+
+  if (status === 'active') {
+    tr.querySelectorAll('td').forEach(td => td.classList.add('status-active'));
+  }
+
+  if (status === 'inactive' || status === 'dismantle') {
+    tr.querySelectorAll('td').forEach(td => td.classList.add('status-inactive'));
+  }
+
+  const terminal = (row['Total Terminal'] || '').toLowerCase();
+  if (terminal.includes('non')) {
+    tr.classList.add('status-nonts');
+  }
+}
+</script>
 
 <body>
 
@@ -306,10 +352,25 @@ function pagination() {
   next.onclick = () => { page++; render(); };
   p.appendChild(next);
 }
+  filteredData.slice(start, end).forEach(row => {
+  const tr = document.createElement('tr');
+
+  Object.values(row).forEach(val => {
+    const td = document.createElement('td');
+    td.textContent = val;
+    tr.appendChild(td);
+  });
+
+  applyRowStyle(tr, row); // << INI KUNCI
+
+  tbody.appendChild(tr);
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
