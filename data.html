@@ -97,19 +97,7 @@ footer {
 
 <div class="container">
   <input id="search" placeholder="Search data...">
-  <div class="controls">
-  <select id="filterRegion">
-    <option value="">All Region</option>
-  </select>
-
-  <select id="filterNode">
-    <option value="">All Node</option>
-  </select>
-
-  <select id="filterSW">
-    <option value="">All SW Version</option>
-  </select>
-</div>
+  <div class="controls" id="filters"></div>
 <div class="controls">
   Rows:
   <select id="rowsSelect">
@@ -141,8 +129,8 @@ let rowsPerPage = 20;
 
 let data = [];
 let filtered = [];
+let activeFilters = {};
 let page = 1;
-let filtersReady = false;
 let sortKey = '';
 let sortAsc = true;
 
@@ -276,53 +264,66 @@ function pagination() {
   };
   p.appendChild(next);
 }
-  function initFilters() {
-  fillSelect('filterRegion', 'Region');
-  fillSelect('filterNode', 'Node');
-  fillSelect('filterSW', 'SW Version');
+/* =============================
+   INIT FILTER SEMUA KOLOM
+============================= */
+function initFilters() {
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  activeFilters = {};
 
-  document.querySelectorAll('#filterRegion,#filterNode,#filterSW')
-    .forEach(el => el.onchange = applyFilters);
+  const headers = Object.keys(data[0]);
 
-  filtersReady = true;
-}
+  headers.forEach(col => {
+    const select = document.createElement('select');
+    select.dataset.col = col;
 
-function fillSelect(id, col) {
-  const select = document.getElementById(id);
-  const values = [...new Set(data.map(r => r[col]).filter(v => v))];
+    select.innerHTML = `<option value="">All ${col}</option>`;
 
-  values.sort().forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
+    [...new Set(data.map(r => r[col]).filter(v => v))]
+      .sort()
+      .forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        select.appendChild(opt);
+      });
+
+    select.onchange = applyFilters;
+    box.appendChild(select);
   });
 }
+
+/* =============================
+   FILTER UTAMA
+============================= */
 function applyFilters() {
-  if (!filtersReady) return;
-
   const q = search.value.toLowerCase();
-  const region = document.getElementById('filterRegion').value;
-  const node = document.getElementById('filterNode').value;
-  const sw = document.getElementById('filterSW').value;
 
-  filtered = data.filter(r => {
-    const text = Object.values(r).join(' ').toLowerCase();
+  document.querySelectorAll('#filters select').forEach(s => {
+    activeFilters[s.dataset.col] = s.value;
+  });
 
-    return (!q || text.includes(q)) &&
-           (!region || r.Region === region) &&
-           (!node || r.Node === node) &&
-           (!sw || r['SW Version'] === sw);
+  filtered = data.filter(row => {
+    const text = Object.values(row).join(' ').toLowerCase();
+    if (q && !text.includes(q)) return false;
+
+    for (const col in activeFilters) {
+      if (activeFilters[col] && row[col] !== activeFilters[col]) {
+        return false;
+      }
+    }
+    return true;
   });
 
   page = 1;
   render();
 }
-
 </script>
 
 </body>
 </html>
+
 
 
 
