@@ -124,50 +124,118 @@ footer {
 </footer>
 
 <script>
+<script>
 const csvFile = 'data.csv';
 let rowsPerPage = 20;
 
 let data = [];
 let filtered = [];
-let activeFilters = {};
 let page = 1;
 let sortKey = '';
 let sortAsc = true;
+
+let activeFilters = {};
 
 fetch(csvFile)
   .then(res => res.text())
   .then(text => {
     const lines = text.trim().split(/\r?\n/);
-
-    // AUTO DETECT DELIMITER
     const delimiter = lines[0].includes(';') ? ';' : ',';
-
     const headers = lines[0].split(delimiter).map(h => h.trim());
 
     data = lines.slice(1).map(line => {
       const values = line.split(delimiter);
       const obj = {};
-      headers.forEach((h, i) => {
-        obj[h] = values[i]?.trim() || '';
-      });
+      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
       return obj;
     });
 
     filtered = [...data];
     initFilters();
     render();
-  })
-  .catch(() => alert('CSV tidak dapat dibaca'));
+  });
 
-const search = document.getElementById('search');
-search.oninput = applyFilters;
-const rowsSelect = document.getElementById('rowsSelect');
-rowsSelect.onchange = () => {
-  rowsPerPage = Number(rowsSelect.value);
+/* ============================
+   INIT FILTER (SEMUA KOLOM)
+============================ */
+function initFilters() {
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  activeFilters = {};
+
+  Object.keys(data[0]).forEach(col => {
+    const select = document.createElement('select');
+    select.dataset.col = col;
+    select.innerHTML = `<option value="">All ${col}</option>`;
+    select.onchange = () => applyFilters(col);
+    box.appendChild(select);
+  });
+
+  rebuildFilters(data);
+}
+
+/* ============================
+   REBUILD FILTER OPTIONS
+============================ */
+function rebuildFilters(sourceData) {
+  document.querySelectorAll('#filters select').forEach(select => {
+    const col = select.dataset.col;
+    const currentValue = select.value;
+
+    const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
+
+    select.innerHTML = `<option value="">All ${col}</option>`;
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+
+    if (values.includes(currentValue)) {
+      select.value = currentValue;
+    }
+  });
+}
+
+/* ============================
+   APPLY FILTER (CASCADING)
+============================ */
+function applyFilters(changedCol) {
+  activeFilters = {};
+  document.querySelectorAll('#filters select').forEach(s => {
+    if (s.value) activeFilters[s.dataset.col] = s.value;
+  });
+
+  filtered = data.filter(row => {
+    return Object.entries(activeFilters).every(
+      ([col, val]) => row[col] === val
+    );
+  });
+
+  rebuildFilters(filtered);
+  page = 1;
+  render();
+}
+
+/* ============================
+   SEARCH GLOBAL
+============================ */
+document.getElementById('search').oninput = () => {
+  const q = search.value.toLowerCase();
+
+  filtered = data.filter(row =>
+    Object.values(row).join(' ').toLowerCase().includes(q)
+  );
+
+  rebuildFilters(filtered);
   page = 1;
   render();
 };
-  
+
+/* ============================
+   RENDER TABLE
+============================ */
 function render() {
   const headers = Object.keys(filtered[0] || {});
   const thead = document.getElementById('thead');
@@ -183,34 +251,34 @@ function render() {
     thead.appendChild(th);
   });
 
-const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-const slice = rowsPerPage === 0
-  ? filtered
-  : filtered.slice(start, start + rowsPerPage);
-
+  const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
+  const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
 
   slice.forEach(r => {
     const tr = document.createElement('tr');
-    headers.forEach(h => {
-      tr.innerHTML += `<td>${r[h]}</td>`;
-    });
+    headers.forEach(h => tr.innerHTML += `<td>${r[h]}</td>`);
     tbody.appendChild(tr);
   });
 
   pagination();
 }
 
+/* ============================
+   SORT
+============================ */
 function sort(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
   sortKey = key;
 
-  filtered.sort((a,b) =>
+  filtered.sort((a, b) =>
     (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
   );
-
   render();
 }
 
+/* ============================
+   PAGINATION
+============================ */
 function pagination() {
   const p = document.getElementById('pagination');
   p.innerHTML = '';
@@ -218,111 +286,32 @@ function pagination() {
   if (rowsPerPage === 0) return;
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
-  const maxButtons = 5;
 
-  // PREV
   const prev = document.createElement('button');
   prev.textContent = '« Prev';
   prev.disabled = page === 1;
-  prev.onclick = () => {
-    page--;
-    render();
-  };
+  prev.onclick = () => { page--; render(); };
   p.appendChild(prev);
 
-  // HITUNG RANGE HALAMAN
-  let start = Math.max(1, page - Math.floor(maxButtons / 2));
-  let end = start + maxButtons - 1;
-
-  if (end > totalPages) {
-    end = totalPages;
-    start = Math.max(1, end - maxButtons + 1);
-  }
-
-  // BUTTON NOMOR
-  for (let i = start; i <= end; i++) {
+  for (let i = 1; i <= totalPages; i++) {
     const b = document.createElement('button');
     b.textContent = i;
-    if (i === page) {
-      b.style.fontWeight = 'bold';
-      b.style.background = '#e5e7eb';
-    }
-    b.onclick = () => {
-      page = i;
-      render();
-    };
+    if (i === page) b.style.fontWeight = 'bold';
+    b.onclick = () => { page = i; render(); };
     p.appendChild(b);
   }
 
-  // NEXT
   const next = document.createElement('button');
   next.textContent = 'Next »';
   next.disabled = page === totalPages;
-  next.onclick = () => {
-    page++;
-    render();
-  };
+  next.onclick = () => { page++; render(); };
   p.appendChild(next);
-}
-/* =============================
-   INIT FILTER SEMUA KOLOM
-============================= */
-function initFilters() {
-  const box = document.getElementById('filters');
-  box.innerHTML = '';
-  activeFilters = {};
-
-  const headers = Object.keys(data[0]);
-
-  headers.forEach(col => {
-    const select = document.createElement('select');
-    select.dataset.col = col;
-
-    select.innerHTML = `<option value="">All ${col}</option>`;
-
-    [...new Set(data.map(r => r[col]).filter(v => v))]
-      .sort()
-      .forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.textContent = v;
-        select.appendChild(opt);
-      });
-
-    select.onchange = applyFilters;
-    box.appendChild(select);
-  });
-}
-
-/* =============================
-   FILTER UTAMA
-============================= */
-function applyFilters() {
-  const q = search.value.toLowerCase();
-
-  document.querySelectorAll('#filters select').forEach(s => {
-    activeFilters[s.dataset.col] = s.value;
-  });
-
-  filtered = data.filter(row => {
-    const text = Object.values(row).join(' ').toLowerCase();
-    if (q && !text.includes(q)) return false;
-
-    for (const col in activeFilters) {
-      if (activeFilters[col] && row[col] !== activeFilters[col]) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  page = 1;
-  render();
 }
 </script>
 
 </body>
 </html>
+
 
 
 
