@@ -140,6 +140,12 @@ footer {
       <h3>Sector per Area</h3>
       <canvas id="sectorAreaChart"></canvas>
     </div>
+    <div class="chart-box">
+      <h3>User per Area</h3>
+      <button id="backUserArea" style="display:none;margin-bottom:10px;">⬅ Back</button>
+      <canvas id="userAreaChart"></canvas>
+</div>
+
   </div>
 
 </div>
@@ -178,7 +184,9 @@ fetch(csvFile)
     let users = 0;
     let active = 0;
     let inactive = 0;
-
+    let userAreaChartInstance;
+    let userAreaLevel = 'area'; // area | node
+  
     const userArea = {};
     const nodeRegion = {};
     const sectorArea = {};
@@ -225,20 +233,36 @@ if (stateCol && r[stateCol]) {
     document.getElementById('activeCount').textContent = active;
     document.getElementById('inactiveCount').textContent = inactive;
 
-    // PIE CHART FUNCTION
-    const makePie = (id, dataObj) => {
-      new Chart(document.getElementById(id), {
-        type: 'pie',
-        data: {
-          labels: Object.keys(dataObj),
-          datasets: [{
-            data: Object.values(dataObj)
-          }]
-        }
-      });
-    };
+    const makePie = (canvasId, labels, values, onClickHandler) => {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values
+      }]
+    },
+    options: {
+      onClick: onClickHandler
+    }
+  });
+};
 
-    makePie('userAreaChart', userArea);
+
+    userAreaChartInstance = makePie(
+  'userAreaChart',
+  Object.keys(userArea),
+  Object.values(userArea),
+  (evt, elements) => {
+    if (!elements.length) return;
+
+    const index = elements[0].index;
+    const selectedArea = userAreaChartInstance.data.labels[index];
+
+    drillDownUserByNode(selectedArea);
+  }
+);
+
     makePie('nodeRegionChart', nodeRegion);
     makePie('sectorAreaChart', sectorArea);
   })
@@ -246,10 +270,53 @@ if (stateCol && r[stateCol]) {
     console.error(err);
     alert('Gagal membaca data.csv');
   });
+  function drillDownUserByNode(areaName) {
+  userAreaLevel = 'node';
+
+  const nodeCount = {};
+
+  rows.forEach(r => {
+    if (r[areaCol] === areaName && r[userCol]) {
+      const node = r[nodeCol] || 'Unknown';
+      nodeCount[node] = (nodeCount[node] || 0) + 1;
+    }
+  });
+
+  userAreaChartInstance.destroy();
+
+  userAreaChartInstance = makePie(
+    'userAreaChart',
+    Object.keys(nodeCount),
+    Object.values(nodeCount)
+  );
+
+  document.getElementById('backUserArea').style.display = 'inline-block';
+}
+document.getElementById('backUserArea').addEventListener('click', () => {
+  userAreaLevel = 'area';
+
+  userAreaChartInstance.destroy();
+
+  userAreaChartInstance = makePie(
+    'userAreaChart',
+    Object.keys(userArea),
+    Object.values(userArea),
+    (evt, elements) => {
+      if (!elements.length) return;
+      const index = elements[0].index;
+      const selectedArea = userAreaChartInstance.data.labels[index];
+      drillDownUserByNode(selectedArea);
+    }
+  );
+
+  document.getElementById('backUserArea').style.display = 'none';
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
