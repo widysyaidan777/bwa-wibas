@@ -15,12 +15,12 @@ body {
 header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
-  padding: 12px 300px;   /* DIPERKECIL */
+  padding: 12px 1600px;   /* DIPERKECIL */
 }
 
 nav {
   background: #1e293b;
-  padding: 6px 300px;    /* DIPERKECIL */
+  padding: 6px 1600px;    /* DIPERKECIL */
 }
 
 nav a {
@@ -346,21 +346,37 @@ function pagination() {
   if (rowsPerPage === 0) return;
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const maxButtons = 5;
 
+  let start = Math.max(1, page - Math.floor(maxButtons / 2));
+  let end = start + maxButtons - 1;
+
+  if (end > totalPages) {
+    end = totalPages;
+    start = Math.max(1, end - maxButtons + 1);
+  }
+
+  // Prev
   const prev = document.createElement('button');
   prev.textContent = '« Prev';
   prev.disabled = page === 1;
   prev.onclick = () => { page--; render(); };
   p.appendChild(prev);
 
-  for (let i = 1; i <= totalPages; i++) {
+  // Page numbers
+  for (let i = start; i <= end; i++) {
     const b = document.createElement('button');
     b.textContent = i;
-    if (i === page) b.style.fontWeight = 'bold';
+    if (i === page) {
+      b.style.fontWeight = 'bold';
+      b.style.background = '#1e293b';
+      b.style.color = 'white';
+    }
     b.onclick = () => { page = i; render(); };
     p.appendChild(b);
   }
 
+  // Next
   const next = document.createElement('button');
   next.textContent = 'Next »';
   next.disabled = page === totalPages;
@@ -377,6 +393,7 @@ document.getElementById('rowsSelect').onchange = e => {
 
 </body>
 </html>
+
 
 
 
