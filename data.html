@@ -183,31 +183,7 @@ function applyRowStyle(tr, row) {
   © 2026 BWA WiBAS – Lintasarta
 </footer>
 
-<script>
-  function exportToExcel() {
-  const table = document.querySelector("table");
-  const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-  XLSX.writeFile(wb, "data.xlsx");
-}
 
-// Fungsi Ekspor ke PDF
-function exportToPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  const table = document.querySelector("table");
-  const rows = Array.from(table.querySelectorAll('tr'));
-  const data = rows.map(row => {
-    return Array.from(row.querySelectorAll('td, th')).map(cell => cell.innerText);
-  });
-
-  doc.autoTable({
-    head: [data[0]],
-    body: data.slice(1)
-  });
-
-  doc.save("data.pdf");
-<script>
 <script>
 const csvFile = 'data.csv';
 let rowsPerPage = 20;
@@ -424,11 +400,34 @@ document.getElementById('rowsSelect').onchange = e => {
   page = 1;
   render();
 };
+  function exportToExcel() {
+  const table = document.querySelector("table");
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+  XLSX.writeFile(wb, "data.xlsx");
+}
 
+// Fungsi Ekspor ke PDF
+function exportToPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const table = document.querySelector("table");
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const data = rows.map(row => {
+    return Array.from(row.querySelectorAll('td, th')).map(cell => cell.innerText);
+  });
+
+  doc.autoTable({
+    head: [data[0]],
+    body: data.slice(1)
+  });
+
+  doc.save("data.pdf");
 </script>
 
 </body>
 </html>
+
 
 
 
