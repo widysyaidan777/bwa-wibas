@@ -44,9 +44,17 @@ input {
 }
 
 table {
-  width: 1600px;
+  width: 100%;
   border-collapse: collapse;
   background: white;
+}
+.table-container {
+  width: 100vw;
+  overflow-x: auto;
+}
+
+table {
+  min-width: 1600px; /* NAIKKAN kalau kolom banyak */
 }
 
 th, td {
@@ -385,6 +393,7 @@ document.getElementById('rowsSelect').onchange = e => {
 
 </body>
 </html>
+
 
 
 
