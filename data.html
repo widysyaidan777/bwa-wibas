@@ -97,6 +97,19 @@ footer {
 
 <div class="container">
   <input id="search" placeholder="Search data...">
+  <div class="controls">
+  <select id="filterRegion">
+    <option value="">All Region</option>
+  </select>
+
+  <select id="filterNode">
+    <option value="">All Node</option>
+  </select>
+
+  <select id="filterSW">
+    <option value="">All SW Version</option>
+  </select>
+</div>
 <div class="controls">
   Rows:
   <select id="rowsSelect">
@@ -129,6 +142,7 @@ let rowsPerPage = 20;
 let data = [];
 let filtered = [];
 let page = 1;
+let filtersReady = false;
 let sortKey = '';
 let sortAsc = true;
 
@@ -152,19 +166,13 @@ fetch(csvFile)
     });
 
     filtered = [...data];
+    initFilters();
     render();
   })
   .catch(() => alert('CSV tidak dapat dibaca'));
 
 const search = document.getElementById('search');
-search.oninput = () => {
-  const q = search.value.toLowerCase();
-  filtered = data.filter(r =>
-    Object.values(r).join(' ').toLowerCase().includes(q)
-  );
-  page = 1;
-  render();
-};
+search.oninput = applyFilters;
 const rowsSelect = document.getElementById('rowsSelect');
 rowsSelect.onchange = () => {
   rowsPerPage = Number(rowsSelect.value);
@@ -267,11 +275,55 @@ function pagination() {
     render();
   };
   p.appendChild(next);
-}  
+}
+  function initFilters() {
+  fillSelect('filterRegion', 'Region');
+  fillSelect('filterNode', 'Node');
+  fillSelect('filterSW', 'SW Version');
+
+  document.querySelectorAll('#filterRegion,#filterNode,#filterSW')
+    .forEach(el => el.onchange = applyFilters);
+
+  filtersReady = true;
+}
+
+function fillSelect(id, col) {
+  const select = document.getElementById(id);
+  const values = [...new Set(data.map(r => r[col]).filter(v => v))];
+
+  values.sort().forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    select.appendChild(opt);
+  });
+}
+function applyFilters() {
+  if (!filtersReady) return;
+
+  const q = search.value.toLowerCase();
+  const region = document.getElementById('filterRegion').value;
+  const node = document.getElementById('filterNode').value;
+  const sw = document.getElementById('filterSW').value;
+
+  filtered = data.filter(r => {
+    const text = Object.values(r).join(' ').toLowerCase();
+
+    return (!q || text.includes(q)) &&
+           (!region || r.Region === region) &&
+           (!node || r.Node === node) &&
+           (!sw || r['SW Version'] === sw);
+  });
+
+  page = 1;
+  render();
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
