@@ -48,6 +48,64 @@
     footer {
       text-align: center;
     }
+    .accordion {
+  max-width: 900px;
+  margin: 40px auto;
+}
+
+.accordion-item {
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.08);
+  overflow: hidden;
+  border-left: 6px solid #0f172a;
+}
+
+.accordion-header {
+  width: 100%;
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  border: none;
+  padding: 20px 24px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accordion-header:hover {
+  background: linear-gradient(90deg,#1e293b,#020617);
+}
+
+.accordion-body {
+  padding: 0 24px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.45s ease, padding 0.45s ease;
+}
+
+.accordion-body p,
+.accordion-body ul {
+  margin: 16px 0;
+}
+
+.accordion-item.active .accordion-body {
+  max-height: 600px;
+  padding: 16px 24px 24px;
+}
+
+.arrow {
+  font-size: 20px;
+  transition: transform 0.3s ease;
+}
+
+.accordion-item.active .arrow {
+  transform: rotate(90deg);
+}
+
   </style>
 </head>
 <body>
@@ -64,84 +122,55 @@
   <a href="map.html">Map</a>
 </nav>
 
-<div class="container">
+ <div class="accordion">
 
-  <div class="card">
-    <h2>Apa itu BWA?</h2>
-    <p>
-      <strong>BWA (Broadband Wireless Access)</strong> adalah layanan akses broadband nirkabel
-      yang digunakan untuk menyediakan konektivitas data berkecepatan tinggi tanpa media kabel.
-      BWA banyak dimanfaatkan untuk mendukung konektivitas di wilayah perkotaan maupun daerah
-      yang sulit dijangkau infrastruktur kabel.
-    </p>
-    <p>
-      Teknologi BWA memungkinkan distribusi jaringan secara fleksibel, efisien, dan scalable,
-      terutama untuk kebutuhan layanan data, monitoring, dan komunikasi berbasis IP.
-    </p>
+  <div class="accordion-item active">
+    <button class="accordion-header">
+      <span>Apa itu BWA?</span>
+      <span class="arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <p>
+        <b>BWA (Broadband Wireless Access)</b> adalah layanan akses broadband nirkabel
+        yang digunakan untuk menyediakan konektivitas data berkecepatan tinggi
+        tanpa media kabel.
+      </p>
+      <p>
+        BWA banyak dimanfaatkan untuk mendukung konektivitas di wilayah perkotaan
+        maupun daerah yang sulit dijangkau infrastruktur kabel.
+      </p>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Apa itu WiBAS?</h2>
-    <p>
-      <strong>WiBAS (Wireless Broadband Access System)</strong> merupakan sistem yang digunakan
-      untuk mengelola, memantau, dan mendokumentasikan layanan BWA secara terpusat.
-    </p>
-    <p>
-      WiBAS berfungsi sebagai sarana pengolahan data operasional BWA, termasuk informasi pelanggan,
-      status layanan, lokasi, serta parameter pendukung lainnya.
-    </p>
+  <div class="accordion-item">
+    <button class="accordion-header">
+      <span>Apa itu WiBAS?</span>
+      <span class="arrow">▶</span>
+    </button>
+    <div class="accordion-body">
+      <p>
+        <b>WiBAS (Wireless Broadband Access System)</b> merupakan sistem yang digunakan
+        untuk mengelola, memantau, dan mendokumentasikan layanan BWA secara terpusat.
+      </p>
+      <p>
+        WiBAS berfungsi sebagai sarana pengolahan data operasional BWA, termasuk
+        informasi pelanggan, status layanan, lokasi, serta parameter pendukung lainnya.
+      </p>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Tujuan WiBAS</h2>
-    <ul>
-      <li>Menyediakan data BWA yang terstruktur dan mudah diakses</li>
-      <li>Mendukung transparansi dan akurasi data layanan</li>
-      <li>Mempermudah pencarian dan analisis data</li>
-      <li>Menjadi referensi monitoring dan pelaporan</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>Ruang Lingkup Data</h2>
-    <p>
-      Data yang ditampilkan dalam sistem WiBAS mencakup berbagai informasi terkait layanan BWA,
-      antara lain:
-    </p>
-    <ul>
-      <li>Identitas layanan / pelanggan</li>
-      <li>Nomor MSISDN atau ID layanan</li>
-      <li>Lokasi dan wilayah operasional</li>
-      <li>Status layanan (aktif / non-aktif)</li>
-      <li>Informasi teknis pendukung lainnya</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>Website BWA WiBAS</h2>
-    <p>
-      Website ini dibangun sebagai platform <strong>static website</strong> berbasis
-      <strong>GitHub Pages</strong>, dengan tujuan:
-    </p>
-    <ul>
-      <li>Akses cepat tanpa server backend</li>
-      <li>Mudah dipelihara dan diperbarui</li>
-      <li>Ringan dan aman</li>
-      <li>Mendukung pengolahan data CSV</li>
-    </ul>
-    <p>
-      Halaman <strong>Data</strong> menyediakan fitur pencarian, pengurutan, dan pagination
-      untuk memudahkan eksplorasi data BWA WiBAS.
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>Penutup</h2>
-    <p>
-      Dengan adanya sistem WiBAS, diharapkan pengelolaan data BWA dapat dilakukan secara lebih
-      efektif, transparan, dan terstruktur, sehingga mendukung kebutuhan operasional
-      dan pengambilan keputusan berbasis data.
-    </p>
+  <div class="accordion-item">
+    <button class="accordion-header">
+      <span>Tujuan WiBAS</span>
+      <span class="arrow">▶</span>
+    </button>
+    <div class="accordion-body">
+      <ul>
+        <li>Menyediakan data BWA yang terstruktur dan mudah diakses</li>
+        <li>Mendukung monitoring dan evaluasi layanan</li>
+        <li>Meningkatkan efisiensi pengelolaan jaringan</li>
+      </ul>
+    </div>
   </div>
 
 </div>
@@ -152,4 +181,5 @@
 
 </body>
 </html>
+
 
