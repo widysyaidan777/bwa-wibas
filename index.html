@@ -116,11 +116,11 @@ footer {
     </div>
     <div class="card">
       <h2 id="activeCount">0</h2>
-      <p>state Active</p>
+      <p>status Active</p>
     </div>
     <div class="card">
       <h2 id="inactiveCount">0</h2>
-      <p>state Inactive</p>
+      <p>status Inactive</p>
     </div>
   </div>
 
@@ -169,7 +169,7 @@ fetch(csvFile)
     const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
     const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
     const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
-    const stateCol = headers.find(h => h.toLowerCase().includes('state'));
+    const statusCol = headers.find(h => h.toLowerCase().includes('status'));
     const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
 
@@ -189,14 +189,16 @@ fetch(csvFile)
       if (userCol && r[userCol]) users++;
 
 if (statusCol && r[statusCol]) {
-  const s = r[statusCol].toString().trim().toLowerCase();
+    const s = r[statusCol].toString().trim().toLowerCase();
 
-  if (s === 'active') {
-    active++;
-  } else {
-    inactive++;
+    if (s === 'active' || s.includes('connected')) {
+      active++;
+    } else {
+      inactive++;
+    }
   }
-}
+
+});
 
       // USER PER AREA
       if (areaCol && userCol && r[userCol]) {
@@ -249,6 +251,7 @@ if (statusCol && r[statusCol]) {
 
 </body>
 </html>
+
 
 
 
