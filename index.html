@@ -169,7 +169,7 @@ fetch(csvFile)
     const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
     const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
     const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
-    const statusCol = headers.find(h => h.toLowerCase().includes('state'));
+    const statusCol = headers.find(h => h.toLowerCase().includes('status'));
     const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
 
@@ -188,28 +188,26 @@ fetch(csvFile)
       if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
       if (userCol && r[userCol]) users++;
 
-      // STATUS (AMAN)
-      if (statusCol && r[statusCol]) {
+// STATUS FIX
+if (statusCol && r[statusCol]) {
   const s = r[statusCol].toLowerCase();
 
   if (
-    s.includes('Active') &&
-    !s.includes('In')
+    s === 'active' ||
+    s.includes('connected')
   ) {
-    Active++;
+    active++;
   } 
   else if (
-    s.includes('Inactive') ||
-    s.includes('in active') ||
+    s === 'inactive' ||
+    s.includes('dismantle') ||
+    s.includes('unreachable') ||
     s.includes('down') ||
-    s.includes('Dismantle') ||
     s.includes('non')
   ) {
-    Inactive++;
+    inactive++;
   }
 }
-
-
       // USER PER AREA
       if (areaCol && userCol && r[userCol]) {
         const a = r[areaCol] || 'Unknown';
@@ -261,6 +259,7 @@ fetch(csvFile)
 
 </body>
 </html>
+
 
 
 
