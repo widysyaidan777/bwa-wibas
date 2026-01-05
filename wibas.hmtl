@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Home - BWA WiBAS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+header {
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  padding: 24px;
+}
+
+nav {
+  background: #1e293b;
+  padding: 10px 24px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+.container {
+  padding: 24px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.08);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.card p {
+  margin: 8px 0 0;
+  color: #475569;
+  font-weight: bold;
+}
+
+.charts {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+  gap: 30px;
+}
+
+.chart-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.08);
+}
+
+footer {
+  margin-top: 40px;
+  padding: 16px;
+  text-align: center;
+  background: #020617;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>BWA WiBAS</h1>
+  <p>Overview Dashboard</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="data.html">Data</a>
+  <a href="wibas.html">WiBAS</a>
+  <a href="map.html">Map</a>
+</nav>
+
+<div class="container">
+
+  <!-- OVERVIEW -->
+  <div class="cards">
+    <div class="card">
+      <h2 id="totalSector">0</h2>
+      <p>Total Sector</p>
+    </div>
+    <div class="card">
+      <h2 id="totalNode">0</h2>
+      <p>Total Node</p>
+    </div>
+    <div class="card">
+      <h2 id="totalUser">0</h2>
+      <p>Total User</p>
+    </div>
+    <div class="card">
+      <h2 id="activeCount">0</h2>
+      <p>Status Active</p>
+    </div>
+    <div class="card">
+      <h2 id="inactiveCount">0</h2>
+      <p>Status Inactive</p>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts">
+    <div class="chart-box">
+      <h3>User per Area</h3>
+      <canvas id="userAreaChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <h3>Node per Region</h3>
+      <canvas id="nodeRegionChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <h3>Sector per Area</h3>
+      <canvas id="sectorAreaChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 BWA WiBAS – Lintasarta
+</footer>
+
+<script>
+const csvFile = 'data.csv';
+
+fetch(csvFile)
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.trim().split(/\r?\n/);
+    const delimiter = lines[0].includes(';') ? ';' : ',';
+    const headers = lines[0].split(delimiter).map(h => h.trim());
+
+    const rows = lines.slice(1).map(l => {
+      const values = l.split(delimiter);
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = values[i]?.trim() || '');
+      return obj;
+    });
+
+    // === AUTO DETECT COLUMN ===
+    const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
+    const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
+    const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
+    const stateCol = headers.find(h => h.toLowerCase().includes('state'));
+    const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
+    const regionCol = headers.find(h => h.toLowerCase().includes('region'));
+
+    const sectors = new Set();
+    const nodes = new Set();
+    let users = 0;
+    let active = 0;
+    let inactive = 0;
+
+    const userArea = {};
+    const nodeRegion = {};
+    const sectorArea = {};
+
+    rows.forEach(r => {
+      if (sectorCol && r[sectorCol]) sectors.add(r[sectorCol]);
+      if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
+      if (userCol && r[userCol]) users++;
+
+if (stateCol && r[stateCol]) {
+  const s = r[stateCol].toString().trim().toLowerCase();
+
+  if (s === 'active') {
+    active++;
+  } else {
+    inactive++;
+  }
+}
+
+
+      // USER PER AREA
+      if (areaCol && userCol && r[userCol]) {
+        const a = r[areaCol] || 'Unknown';
+        userArea[a] = (userArea[a] || 0) + 1;
+      }
+
+      // NODE PER REGION
+      if (regionCol && nodeCol && r[nodeCol]) {
+        const rg = r[regionCol] || 'Unknown';
+        nodeRegion[rg] = (nodeRegion[rg] || 0) + 1;
+      }
+
+      // SECTOR PER AREA
+      if (areaCol && sectorCol && r[sectorCol]) {
+        const a = r[areaCol] || 'Unknown';
+        sectorArea[a] = (sectorArea[a] || 0) + 1;
+      }
+    });
+
+    // OVERVIEW
+    document.getElementById('totalSector').textContent = sectors.size;
+    document.getElementById('totalNode').textContent = nodes.size;
+    document.getElementById('totalUser').textContent = users;
+    document.getElementById('activeCount').textContent = active;
+    document.getElementById('inactiveCount').textContent = inactive;
+
+    // PIE CHART FUNCTION
+    const makePie = (id, dataObj) => {
+      new Chart(document.getElementById(id), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(dataObj),
+          datasets: [{
+            data: Object.values(dataObj)
+          }]
+        }
+      });
+    };
+
+    makePie('userAreaChart', userArea);
+    makePie('nodeRegionChart', nodeRegion);
+    makePie('sectorAreaChart', sectorArea);
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Gagal membaca data.csv');
+  });
+</script>
+
+</body>
+</html>
