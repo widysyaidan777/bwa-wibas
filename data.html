@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Data BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body {
@@ -161,6 +163,12 @@ function applyRowStyle(tr, row) {
     <option value="0">All</option>
   </select>
 </div>
+
+<div class="controls">
+    <button onclick="exportToExcel()">Export to Excel</button>
+    <button onclick="exportToPDF()">Export to PDF</button>
+  </div>
+  
   <table>
     <thead>
       <tr id="thead"></tr>
@@ -176,6 +184,30 @@ function applyRowStyle(tr, row) {
 </footer>
 
 <script>
+  function exportToExcel() {
+  const table = document.querySelector("table");
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+  XLSX.writeFile(wb, "data.xlsx");
+}
+
+// Fungsi Ekspor ke PDF
+function exportToPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const table = document.querySelector("table");
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const data = rows.map(row => {
+    return Array.from(row.querySelectorAll('td, th')).map(cell => cell.innerText);
+  });
+
+  doc.autoTable({
+    head: [data[0]],
+    body: data.slice(1)
+  });
+
+  doc.save("data.pdf");
+
 const csvFile = 'data.csv';
 let rowsPerPage = 20;
 
@@ -396,6 +428,7 @@ document.getElementById('rowsSelect').onchange = e => {
 
 </body>
 </html>
+
 
 
 
