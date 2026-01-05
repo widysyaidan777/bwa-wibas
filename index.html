@@ -188,26 +188,16 @@ fetch(csvFile)
       if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
       if (userCol && r[userCol]) users++;
 
-// state FIX
-if (stateCol && r[stateCol]) {
-  const s = r[stateCol].toLowerCase();
+if (statusCol && r[statusCol]) {
+  const s = r[statusCol].toString().trim().toLowerCase();
 
-  if (
-    s === 'active' ||
-    s.includes('connected')
-  ) {
+  if (s === 'active') {
     active++;
-  } 
-  else if (
-    s === 'inactive' ||
-    s.includes('dismantle') ||
-    s.includes('unreachable') ||
-    s.includes('down') ||
-    s.includes('non')
-  ) {
+  } else {
     inactive++;
   }
 }
+
       // USER PER AREA
       if (areaCol && userCol && r[userCol]) {
         const a = r[areaCol] || 'Unknown';
@@ -259,6 +249,7 @@ if (stateCol && r[stateCol]) {
 
 </body>
 </html>
+
 
 
 
