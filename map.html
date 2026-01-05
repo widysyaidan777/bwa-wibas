@@ -55,8 +55,8 @@ fetch(csvFile)
     const lines = text.trim().split(/\r?\n/);
     const headers = lines[0].split(',').map(h => h.trim());
 
-    const latCol = headers.find(h => h.toLowerCase().includes('lat'));
-    const lonCol = headers.find(h => h.toLowerCase().includes('lon'));
+    const latitudeCol = headers.find(h => h.toLowerCase().includes('latitude'));
+    const longitudeCol = headers.find(h => h.toLowerCase().includes('longitude'));
     const nodeCol = headers.find(h => h.toLowerCase().includes('node'));
     const areaCol = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
@@ -68,11 +68,11 @@ fetch(csvFile)
       const row = {};
       headers.forEach((h,i) => row[h] = v[i]);
 
-      const lat = parseFloat(row[latCol]);
-      const lon = parseFloat(row[lonCol]);
+      const latitude = parseFloat(row[latitudeCol]);
+      const longitude = parseFloat(row[longitudeCol]);
       const node = row[nodeCol];
 
-      if (!lat || !lon || !node) return;
+      if (!latitude || !longitude || !node) return;
 
       // Hindari duplikat marker node
       if (nodes[node]) return;
@@ -85,7 +85,7 @@ fetch(csvFile)
         <b>Region:</b> ${row[regionCol] || '-'}
       `;
 
-      L.marker([lat, lon])
+      L.marker([latitude, longitude])
         .addTo(map)
         .bindPopup(popup);
     });
