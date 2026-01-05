@@ -169,7 +169,7 @@ fetch(csvFile)
     const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
     const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
     const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
-    const statusCol = headers.find(h => h.toLowerCase().includes('status'));
+    const statusCol = headers.find(h => h.toLowerCase().includes('state'));
     const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
 
@@ -196,7 +196,7 @@ fetch(csvFile)
     s.includes('Active') &&
     !s.includes('In')
   ) {
-    active++;
+    Active++;
   } 
   else if (
     s.includes('Inactive') ||
@@ -205,7 +205,7 @@ fetch(csvFile)
     s.includes('Dismantle') ||
     s.includes('non')
   ) {
-    inactive++;
+    Inactive++;
   }
 }
 
@@ -261,6 +261,7 @@ fetch(csvFile)
 
 </body>
 </html>
+
 
 
 
