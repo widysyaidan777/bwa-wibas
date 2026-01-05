@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Topology Map - BWA WiBAS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  padding: 16px;
+}
+
+#map {
+  height: calc(100vh - 80px);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Topology Map – BWA WiBAS</h2>
+</header>
+
+<div id="map"></div>
+
+<script>
+const csvFile = 'data.csv';
+
+// INIT MAP
+const map = L.map('map').setView([-2.5, 118], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+fetch(csvFile)
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines[0].split(',').map(h => h.trim());
+
+    const latCol = headers.find(h => h.toLowerCase().includes('lat'));
+    const lonCol = headers.find(h => h.toLowerCase().includes('lon'));
+    const nodeCol = headers.find(h => h.toLowerCase().includes('node'));
+    const areaCol = headers.find(h => h.toLowerCase().includes('area'));
+    const regionCol = headers.find(h => h.toLowerCase().includes('region'));
+
+    const nodes = {};
+
+    lines.slice(1).forEach(line => {
+      const v = line.split(',');
+      const row = {};
+      headers.forEach((h,i) => row[h] = v[i]);
+
+      const lat = parseFloat(row[latCol]);
+      const lon = parseFloat(row[lonCol]);
+      const node = row[nodeCol];
+
+      if (!lat || !lon || !node) return;
+
+      // Hindari duplikat marker node
+      if (nodes[node]) return;
+
+      nodes[node] = true;
+
+      const popup = `
+        <b>Node:</b> ${node}<br>
+        <b>Area:</b> ${row[areaCol] || '-'}<br>
+        <b>Region:</b> ${row[regionCol] || '-'}
+      `;
+
+      L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(popup);
+    });
+  });
+</script>
+
+</body>
+</html>
