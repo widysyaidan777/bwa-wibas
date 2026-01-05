@@ -282,7 +282,9 @@ document.getElementById('search').oninput = () => {
    RENDER TABLE
 ============================ */
 function render() {
-  const headers = Object.keys(filtered[0] || {});
+  if (filtered.length === 0) return;
+
+  const headers = Object.keys(filtered[0]);
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
 
@@ -297,16 +299,26 @@ function render() {
   });
 
   const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-  const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
+  const slice = rowsPerPage === 0
+    ? filtered
+    : filtered.slice(start, start + rowsPerPage);
 
-  slice.forEach(r => {
+  slice.forEach(row => {
     const tr = document.createElement('tr');
-    headers.forEach(h => tr.innerHTML += `<td>${r[h]}</td>`);
+
+    headers.forEach(h => {
+      const td = document.createElement('td');
+      td.textContent = row[h];
+      tr.appendChild(td);
+    });
+
+    applyRowStyle(tr, row); // ✅ INI BARU BENAR
     tbody.appendChild(tr);
   });
 
   pagination();
 }
+
 
 /* ============================
    SORT
@@ -352,24 +364,17 @@ function pagination() {
   next.onclick = () => { page++; render(); };
   p.appendChild(next);
 }
-  filteredData.slice(start, end).forEach(row => {
-  const tr = document.createElement('tr');
-
-  Object.values(row).forEach(val => {
-    const td = document.createElement('td');
-    td.textContent = val;
-    tr.appendChild(td);
-  });
-
-  applyRowStyle(tr, row); // << INI KUNCI
-
-  tbody.appendChild(tr);
-});
+document.getElementById('rowsSelect').onchange = e => {
+  rowsPerPage = Number(e.target.value);
+  page = 1;
+  render();
+};
 
 </script>
 
 </body>
 </html>
+
 
 
 
