@@ -105,15 +105,15 @@ button:hover {
     // Menambahkan marker untuk node
     const nodeMarker = L.marker([node.lat, node.lon], { icon: signalIcon }).addTo(map).bindPopup(popupContent);
     
-    // Menambahkan informasi tentang sektor dalam popup node
+    // Menambahkan marker dan popup untuk setiap sektor dalam node
     node.sectors.forEach(sector => {
       const sectorContent = `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
       
-      // Ketika marker sektor diklik, menampilkan popup sektor
+      // Menambahkan interaksi klik sektor
       const sectorMarker = L.marker([node.lat, node.lon], { icon: signalIcon }).addTo(map)
         .bindPopup(popupContent + sectorContent)
         .on('click', function () {
-          // Menutup popup sebelumnya
+          // Menutup popup yang sedang terbuka
           if (currentPopup) {
             currentPopup.remove();
           }
