@@ -41,45 +41,44 @@ header {
   <a href="map.html">Map</a>
 </nav>
 <script>
-  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set the initial map position
+  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set initial view for the map
   
-  // Add Tile Layer (OpenStreetMap)
+  // Add OpenStreetMap Tile Layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  const csvFile = 'map.csv';  // Path to your uploaded CSV file
+  const csvFile = 'map.csv';  // Path to your CSV file
 
   fetch(csvFile)
     .then(res => res.text())
     .then(text => {
       const lines = text.trim().split(/\r?\n/);
-      const headers = lines[0].split(',');  // Get the header row to identify columns
+      const headers = lines[0].split(',');
 
-      // Identify columns for latitude, longitude, sector, and IP
+      // Identifying the necessary columns
       const latCol = headers.find(h => h.toLowerCase().includes('latitude'));
       const lonCol = headers.find(h => h.toLowerCase().includes('longitude'));
-      const sectorCol = headers.find(h => h.toLowerCase().includes('sector name'));  // Use Sector Name
-      const ipCol = headers.find(h => h.toLowerCase().includes('user label'));  // Use User Label for IP
+      const sectorCol = headers.find(h => h.toLowerCase().includes('sector name'));
+      const ipCol = headers.find(h => h.toLowerCase().includes('user label'));
 
-      // Ensure we found the necessary columns
       if (!latCol || !lonCol || !sectorCol || !ipCol) {
-        console.error("One or more required columns are missing.");
+        console.error("One or more columns are missing.");
         return;
       }
 
-      // Process each line and extract lat, lon, sector, and IP
+      // Process each line in CSV
       lines.slice(1).forEach(line => {
         const values = line.split(',');
-        const lat = parseFloat(values[headers.indexOf(latCol)]);
-        const lon = parseFloat(values[headers.indexOf(lonCol)]);
+        const lat = parseFloat(values[headers.indexOf(latCol)]);  // Ensure latitude is a float
+        const lon = parseFloat(values[headers.indexOf(lonCol)]); // Ensure longitude is a float
         const sector = values[headers.indexOf(sectorCol)];
         const ip = values[headers.indexOf(ipCol)];
 
-        // Skip if lat or lon are invalid
+        // Skip invalid lat/lon
         if (isNaN(lat) || isNaN(lon)) return;
 
-        // Create popup content with sector and IP
+        // Popup content with correct lat and lon
         const popupContent = `
           <b>Sector:</b> ${sector}<br>
           <b>IP:</b> ${ip || 'N/A'}<br>
@@ -87,7 +86,7 @@ header {
           <b>Longitude:</b> ${lon}
         `;
         
-        // Add marker with popup to the map
+        // Add marker to the map
         L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
       });
     })
@@ -95,6 +94,7 @@ header {
       console.error("Failed to load CSV:", err);
     });
 </script>
+
 
 </body>
 </html>
