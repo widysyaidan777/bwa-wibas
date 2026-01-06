@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Topology Map - BWA WiBAS</title>
+<title>Topology Map – BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Leaflet -->
@@ -41,61 +41,58 @@ header {
   <a href="map.html">Map</a>
 </nav>
 <script>
-  const map = L.map('map').setView([-6.291, 106.786], 5);  // Atur posisi default peta
+  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set the initial map position
   
-  // Menambahkan Tile Layer (Peta)
+  // Add Tile Layer (OpenStreetMap)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  const csvFile = 'data.csv';  // Nama file CSV
+  const csvFile = 'map.csv';  // Path to your uploaded CSV file
 
   fetch(csvFile)
     .then(res => res.text())
     .then(text => {
       const lines = text.trim().split(/\r?\n/);
-      const headers = lines[0].split(',').map(h => h.trim());
+      const headers = lines[0].split(',');  // Get the header row to identify columns
 
+      // Identify columns for latitude, longitude, sector, and IP
       const latCol = headers.find(h => h.toLowerCase().includes('latitude'));
       const lonCol = headers.find(h => h.toLowerCase().includes('longitude'));
-      const nodeCol = headers.find(h => h.toLowerCase().includes('node'));
-      const areaCol = headers.find(h => h.toLowerCase().includes('area'));
-      const regionCol = headers.find(h => h.toLowerCase().includes('region'));
+      const sectorCol = headers.find(h => h.toLowerCase().includes('sector name'));  // Use Sector Name
+      const ipCol = headers.find(h => h.toLowerCase().includes('user label'));  // Use User Label for IP
 
-      // Memastikan kolom Latitude dan Longitude ditemukan
-      if (!latCol || !lonCol || !nodeCol) {
-        console.error("Kolom latitude, longitude atau node tidak ditemukan.");
+      // Ensure we found the necessary columns
+      if (!latCol || !lonCol || !sectorCol || !ipCol) {
+        console.error("One or more required columns are missing.");
         return;
       }
 
-      // Proses setiap baris dalam CSV
+      // Process each line and extract lat, lon, sector, and IP
       lines.slice(1).forEach(line => {
         const values = line.split(',');
-        const row = {};
-        headers.forEach((header, i) => row[header] = values[i]);
+        const lat = parseFloat(values[headers.indexOf(latCol)]);
+        const lon = parseFloat(values[headers.indexOf(lonCol)]);
+        const sector = values[headers.indexOf(sectorCol)];
+        const ip = values[headers.indexOf(ipCol)];
 
-        // Mengambil data latitude dan longitude
-        const lat = parseFloat(row[latCol]);
-        const lon = parseFloat(row[lonCol]);
+        // Skip if lat or lon are invalid
+        if (isNaN(lat) || isNaN(lon)) return;
 
-        // Pastikan lat dan lon valid
-        if (isNaN(lat) || isNaN(lon)) return; // Jika data lat/lon tidak valid, skip
-
-        const node = row[nodeCol];
+        // Create popup content with sector and IP
         const popupContent = `
-          <b>Node:</b> ${node}<br>
-          <b>Area:</b> ${row[areaCol] || '-'}<br>
-          <b>Region:</b> ${row[regionCol] || '-'}
+          <b>Sector:</b> ${sector}<br>
+          <b>IP:</b> ${ip || 'N/A'}<br>
+          <b>Latitude:</b> ${lat}<br>
+          <b>Longitude:</b> ${lon}
         `;
         
-        // Menambahkan marker ke peta
-        L.marker([lat, lon])
-          .addTo(map)
-          .bindPopup(popupContent);
+        // Add marker with popup to the map
+        L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
       });
     })
     .catch(err => {
-      console.error("Gagal memuat CSV:", err);
+      console.error("Failed to load CSV:", err);
     });
 </script>
 
