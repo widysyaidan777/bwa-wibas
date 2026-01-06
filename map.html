@@ -56,14 +56,17 @@ button:hover {
 }
 
 .leaflet-div-icon.green {
+  background-color: green;
+  border-radius: 50%;
   animation: blinkGreen 1s infinite;
+  width: 40px;
+  height: 40px;
 }
 
 .leaflet-div-icon.red {
+  background-color: red;
+  border-radius: 50%;
   animation: blinkRed 1s infinite;
-}
-
-.leaflet-div-icon img {
   width: 40px;
   height: 40px;
 }
@@ -128,8 +131,8 @@ button:hover {
     // Menambahkan marker untuk node dengan ikon yang sesuai status
     const nodeMarker = L.marker([node.lat, node.lon], {
       icon: L.divIcon({
-        className: 'leaflet-div-icon ' + iconClass,
-        html: `<img src="https://github.com/widysyaidan777/bwa-wibas/blob/main/signal-removebg-preview.png?raw=true" />`
+        className: 'leaflet-div-icon ' + iconClass, // Menambahkan kelas untuk status
+        html: '' // Bisa ditambahkan gambar jika perlu, di sini hanya menggunakan background color
       })
     }).addTo(map).bindPopup(popupContent);
     
