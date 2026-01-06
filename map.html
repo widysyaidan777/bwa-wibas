@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Topology Map – BWA WiBAS</title>
+<title>Peta Topologi – BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Leaflet -->
@@ -47,68 +47,67 @@ button:hover {
 <body>
 
 <header>
-  <h2>Topology Map – BWA WiBAS</h2>
+  <h2>Peta Topologi – BWA WiBAS</h2>
 </header>
 
-<!-- Back Button -->
-<button onclick="window.location.href='index.html';">Back to Menu</button>
+<!-- Tombol Kembali -->
+<button onclick="window.location.href='index.html';">Kembali ke Menu</button>
 
 <div id="map"></div>
 
 <script>
-  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set the initial map position
+  const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
   
-  // Add OpenStreetMap Tile Layer
+  // Menambahkan Lapisan Tile OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Define custom icon (signal image)
+  // Menentukan ikon kustom (gambar sinyal)
   const signalIcon = L.icon({
-    iconUrl: 'https://github.com/widysyaidan777/bwa-wibas/blob/main/signal-removebg-preview.png?raw=true',  // Path to your custom image
-    iconSize: [40, 40],  // Set the size of the icon
-    iconAnchor: [15, 30],  // Anchor the icon to the bottom center
-    popupAnchor: [0, -30]  // Position the popup above the icon
+    iconUrl: 'https://github.com/widysyaidan777/bwa-wibas/blob/main/signal-removebg-preview.png?raw=true',  // Path ke gambar kustom
+    iconSize: [40, 40],  // Menetapkan ukuran ikon
+    iconAnchor: [15, 30],  // Menyematkan ikon di tengah bawah
+    popupAnchor: [0, -30]  // Posisi popup di atas ikon
   });
 
-  // Sample data for markers: Latitude, Longitude, and Popup Information
-  const markerData = [
+  // Data contoh untuk node dan sektor: Latitude, Longitude, dan Informasi Sektor
+  const nodeData = [
     {
       lat: -6.291,
       lon: 106.786,
-      sector: 'CRO - West Java Area',
-      ip: '172.31.141.2'
+      node: 'Node 1 - Jawa Barat',
+      sectors: [
+        { sector: 'CRO - Area Jawa Barat', ip: '172.31.141.2', sectorNumber: 1 },
+        { sector: 'CRO - Area Jawa Tengah', ip: '172.31.142.3', sectorNumber: 2 },
+        { sector: 'CRO - Area Jawa Timur', ip: '172.31.143.4', sectorNumber: 3 },
+        { sector: 'CRO - Area Banten', ip: '172.31.144.5', sectorNumber: 4 }
+      ]
     },
     {
       lat: -6.836141,
       lon: 107.48698,
-      sector: 'CRO - East Java Area',
-      ip: '172.31.147.2'
+      node: 'Node 2 - Jawa Timur',
+      sectors: [
+        { sector: 'CRO - Area Surabaya', ip: '172.31.147.2', sectorNumber: 1 },
+        { sector: 'CRO - Area Malang', ip: '172.31.148.3', sectorNumber: 2 }
+      ]
     },
-    {
-      lat: -7.15068,
-      lon: 112.646615,
-      sector: 'CRO - Central Java Area',
-      ip: '172.31.177.130'
-    },
-    // Add more marker data as needed
+    // Node lainnya bisa ditambahkan di sini
   ];
 
-  // Add markers to the map using custom icon (signal)
-  markerData.forEach(data => {
-    const popupContent = `
-      <b>Sector:</b> ${data.sector}<br>
-      <b>IP:</b> ${data.ip}<br>
-      <b>Latitude:</b> ${data.lat}<br>
-      <b>Longitude:</b> ${data.lon}
-    `;
+  // Menambahkan marker untuk setiap node
+  nodeData.forEach(node => {
+    const popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
-    // Add marker with custom signal icon
-    L.marker([data.lat, data.lon], { icon: signalIcon })
-      .addTo(map)
-      .bindPopup(popupContent);
+    // Menambahkan marker untuk node
+    const nodeMarker = L.marker([node.lat, node.lon], { icon: signalIcon }).addTo(map).bindPopup(popupContent);
+    
+    // Menambahkan informasi tentang sektor dalam popup node
+    node.sectors.forEach(sector => {
+      nodeMarker.bindPopup(nodeMarker.getPopup().getContent() + `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`);
+    });
   });
-
 </script>
 
 </body>
