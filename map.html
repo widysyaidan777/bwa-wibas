@@ -24,6 +24,23 @@ header {
 #map {
   height: calc(100vh - 80px);
 }
+
+button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #555;
+}
 </style>
 </head>
 
@@ -33,6 +50,9 @@ header {
   <h2>Topology Map – BWA WiBAS</h2>
 </header>
 
+<!-- Back Button -->
+<button onclick="window.location.href='index.html';">Back to Menu</button>
+
 <div id="map"></div>
 <nav>
   <a href="index.html">Home</a>
@@ -40,15 +60,40 @@ header {
   <a href="wibas.html">WiBAS</a>
   <a href="map.html">Map</a>
 </nav>
+
 <script>
-  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set initial view for the map
+  const map = L.map('map').setView([-6.291, 106.786], 5);  // Set the initial map position
   
   // Add OpenStreetMap Tile Layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  const csvFile = 'map.csv';  // Path to your CSV file
+  let markers = [];  // Array to store markers
+
+  // Function to add a marker on the map by clicking
+  map.on('click', function(e) {
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+    const newMarker = L.marker([lat, lon], { draggable: true })
+      .addTo(map)
+      .bindPopup(`
+        <b>New Marker</b><br>
+        Latitude: ${lat}<br>
+        Longitude: ${lon}
+      `);
+
+    // Add the new marker to the markers array
+    markers.push(newMarker);
+
+    // When the marker is clicked, it can be removed
+    newMarker.on('click', function() {
+      map.removeLayer(newMarker);  // Remove marker from the map
+      markers = markers.filter(m => m !== newMarker);  // Remove marker from array
+    });
+  });
+
+  const csvFile = 'map.csv';  // Path to your uploaded CSV file
 
   fetch(csvFile)
     .then(res => res.text())
@@ -56,29 +101,30 @@ header {
       const lines = text.trim().split(/\r?\n/);
       const headers = lines[0].split(',');
 
-      // Identifying the necessary columns
+      // Identify columns for latitude, longitude, sector, and IP
       const latCol = headers.find(h => h.toLowerCase().includes('latitude'));
       const lonCol = headers.find(h => h.toLowerCase().includes('longitude'));
       const sectorCol = headers.find(h => h.toLowerCase().includes('sector name'));
       const ipCol = headers.find(h => h.toLowerCase().includes('user label'));
 
+      // Ensure we found the necessary columns
       if (!latCol || !lonCol || !sectorCol || !ipCol) {
-        console.error("One or more columns are missing.");
+        console.error("One or more required columns are missing.");
         return;
       }
 
-      // Process each line in CSV
+      // Process each line and extract lat, lon, sector, and IP
       lines.slice(1).forEach(line => {
         const values = line.split(',');
-        const lat = parseFloat(values[headers.indexOf(latCol)]);  // Ensure latitude is a float
-        const lon = parseFloat(values[headers.indexOf(lonCol)]); // Ensure longitude is a float
+        const lat = parseFloat(values[headers.indexOf(latCol)]);
+        const lon = parseFloat(values[headers.indexOf(lonCol)]);
         const sector = values[headers.indexOf(sectorCol)];
         const ip = values[headers.indexOf(ipCol)];
 
-        // Skip invalid lat/lon
+        // Skip if lat or lon are invalid
         if (isNaN(lat) || isNaN(lon)) return;
 
-        // Popup content with correct lat and lon
+        // Create popup content with sector and IP
         const popupContent = `
           <b>Sector:</b> ${sector}<br>
           <b>IP:</b> ${ip || 'N/A'}<br>
@@ -86,15 +132,31 @@ header {
           <b>Longitude:</b> ${lon}
         `;
         
-        // Add marker to the map
-        L.marker([lat, lon]).addTo(map).bindPopup(popupContent);
+        // Add draggable marker to the map
+        const marker = L.marker([lat, lon], { draggable: true })
+          .addTo(map)
+          .bindPopup(popupContent);
+
+        // Update the position of the marker when it is dragged
+        marker.on('dragend', function(event) {
+          const newLatLng = event.target.getLatLng();
+          console.log("New position:", newLatLng.lat, newLatLng.lng);  // Log the new position
+        });
+
+        // Add the marker to the markers array
+        markers.push(marker);
+
+        // When the marker is clicked, it can be removed
+        marker.on('click', function() {
+          map.removeLayer(marker);  // Remove the marker from the map
+          markers = markers.filter(m => m !== marker);  // Remove from the markers array
+        });
       });
     })
     .catch(err => {
       console.error("Failed to load CSV:", err);
     });
 </script>
-
 
 </body>
 </html>
