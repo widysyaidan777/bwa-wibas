@@ -54,12 +54,6 @@ button:hover {
 <button onclick="window.location.href='index.html';">Back to Menu</button>
 
 <div id="map"></div>
-<nav>
-  <a href="index.html">Home</a>
-  <a href="data.html">Data</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
-</nav>
 
 <script>
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Set the initial map position
@@ -69,93 +63,44 @@ button:hover {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  let markers = [];  // Array to store markers
+  // Sample data for markers: Latitude, Longitude, and Popup Information
+  const markerData = [
+    {
+      lat: -6.291,
+      lon: 106.786,
+      sector: 'CRO - West Java Area',
+      ip: '172.31.141.2'
+    },
+    {
+      lat: -6.836141,
+      lon: 107.48698,
+      sector: 'CRO - East Java Area',
+      ip: '172.31.147.2'
+    },
+    {
+      lat: -7.15068,
+      lon: 112.646615,
+      sector: 'CRO - Central Java Area',
+      ip: '172.31.177.130'
+    },
+    // Add more marker data as needed
+  ];
 
-  // Function to add a marker on the map by clicking
-  map.on('click', function(e) {
-    const lat = e.latlng.lat;
-    const lon = e.latlng.lng;
-    const newMarker = L.marker([lat, lon], { draggable: true })
+  // Add markers to the map
+  markerData.forEach(data => {
+    const popupContent = `
+      <b>Sector:</b> ${data.sector}<br>
+      <b>IP:</b> ${data.ip}<br>
+      <b>Latitude:</b> ${data.lat}<br>
+      <b>Longitude:</b> ${data.lon}
+    `;
+    
+    // Add marker without draggable functionality
+    L.marker([data.lat, data.lon])
       .addTo(map)
-      .bindPopup(`
-        <b>New Marker</b><br>
-        Latitude: ${lat}<br>
-        Longitude: ${lon}
-      `);
-
-    // Add the new marker to the markers array
-    markers.push(newMarker);
-
-    // When the marker is clicked, it can be removed
-    newMarker.on('click', function() {
-      map.removeLayer(newMarker);  // Remove marker from the map
-      markers = markers.filter(m => m !== newMarker);  // Remove marker from array
-    });
+      .bindPopup(popupContent);
   });
 
-  const csvFile = 'map.csv';  // Path to your uploaded CSV file
-
-  fetch(csvFile)
-    .then(res => res.text())
-    .then(text => {
-      const lines = text.trim().split(/\r?\n/);
-      const headers = lines[0].split(',');
-
-      // Identify columns for latitude, longitude, sector, and IP
-      const latCol = headers.find(h => h.toLowerCase().includes('latitude'));
-      const lonCol = headers.find(h => h.toLowerCase().includes('longitude'));
-      const sectorCol = headers.find(h => h.toLowerCase().includes('sector name'));
-      const ipCol = headers.find(h => h.toLowerCase().includes('user label'));
-
-      // Ensure we found the necessary columns
-      if (!latCol || !lonCol || !sectorCol || !ipCol) {
-        console.error("One or more required columns are missing.");
-        return;
-      }
-
-      // Process each line and extract lat, lon, sector, and IP
-      lines.slice(1).forEach(line => {
-        const values = line.split(',');
-        const lat = parseFloat(values[headers.indexOf(latCol)]);
-        const lon = parseFloat(values[headers.indexOf(lonCol)]);
-        const sector = values[headers.indexOf(sectorCol)];
-        const ip = values[headers.indexOf(ipCol)];
-
-        // Skip if lat or lon are invalid
-        if (isNaN(lat) || isNaN(lon)) return;
-
-        // Create popup content with sector and IP
-        const popupContent = `
-          <b>Sector:</b> ${sector}<br>
-          <b>IP:</b> ${ip || 'N/A'}<br>
-          <b>Latitude:</b> ${lat}<br>
-          <b>Longitude:</b> ${lon}
-        `;
-        
-        // Add draggable marker to the map
-        const marker = L.marker([lat, lon], { draggable: true })
-          .addTo(map)
-          .bindPopup(popupContent);
-
-        // Update the position of the marker when it is dragged
-        marker.on('dragend', function(event) {
-          const newLatLng = event.target.getLatLng();
-          console.log("New position:", newLatLng.lat, newLatLng.lng);  // Log the new position
-        });
-
-        // Add the marker to the markers array
-        markers.push(marker);
-
-        // When the marker is clicked, it can be removed
-        marker.on('click', function() {
-          map.removeLayer(marker);  // Remove the marker from the map
-          markers = markers.filter(m => m !== marker);  // Remove from the markers array
-        });
-      });
-    })
-    .catch(err => {
-      console.error("Failed to load CSV:", err);
-    });
 </script>
 
 </body>
