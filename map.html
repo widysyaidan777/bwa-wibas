@@ -105,21 +105,22 @@ button:hover {
     // Menambahkan marker untuk node
     const nodeMarker = L.marker([node.lat, node.lon], { icon: signalIcon }).addTo(map).bindPopup(popupContent);
     
-    // Menambahkan marker dan popup untuk setiap sektor dalam node
+    // Menambahkan interaksi klik untuk setiap sektor dalam node
     node.sectors.forEach(sector => {
       const sectorContent = `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
       
-      // Menambahkan interaksi klik sektor
+      // Menambahkan marker untuk sektor
       const sectorMarker = L.marker([node.lat, node.lon], { icon: signalIcon }).addTo(map)
-        .bindPopup(popupContent + sectorContent)
         .on('click', function () {
-          // Menutup popup yang sedang terbuka
+          // Menutup popup yang sebelumnya terbuka
           if (currentPopup) {
             currentPopup.remove();
           }
-          // Menampilkan popup sektor yang baru dipilih
-          currentPopup = this.getPopup();
-          currentPopup.openOn(map);
+          // Menampilkan popup untuk sektor yang baru dipilih
+          currentPopup = L.popup()
+            .setLatLng([node.lat, node.lon])
+            .setContent(popupContent + sectorContent)
+            .openOn(map);
         });
     });
   });
