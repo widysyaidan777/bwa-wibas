@@ -19,10 +19,9 @@ header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
   padding: 16px;
-  text-align: center;
+  text-align: left; /* Mengubah ke kiri */
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -38,37 +37,11 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-top: 20px; /* Adds space between the title and the button */
+  margin-left: 10px; /* Menambahkan margin agar tombol tidak menempel dengan teks */
 }
 
 button:hover {
   background-color: #555;
-}
-
-/* Animasi kedip untuk status online dan offline */
-@keyframes blinkGreen {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-@keyframes blinkRed {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-.leaflet-div-icon.green {
-  animation: blinkGreen 1s infinite;
-}
-
-.leaflet-div-icon.red {
-  animation: blinkRed 1s infinite;
-}
-
-.leaflet-div-icon img {
-  width: 40px;
-  height: 40px;
 }
 
 /* Menghilangkan kotak putih di sekitar popup */
@@ -182,4 +155,3 @@ button:hover {
 
 </body>
 </html>
-
