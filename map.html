@@ -86,7 +86,7 @@ button:hover {
   display: none !important; /* Menghilangkan ujung segitiga pada popup */
 }
 
-/* Untuk lebih memastikan popup transparan */
+/* Popup content customizations */
 .leaflet-popup {
   border: none !important; /* Menghilangkan border pada popup */
   background-color: transparent !important; /* Menghilangkan background pada popup */
@@ -95,10 +95,38 @@ button:hover {
   margin: 0 !important; /* Menghilangkan margin tambahan */
 }
 
+/* Customizing the Node and Region fields with a blue border below */
+.node-region {
+  border-bottom: 2px solid #003366; /* Dark blue border */
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.node-region b {
+  color: #003366;
+}
+
 /* Memperbaiki posisi tombol tutup (X) pada popup */
 .leaflet-popup-close-button {
   right: 10px !important; /* Memindahkan tombol tutup ke kanan atas */
   top: 10px !important;
+}
+
+#back-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#back-button:hover {
+  background-color: #555;
 }
 </style>
 </head>
@@ -107,11 +135,12 @@ button:hover {
 
 <header>
   <h2>Peta Topologi – BWA WiBAS</h2>
-  <!-- Tombol Kembali -->
-  <button onclick="window.location.href='index.html';">Kembali ke Menu</button>
 </header>
 
 <div id="map"></div>
+
+<!-- Button placed below the map -->
+<button id="back-button" onclick="window.location.href='index.html';">Kembali ke Menu</button>
 
 <script>
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
@@ -154,7 +183,9 @@ button:hover {
 
   // Menambahkan marker untuk setiap node
   nodeData.forEach(node => {
-    let popupContent = `<b>Node:</b> ${node.node}<br><b>Region:</b> ${node.region}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
+    let popupContent = `<div class="node-region"><b>Node:</b> ${node.node}</div>
+                        <div class="node-region"><b>Region:</b> ${node.region}</div>
+                        <b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
     // Menampilkan semua sektor yang terkait dengan node
     node.sectors.forEach(sector => {
