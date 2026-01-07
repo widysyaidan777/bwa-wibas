@@ -45,13 +45,13 @@ button:hover {
 /* Animasi kedip untuk status online dan offline */
 @keyframes blinkGreen {
   0% { opacity: 1; }
-  50% { opacity: 0.3; }  /* Kedipan lebih cepat */
+  50% { opacity: 0.3; }
   100% { opacity: 1; }
 }
 
 @keyframes blinkRed {
   0% { opacity: 1; }
-  50% { opacity: 0.3; }  /* Kedipan lebih cepat */
+  50% { opacity: 0.3; }
   100% { opacity: 1; }
 }
 
@@ -64,10 +64,9 @@ button:hover {
 }
 
 .leaflet-div-icon img {
-  width: 25px;
+  width: 40px;
   height: 40px;
 }
-  
 </style>
 </head>
 
@@ -90,17 +89,13 @@ button:hover {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Menentukan URL ikon hijau dan merah untuk online/offline
-  const greenIconUrl = 'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true'; // Ikon hijau untuk online
-  const redIconUrl = 'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64.png?raw=true'; // Ikon merah untuk offline
-
   // Data contoh untuk node dan sektor: Latitude, Longitude, dan Informasi Sektor
   const nodeData = [
     {
       lat: -6.291,
       lon: 106.786,
       node: 'Node 1 - Jawa Barat',
-      status: 'online', // Status online
+      status: 'online', // Status online/offline
       sectors: [
         { sector: 'CRO - Area Jawa Barat', ip: '172.31.141.2', sectorNumber: 1 },
         { sector: 'CRO - Area Jawa Tengah', ip: '172.31.142.3', sectorNumber: 2 },
@@ -126,25 +121,40 @@ button:hover {
   // Menambahkan marker untuk setiap node
   nodeData.forEach(node => {
     const popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
-
+    
     // Menentukan URL gambar ikon berdasarkan status
-    const iconUrl = node.status === 'online' ? greenIconUrl : redIconUrl;
+    const iconUrl = node.status === 'online' ? 
+      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64.png?raw=true' :
+      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true';
 
     // Menambahkan marker untuk node dengan ikon yang sesuai status
     const nodeMarker = L.marker([node.lat, node.lon], {
       icon: L.icon({
-        iconUrl: iconUrl,  // Menentukan ikon sesuai status
-        iconSize: [40, 40],  // Menetapkan ukuran ikon
-        iconAnchor: [20, 40],  // Menyematkan ikon di tengah bawah
-        popupAnchor: [0, -30]  // Posisi popup di atas ikon
+        iconUrl: iconUrl,
+        iconSize: [40, 40],  // Ukuran ikon
+        iconAnchor: [20, 40], // Titik jangkar ikon
+        popupAnchor: [0, -40] // Posisi popup
       })
     }).addTo(map).bindPopup(popupContent);
     
-    // Menambahkan informasi sektor di node tanpa popup
-    const sectorContent = node.sectors.map(sector => 
-      `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`).join('');
-    
-    nodeMarker.bindPopup(popupContent + sectorContent); // Menampilkan informasi sektor secara statis dalam popup
+    // Menambahkan interaksi klik untuk setiap sektor dalam node
+    node.sectors.forEach(sector => {
+      const sectorContent = `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
+      
+      // Menambahkan marker untuk sektor
+      const sectorMarker = L.marker([node.lat, node.lon], { icon: nodeMarker.options.icon }).addTo(map)
+        .on('click', function () {
+          // Menutup popup yang sebelumnya terbuka
+          if (currentPopup) {
+            currentPopup.remove();
+          }
+          // Menampilkan popup untuk sektor yang baru dipilih
+          currentPopup = L.popup()
+            .setLatLng([node.lat, node.lon])
+            .setContent(popupContent + sectorContent)
+            .openOn(map);
+        });
+    });
   });
 </script>
 
