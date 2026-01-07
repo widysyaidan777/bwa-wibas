@@ -1,118 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Peta Topologi – BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-}
-
-header {
-  background: linear-gradient(90deg,#0f172a,#020617);
-  color: white;
-  padding: 16px;
-  text-align: left;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-#map {
-  height: calc(100vh - 160px); /* Adjusted for space for the button */
-}
-
-button {
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #333;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px; /* Menambahkan margin agar tombol tidak menempel dengan teks */
-}
-
-button:hover {
-  background-color: #555;
-}
-
-/* Animasi kedip untuk status online dan offline */
-@keyframes blinkGreen {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-@keyframes blinkRed {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-.leaflet-div-icon.green {
-  animation: blinkGreen 1s infinite;
-}
-
-.leaflet-div-icon.red {
-  animation: blinkRed 1s infinite;
-}
-
-.leaflet-div-icon img {
-  width: 40px;
-  height: 40px;
-  border: none !important; /* Menghilangkan border pada gambar ikon */
-  margin: 0 !important; /* Menghilangkan margin */
-  padding: 0 !important; /* Menghilangkan padding */
-}
-
-/* Menghilangkan kotak putih di sekitar popup */
-.leaflet-popup-content {
-  background-color: transparent !important; /* Menghilangkan latar belakang putih */
-  padding: 10px 15px !important; /* Memberikan padding lebih untuk informasi */
-  margin: 0 !important; /* Menghilangkan margin */
-  box-shadow: none !important; /* Menghilangkan bayangan */
-  border: 1px solid #333 !important; /* Menambahkan border untuk popup */
-}
-
-.leaflet-popup-tip {
-  display: none !important; /* Menghilangkan ujung segitiga pada popup */
-}
-
-/* Untuk lebih memastikan popup transparan */
-.leaflet-popup {
-  border: none !important; /* Menghilangkan border pada popup */
-  background-color: transparent !important; /* Menghilangkan background pada popup */
-  box-shadow: none !important; /* Menghilangkan bayangan pada popup */
-  padding: 0 !important; /* Menghilangkan padding tambahan */
-  margin: 0 !important; /* Menghilangkan margin tambahan */
-}
-
-/* Memperbaiki posisi tombol tutup (X) pada popup */
-.leaflet-popup-close-button {
-  right: 10px !important; /* Memindahkan tombol tutup ke kanan atas */
-  top: 10px !important;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <h2>Peta Topologi – BWA WiBAS</h2>
-  <!-- Tombol Kembali -->
-  <button onclick="window.location.href='index.html';">Kembali ke Menu</button>
-</header>
-
-<div id="map"></div>
-
 <script>
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
   
@@ -128,11 +13,12 @@ button:hover {
       lon: 106.786,
       node: 'Node 1 - Jawa Barat',
       status: 'online', // Status online
+      region: 'CRO - West Java Area',
       sectors: [
-        { sector: 'CRO - Area Jawa Barat', ip: '172.31.141.2', sectorNumber: 1 },
-        { sector: 'CRO - Area Jawa Tengah', ip: '172.31.142.3', sectorNumber: 2 },
-        { sector: 'CRO - Area Jawa Timur', ip: '172.31.143.4', sectorNumber: 3 },
-        { sector: 'CRO - Area Banten', ip: '172.31.144.5', sectorNumber: 4 }
+        { sector: 'slosrh180', ip: '172.31.141.2' },
+        { sector: 'slosrh181', ip: '172.31.142.3' },
+        { sector: 'slosrh182', ip: '172.31.143.4' },
+        { sector: 'slosrh183', ip: '172.31.144.5' }
       ]
     },
     {
@@ -140,9 +26,10 @@ button:hover {
       lon: 107.48698,
       node: 'Node 2 - Jawa Timur',
       status: 'offline', // Status offline
+      region: 'CRO - East Java Area',
       sectors: [
-        { sector: 'CRO - Area Surabaya', ip: '172.31.147.2', sectorNumber: 1 },
-        { sector: 'CRO - Area Malang', ip: '172.31.148.3', sectorNumber: 2 }
+        { sector: 'slosrh190', ip: '172.31.147.2' },
+        { sector: 'slosrh191', ip: '172.31.148.3' }
       ]
     },
     // Node lainnya bisa ditambahkan di sini
@@ -152,11 +39,11 @@ button:hover {
 
   // Menambahkan marker untuk setiap node
   nodeData.forEach(node => {
-    let popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
+    let popupContent = `<b>Node:</b> ${node.node}<br><b>Region:</b> ${node.region}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
     // Menampilkan semua sektor yang terkait dengan node
     node.sectors.forEach(sector => {
-      popupContent += `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
+      popupContent += `<br><b>${sector.sector}:</b> IP: ${sector.ip}`;
     });
 
     // Menentukan ikon berdasarkan status (hijau untuk online, merah untuk offline)
@@ -176,7 +63,7 @@ button:hover {
     
     // Menambahkan interaksi klik untuk setiap sektor dalam node
     node.sectors.forEach(sector => {
-      const sectorContent = `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
+      const sectorContent = `<br><b>${sector.sector}:</b> IP: ${sector.ip}`;
       
       // Menambahkan marker untuk sektor
       const sectorMarker = L.marker([node.lat, node.lon], { icon: nodeMarker.options.icon }).addTo(map)
@@ -195,5 +82,3 @@ button:hover {
   });
 </script>
 
-</body>
-</html>
