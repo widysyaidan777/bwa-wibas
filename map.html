@@ -75,35 +75,29 @@ button:hover {
 
 /* Menghilangkan kotak putih di sekitar popup */
 .leaflet-popup-content {
-  background-color: #fff; /* Menambahkan warna latar belakang putih */
+  background-color: transparent !important; /* Menghilangkan latar belakang putih */
   padding: 10px 15px !important; /* Memberikan padding lebih untuk informasi */
   margin: 0 !important; /* Menghilangkan margin */
   box-shadow: none !important; /* Menghilangkan bayangan */
   border: 1px solid #333 !important; /* Menambahkan border untuk popup */
-  max-width: 250px; /* Mengatur lebar maksimal popup */
-  font-size: 14px; /* Menyesuaikan ukuran font */
 }
 
-/* Mengatur gaya popup tip */
 .leaflet-popup-tip {
   display: none !important; /* Menghilangkan ujung segitiga pada popup */
 }
 
-/* Menambah dan mengatur tombol minimize pada popup */
-.leaflet-popup .minimize-btn {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 5px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-top: 10px;
-  text-align: center;
+/* Untuk lebih memastikan popup transparan */
+.leaflet-popup {
+  border: none !important; /* Menghilangkan border pada popup */
+  background-color: transparent !important; /* Menghilangkan background pada popup */
+  box-shadow: none !important; /* Menghilangkan bayangan pada popup */
+  padding: 0 !important; /* Menghilangkan padding tambahan */
+  margin: 0 !important; /* Menghilangkan margin tambahan */
 }
 
+/* Memperbaiki posisi tombol tutup (X) pada popup */
 .leaflet-popup-close-button {
-  right: 10px !important;
+  right: 10px !important; /* Memindahkan tombol tutup ke kanan atas */
   top: 10px !important;
 }
 </style>
@@ -160,18 +154,11 @@ button:hover {
   nodeData.forEach(node => {
     let popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
-    // Menambahkan tombol minimize pada popup
-    popupContent += `<button class="minimize-btn">Show Info</button><br><div class="sector-info" style="display: none;">`;
-    
     // Menampilkan semua sektor yang terkait dengan node
     node.sectors.forEach(sector => {
-      popupContent += `<div class="sector" id="sector-${sector.sectorNumber}">
-                        <b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}<br>
-                      </div>`;
+      popupContent += `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
     });
 
-    popupContent += `</div>`; // Menutup sektor-info div
-    
     // Menentukan ikon berdasarkan status (hijau untuk online, merah untuk offline)
     const iconUrl = node.status === 'online' ? 
       'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true' : 
@@ -205,20 +192,6 @@ button:hover {
             .openOn(map);
         });
     });
-  });
-
-  // Menambahkan event listener untuk tombol minimize
-  document.addEventListener('click', function(e) {
-    if (e.target && e.target.classList.contains('minimize-btn')) {
-      const sectorInfo = e.target.nextElementSibling; // Mendapatkan div sektor-info
-      if (sectorInfo.style.display === 'none') {
-        sectorInfo.style.display = 'block';
-        e.target.innerHTML = 'Minimize'; // Ubah teks tombol menjadi minimize
-      } else {
-        sectorInfo.style.display = 'none';
-        e.target.innerHTML = 'Show Info'; // Ubah teks tombol menjadi show info
-      }
-    }
   });
 </script>
 
