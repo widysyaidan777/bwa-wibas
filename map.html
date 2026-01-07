@@ -1,3 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Peta Topologi – BWA WiBAS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  padding: 16px;
+  text-align: left;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+#map {
+  height: calc(100vh - 160px); /* Adjusted for space for the button */
+}
+
+button {
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px; /* Menambahkan margin agar tombol tidak menempel dengan teks */
+}
+
+button:hover {
+  background-color: #555;
+}
+
+/* Animasi kedip untuk status online dan offline */
+@keyframes blinkGreen {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+@keyframes blinkRed {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.leaflet-div-icon.green {
+  animation: blinkGreen 1s infinite;
+}
+
+.leaflet-div-icon.red {
+  animation: blinkRed 1s infinite;
+}
+
+.leaflet-div-icon img {
+  width: 40px;
+  height: 40px;
+  border: none !important; /* Menghilangkan border pada gambar ikon */
+  margin: 0 !important; /* Menghilangkan margin */
+  padding: 0 !important; /* Menghilangkan padding */
+}
+
+/* Menghilangkan kotak putih di sekitar popup */
+.leaflet-popup-content {
+  background-color: transparent !important; /* Menghilangkan latar belakang putih */
+  padding: 10px 15px !important; /* Memberikan padding lebih untuk informasi */
+  margin: 0 !important; /* Menghilangkan margin */
+  box-shadow: none !important; /* Menghilangkan bayangan */
+  border: 1px solid #333 !important; /* Menambahkan border untuk popup */
+}
+
+.leaflet-popup-tip {
+  display: none !important; /* Menghilangkan ujung segitiga pada popup */
+}
+
+/* Untuk lebih memastikan popup transparan */
+.leaflet-popup {
+  border: none !important; /* Menghilangkan border pada popup */
+  background-color: transparent !important; /* Menghilangkan background pada popup */
+  box-shadow: none !important; /* Menghilangkan bayangan pada popup */
+  padding: 0 !important; /* Menghilangkan padding tambahan */
+  margin: 0 !important; /* Menghilangkan margin tambahan */
+}
+
+/* Memperbaiki posisi tombol tutup (X) pada popup */
+.leaflet-popup-close-button {
+  right: 10px !important; /* Memindahkan tombol tutup ke kanan atas */
+  top: 10px !important;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>Peta Topologi – BWA WiBAS</h2>
+  <!-- Tombol Kembali -->
+  <button onclick="window.location.href='index.html';">Kembali ke Menu</button>
+</header>
+
+<div id="map"></div>
+
 <script>
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
   
@@ -82,3 +197,5 @@
   });
 </script>
 
+</body>
+</html>
