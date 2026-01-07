@@ -152,8 +152,13 @@ button:hover {
 
   // Menambahkan marker untuk setiap node
   nodeData.forEach(node => {
-    const popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
+    let popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
+    // Menampilkan semua sektor yang terkait dengan node
+    node.sectors.forEach(sector => {
+      popupContent += `<br><b>Sektor ${sector.sectorNumber}:</b> ${sector.sector}<br><b>IP:</b> ${sector.ip}`;
+    });
+
     // Menentukan ikon berdasarkan status (hijau untuk online, merah untuk offline)
     const iconUrl = node.status === 'online' ? 
       'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true' : 
