@@ -74,10 +74,18 @@ button:hover {
   padding: 0 !important; /* Menghilangkan padding */
   margin: 0 !important; /* Menghilangkan margin */
   box-shadow: none !important; /* Menghilangkan bayangan */
+  border: none !important; /* Menghilangkan border */
 }
 
 .leaflet-popup-tip {
   display: none !important; /* Menghilangkan ujung segitiga pada popup */
+}
+
+/* Untuk lebih memastikan popup transparan */
+.leaflet-popup {
+  border: none !important; /* Menghilangkan border pada popup */
+  background-color: transparent !important; /* Menghilangkan background pada popup */
+  box-shadow: none !important; /* Menghilangkan bayangan pada popup */
 }
 </style>
 </head>
@@ -170,3 +178,4 @@ button:hover {
 
 </body>
 </html>
+
