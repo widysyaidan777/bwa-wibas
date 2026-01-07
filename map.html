@@ -19,7 +19,7 @@ header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
   padding: 16px;
-  text-align: left; /* Mengubah ke kiri */
+  text-align: left;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -42,6 +42,35 @@ button {
 
 button:hover {
   background-color: #555;
+}
+
+/* Animasi kedip untuk status online dan offline */
+@keyframes blinkGreen {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+@keyframes blinkRed {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.leaflet-div-icon.green {
+  animation: blinkGreen 1s infinite;
+}
+
+.leaflet-div-icon.red {
+  animation: blinkRed 1s infinite;
+}
+
+.leaflet-div-icon img {
+  width: 40px;
+  height: 40px;
+  border: none !important; /* Menghilangkan border pada gambar ikon */
+  margin: 0 !important; /* Menghilangkan margin */
+  padding: 0 !important; /* Menghilangkan padding */
 }
 
 /* Menghilangkan kotak putih di sekitar popup */
@@ -124,11 +153,13 @@ button:hover {
       'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true' : 
       'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64.png?raw=true';
 
-    // Menambahkan marker untuk node dengan ikon yang sesuai status
+    // Menambahkan marker untuk node dengan ikon yang sesuai status menggunakan L.icon
     const nodeMarker = L.marker([node.lat, node.lon], {
-      icon: L.divIcon({
-        className: 'leaflet-div-icon ' + (node.status === 'online' ? 'green' : 'red'),
-        html: `<img src="${iconUrl}" />`  // Menentukan URL ikon berdasarkan status
+      icon: L.icon({
+        iconUrl: iconUrl,
+        iconSize: [40, 40], // Ukuran ikon
+        iconAnchor: [20, 40], // Titik anchor ikon
+        popupAnchor: [0, -40] // Menentukan posisi popup di atas marker
       })
     }).addTo(map).bindPopup(popupContent);
     
