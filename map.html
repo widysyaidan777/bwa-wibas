@@ -122,18 +122,14 @@ button:hover {
   nodeData.forEach(node => {
     const popupContent = `<b>Node:</b> ${node.node}<br><b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
     
-    // Menentukan URL gambar ikon berdasarkan status
-    const iconUrl = node.status === 'online' ? 
-      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64.png?raw=true' :
-      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true';
+    // Menentukan kelas untuk ikon berdasarkan status
+    const iconClass = node.status === 'online' ? 'green' : 'red';
 
     // Menambahkan marker untuk node dengan ikon yang sesuai status
     const nodeMarker = L.marker([node.lat, node.lon], {
-      icon: L.icon({
-        iconUrl: iconUrl,
-        iconSize: [40, 40],  // Ukuran ikon
-        iconAnchor: [20, 40], // Titik jangkar ikon
-        popupAnchor: [0, -40] // Posisi popup
+      icon: L.divIcon({
+        className: 'leaflet-div-icon ' + iconClass,
+        html: `<img src="https://github.com/widysyaidan777/bwa-wibas/blob/main/signal-removebg-preview.png?raw=true" />`
       })
     }).addTo(map).bindPopup(popupContent);
     
