@@ -5,6 +5,7 @@
   <title>Data Incident BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -37,6 +38,16 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+    }
+
+    input {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 16px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
 
     table {
@@ -73,15 +84,9 @@
       padding: 6px 12px;
       margin-right: 4px;
     }
-
-    #search {
-      padding: 15px;
-      width: 100%; /* Memperbesar lebar input search */
-      margin-bottom: 15px;
-      box-sizing: border-box;
-    }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -97,6 +102,7 @@
 </nav>
 
 <div class="container">
+  <!-- Search Input -->
   <input id="search" placeholder="Cari data..." />
 
   <div class="controls">
@@ -118,121 +124,122 @@
 </footer>
 
 <script>
-    const csvFile = 'incident_data.csv'; // Pastikan file CSV Anda berada di folder yang sesuai atau atur path yang benar
+  const csvFile = 'incident_data.csv'; // Pastikan file CSV Anda berada di folder yang sesuai atau atur path yang benar
+  let rowsPerPage = 20;
 
-    let data = [];
-    let filtered = [];
-    let page = 1;
-    let rowsPerPage = 20;
+  let data = [];
+  let filtered = [];
+  let page = 1;
+  let sortKey = '';
+  let sortAsc = true;
 
-    fetch(csvFile)
-      .then(res => res.text())
-      .then(text => {
-        const lines = text.trim().split(/\r?\n/);
-        const delimiter = lines[0].includes(';') ? ';' : ',';
-        const headers = lines[0].split(delimiter).map(h => h.trim());
+  fetch(csvFile)
+    .then(res => res.text())
+    .then(text => {
+      const lines = text.trim().split(/\r?\n/);
+      const delimiter = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(delimiter).map(h => h.trim());
 
-        data = lines.slice(1).map(line => {
-          const values = line.split(delimiter);
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
-          return obj;
-        });
-
-        filtered = [...data];
-        renderTable();
+      data = lines.slice(1).map(line => {
+        const values = line.split(delimiter);
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
+        return obj;
       });
 
-    document.getElementById('search').oninput = () => {
-      const query = document.getElementById('search').value.toLowerCase();
-      filtered = data.filter(row =>
-        Object.values(row).join(' ').toLowerCase().includes(query)
-      );
+      filtered = [...data];
       renderTable();
-    };
+    });
 
-    function renderTable() {
-      if (filtered.length === 0) return;
+  document.getElementById('search').oninput = () => {
+    const query = document.getElementById('search').value.toLowerCase();
+    filtered = data.filter(row =>
+      Object.values(row).join(' ').toLowerCase().includes(query)
+    );
+    renderTable();
+  };
 
-      const headers = Object.keys(filtered[0]);
-      const thead = document.getElementById('thead');
-      const tbody = document.getElementById('tbody');
+  function renderTable() {
+    if (filtered.length === 0) return;
 
-      thead.innerHTML = '';
-      tbody.innerHTML = '';
+    const headers = Object.keys(filtered[0]);
+    const thead = document.getElementById('thead');
+    const tbody = document.getElementById('tbody');
 
+    thead.innerHTML = '';
+    tbody.innerHTML = '';
+
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      th.onclick = () => sort(h);
+      thead.appendChild(th);
+    });
+
+    const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
+    const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
+
+    slice.forEach(row => {
+      const tr = document.createElement('tr');
       headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        th.onclick = () => sort(h);
-        thead.appendChild(th);
+        const td = document.createElement('td');
+        td.textContent = row[h];
+        tr.appendChild(td);
       });
+      tbody.appendChild(tr);
+    });
 
-      const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-      const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
+    pagination();
+  }
 
-      slice.forEach(row => {
-        const tr = document.createElement('tr');
+  function pagination() {
+    const p = document.getElementById('pagination');
+    p.innerHTML = '';
 
-        headers.forEach(h => {
-          const td = document.createElement('td');
-          td.textContent = row[h];
-          tr.appendChild(td);
-        });
+    if (rowsPerPage === 0) return;
 
-        tbody.appendChild(tr);
-      });
+    const totalPages = Math.ceil(filtered.length / rowsPerPage);
+    const maxButtons = 5;
 
-      pagination();
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = start + maxButtons - 1;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - maxButtons + 1);
     }
 
-    function pagination() {
-      const p = document.getElementById('pagination');
-      p.innerHTML = '';
+    const prev = document.createElement('button');
+    prev.textContent = '« Prev';
+    prev.disabled = page === 1;
+    prev.onclick = () => { page--; renderTable(); };
+    p.appendChild(prev);
 
-      if (rowsPerPage === 0) return;
-
-      const totalPages = Math.ceil(filtered.length / rowsPerPage);
-      const maxButtons = 5;
-
-      let start = Math.max(1, page - Math.floor(maxButtons / 2));
-      let end = start + maxButtons - 1;
-
-      if (end > totalPages) {
-        end = totalPages;
-        start = Math.max(1, end - maxButtons + 1);
+    for (let i = start; i <= end; i++) {
+      const b = document.createElement('button');
+      b.textContent = i;
+      if (i === page) {
+        b.style.fontWeight = 'bold';
+        b.style.background = '#1e293b';
+        b.style.color = 'white';
       }
-
-      const prev = document.createElement('button');
-      prev.textContent = '« Prev';
-      prev.disabled = page === 1;
-      prev.onclick = () => { page--; renderTable(); };
-      p.appendChild(prev);
-
-      for (let i = start; i <= end; i++) {
-        const b = document.createElement('button');
-        b.textContent = i;
-        if (i === page) {
-          b.style.fontWeight = 'bold';
-          b.style.background = '#1e293b';
-          b.style.color = 'white';
-        }
-        b.onclick = () => { page = i; renderTable(); };
-        p.appendChild(b);
-      }
-
-      const next = document.createElement('button');
-      next.textContent = 'Next »';
-      next.disabled = page === totalPages;
-      next.onclick = () => { page++; renderTable(); };
-      p.appendChild(next);
+      b.onclick = () => { page = i; renderTable(); };
+      p.appendChild(b);
     }
 
-    function exportToExcel() {
-      const table = document.querySelector("table");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "data_incident.xlsx");
-    }
+    const next = document.createElement('button');
+    next.textContent = 'Next »';
+    next.disabled = page === totalPages;
+    next.onclick = () => { page++; renderTable(); };
+    p.appendChild(next);
+  }
+
+  function exportToExcel() {
+    const table = document.querySelector("table");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+    XLSX.writeFile(wb, "data_incident.xlsx");
+  }
+
 </script>
 
 </body>
