@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -180,14 +180,17 @@
     const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
 
     slice.forEach(row => {
-      const tr = document.createElement('tr');
-      headers.forEach(h => {
-        const td = document.createElement('td');
-        td.textContent = row[h];
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
+  const tr = document.createElement('tr');
+
+  headers.forEach(h => {
+    const td = document.createElement('td');
+    td.textContent = row[h] === '?' ? '' : row[h]; // Gantilah tanda tanya dengan string kosong
+    tr.appendChild(td);
+  });
+
+  applyRowStyle(tr, row); // ✅ INI BARU BENAR
+  tbody.appendChild(tr);
+});
 
     pagination();
   }
