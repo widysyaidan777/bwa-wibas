@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Incident BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    header {
+      background: linear-gradient(90deg, #0f172a, #020617);
+      color: white;
+      padding: 12px 24px;
+      text-align: left;
+    }
+
+    nav {
+      background: #1e293b;
+      padding: 6px 24px;
+      text-align: left;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 24px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    table {
+      width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      cursor: pointer;
+      background: #f1f5f9;
+    }
+
+    .pagination {
+      margin-top: 15px;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      margin-right: 4px;
+    }
+
+    footer {
+      margin-top: 30px;
+      padding: 24px;
+      text-align: center;
+      background: #020617;
+      color: white;
+    }
+
+    .chart-container {
+      margin-top: 40px;
+    }
+
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Data Incident BWA WiBAS</h1>
+  <p>Lintasarta</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="data.html">Data</a>
+  <a href="wibas.html">WiBAS</a>
+  <a href="map.html">Map</a>
+  <a href="incident.html">Incident</a>
+</nav>
+
+<div class="container">
+  <input id="search" placeholder="Cari data..." />
+  
+  <!-- Controls to filter and export -->
+  <div class="controls">
+    <button onclick="exportToExcel()">Export ke Excel</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr id="thead"></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <!-- Pie Chart for Incident Data -->
+  <div class="chart-container">
+    <canvas id="incidentChart"></canvas>
+  </div>
+
+  <footer>
+    © 2026 BWA WiBAS – Lintasarta
+  </footer>
+
+  <script>
+    function exportToExcel() {
+      const table = document.querySelector("table");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      XLSX.writeFile(wb, "data_incident.xlsx");
+    }
+
+    const csvFile = 'incident.csv'; // Update with your CSV file path
+    let data = [];
+    let filtered = [];
+    let page = 1;
+    let sortKey = '';
+    let sortAsc = true;
+
+    fetch(csvFile)
+      .then(res => res.text())
+      .then(text => {
+        const lines = text.trim().split(/\r?\n/);
+        const delimiter = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(delimiter).map(h => h.trim());
+
+        data = lines.slice(1).map(line => {
+          const values = line.split(delimiter);
+          const obj = {};
+          headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
+          return obj;
+        });
+
+        filtered = [...data];
+        initTable();
+        renderTable();
+        renderChart();
+      });
+
+    function initTable() {
+      const box = document.getElementById('filters');
+      box.innerHTML = '';
+      activeFilters = {};
+
+      Object.keys(data[0]).forEach(col => {
+        const select = document.createElement('select');
+        select.dataset.col = col;
+        select.innerHTML = `<option value="">All ${col}</option>`;
+        select.onchange = () => applyFilters(col);
+        box.appendChild(select);
+      });
+
+      rebuildFilters(data);
+    }
+
+    function rebuildFilters(sourceData) {
+      document.querySelectorAll('#filters select').forEach(select => {
+        const col = select.dataset.col;
+        const currentValue = select.value;
+        const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
+
+        select.innerHTML = `<option value="">All ${col}</option>`;
+        values.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          select.appendChild(opt);
+        });
+
+        if (values.includes(currentValue)) {
+          select.value = currentValue;
+        }
+      });
+    }
+
+    function applyFilters(changedCol) {
+      activeFilters = {};
+      document.querySelectorAll('#filters select').forEach(s => {
+        if (s.value) activeFilters[s.dataset.col] = s.value;
+      });
+
+      filtered = data.filter(row => {
+        return Object.entries(activeFilters).every(
+          ([col, val]) => row[col] === val
+        );
+      });
+
+      rebuildFilters(filtered);
+      page = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      if (filtered.length === 0) return;
+
+      const headers = Object.keys(filtered[0]);
+      const thead = document.getElementById('thead');
+      const tbody = document.getElementById('tbody');
+
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        th.onclick = () => sort(h);
+        thead.appendChild(th);
+      });
+
+      const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
+      const slice = rowsPerPage === 0
+        ? filtered
+        : filtered.slice(start, start + rowsPerPage);
+
+      slice.forEach(row => {
+        const tr = document.createElement('tr');
+
+        headers.forEach(h => {
+          const td = document.createElement('td');
+          td.textContent = row[h];
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      pagination();
+    }
+
+    function renderChart() {
+      const incidentCounts = filtered.reduce((acc, row) => {
+        const assetName = row['asset_name'];
+        acc[assetName] = (acc[assetName] || 0) + 1;
+        return acc;
+      }, {});
+
+      const ctx = document.getElementById('incidentChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(incidentCounts),
+          datasets: [{
+            data: Object.values(incidentCounts),
+            backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#FFD433'],
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(tooltipItem) {
+                  return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
