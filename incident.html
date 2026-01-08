@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Data Incident BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
   <style>
     body {
@@ -58,15 +57,6 @@
       background: #f1f5f9;
     }
 
-    .pagination {
-      margin-top: 15px;
-    }
-
-    .pagination button {
-      padding: 6px 12px;
-      margin-right: 4px;
-    }
-
     footer {
       margin-top: 30px;
       padding: 24px;
@@ -75,8 +65,13 @@
       color: white;
     }
 
-    .chart-container {
-      margin-top: 40px;
+    .pagination {
+      margin-top: 15px;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      margin-right: 4px;
     }
 
   </style>
@@ -92,14 +87,12 @@
   <a href="index.html">Home</a>
   <a href="data.html">Data</a>
   <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
   <a href="incident.html">Incident</a>
 </nav>
 
 <div class="container">
   <input id="search" placeholder="Cari data..." />
-  
-  <!-- Controls to filter and export -->
+
   <div class="controls">
     <button onclick="exportToExcel()">Export ke Excel</button>
   </div>
@@ -111,28 +104,20 @@
     <tbody id="tbody"></tbody>
   </table>
 
-  <!-- Pie Chart for Incident Data -->
-  <div class="chart-container">
-    <canvas id="incidentChart"></canvas>
-  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
 
-  <footer>
-    © 2026 BWA WiBAS – Lintasarta
-  </footer>
+<footer>
+  © 2026 BWA WiBAS – Lintasarta
+</footer>
 
-  <script>
-    function exportToExcel() {
-      const table = document.querySelector("table");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "data_incident.xlsx");
-    }
+<script>
+    const csvFile = 'incident_data.csv'; // Pastikan file CSV Anda berada di folder yang sesuai atau atur path yang benar
 
-    const csvFile = 'incident.csv'; // Update with your CSV file path
     let data = [];
     let filtered = [];
     let page = 1;
-    let sortKey = '';
-    let sortAsc = true;
+    let rowsPerPage = 20;
 
     fetch(csvFile)
       .then(res => res.text())
@@ -149,63 +134,16 @@
         });
 
         filtered = [...data];
-        initTable();
         renderTable();
-        renderChart();
       });
 
-    function initTable() {
-      const box = document.getElementById('filters');
-      box.innerHTML = '';
-      activeFilters = {};
-
-      Object.keys(data[0]).forEach(col => {
-        const select = document.createElement('select');
-        select.dataset.col = col;
-        select.innerHTML = `<option value="">All ${col}</option>`;
-        select.onchange = () => applyFilters(col);
-        box.appendChild(select);
-      });
-
-      rebuildFilters(data);
-    }
-
-    function rebuildFilters(sourceData) {
-      document.querySelectorAll('#filters select').forEach(select => {
-        const col = select.dataset.col;
-        const currentValue = select.value;
-        const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
-
-        select.innerHTML = `<option value="">All ${col}</option>`;
-        values.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v;
-          opt.textContent = v;
-          select.appendChild(opt);
-        });
-
-        if (values.includes(currentValue)) {
-          select.value = currentValue;
-        }
-      });
-    }
-
-    function applyFilters(changedCol) {
-      activeFilters = {};
-      document.querySelectorAll('#filters select').forEach(s => {
-        if (s.value) activeFilters[s.dataset.col] = s.value;
-      });
-
-      filtered = data.filter(row => {
-        return Object.entries(activeFilters).every(
-          ([col, val]) => row[col] === val
-        );
-      });
-
-      rebuildFilters(filtered);
-      page = 1;
+    document.getElementById('search').oninput = () => {
+      const query = document.getElementById('search').value.toLowerCase();
+      filtered = data.filter(row =>
+        Object.values(row).join(' ').toLowerCase().includes(query)
+      );
       renderTable();
-    }
+    };
 
     function renderTable() {
       if (filtered.length === 0) return;
@@ -225,9 +163,7 @@
       });
 
       const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-      const slice = rowsPerPage === 0
-        ? filtered
-        : filtered.slice(start, start + rowsPerPage);
+      const slice = rowsPerPage === 0 ? filtered : filtered.slice(start, start + rowsPerPage);
 
       slice.forEach(row => {
         const tr = document.createElement('tr');
@@ -244,40 +180,54 @@
       pagination();
     }
 
-    function renderChart() {
-      const incidentCounts = filtered.reduce((acc, row) => {
-        const assetName = row['asset_name'];
-        acc[assetName] = (acc[assetName] || 0) + 1;
-        return acc;
-      }, {});
+    function pagination() {
+      const p = document.getElementById('pagination');
+      p.innerHTML = '';
 
-      const ctx = document.getElementById('incidentChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: Object.keys(incidentCounts),
-          datasets: [{
-            data: Object.values(incidentCounts),
-            backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#FFD433'],
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(tooltipItem) {
-                  return `${tooltipItem.label}: ${tooltipItem.raw}`;
-                }
-              }
-            }
-          }
+      if (rowsPerPage === 0) return;
+
+      const totalPages = Math.ceil(filtered.length / rowsPerPage);
+      const maxButtons = 5;
+
+      let start = Math.max(1, page - Math.floor(maxButtons / 2));
+      let end = start + maxButtons - 1;
+
+      if (end > totalPages) {
+        end = totalPages;
+        start = Math.max(1, end - maxButtons + 1);
+      }
+
+      const prev = document.createElement('button');
+      prev.textContent = '« Prev';
+      prev.disabled = page === 1;
+      prev.onclick = () => { page--; renderTable(); };
+      p.appendChild(prev);
+
+      for (let i = start; i <= end; i++) {
+        const b = document.createElement('button');
+        b.textContent = i;
+        if (i === page) {
+          b.style.fontWeight = 'bold';
+          b.style.background = '#1e293b';
+          b.style.color = 'white';
         }
-      });
+        b.onclick = () => { page = i; renderTable(); };
+        p.appendChild(b);
+      }
+
+      const next = document.createElement('button');
+      next.textContent = 'Next »';
+      next.disabled = page === totalPages;
+      next.onclick = () => { page++; renderTable(); };
+      p.appendChild(next);
     }
-  </script>
+
+    function exportToExcel() {
+      const table = document.querySelector("table");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      XLSX.writeFile(wb, "data_incident.xlsx");
+    }
+</script>
+
 </body>
 </html>
