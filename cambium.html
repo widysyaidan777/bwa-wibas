@@ -1,250 +1,266 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Data BWA Cambium</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-    }
+<meta charset="UTF-8">
+<title>Data BWA Cambium</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    header {
-      background: linear-gradient(90deg,#0f172a,#020617);
-      color: white;
-      padding: 12px 24px;
-      text-align: left;
-    }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
 
-    nav {
-      background: #1e293b;
-      width: 100%;
-      padding: 6px 24px;
-      text-align: left;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
 
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-right: 20px;
-      font-weight: bold;
-    }
+header {
+  background: linear-gradient(90deg,#0f172a,#020617);
+  color: white;
+  padding: 12px 24px;
+}
 
-    .container {
-      padding: 24px;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
+nav {
+  background: #1e293b;
+  padding: 6px 24px;
+}
 
-    input {
-      padding: 10px;
-      width: 300px;
-      margin-bottom: 15px;
-    }
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
 
-    table {
-      width: 100%;
-      table-layout: auto;
-      border-collapse: collapse;
-      background: white;
-    }
+.container {
+  padding: 24px;
+}
 
-    th, td {
-      padding: 10px;
-      border: 1px solid #000000; /* Set border color to black */
-      text-align: left;
-      background: transparent; /* Remove any background color */
-    }
+.controls {
+  margin-bottom: 15px;
+}
 
-    th {
-      cursor: pointer;
-      background: #f1f5f9; /* Optional, set a specific color for the header */
-    }
+.controls select,
+.controls button,
+#search {
+  padding: 8px;
+  margin-right: 10px;
+}
 
-    .pagination {
-      margin-top: 15px;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
 
-    .pagination button {
-      padding: 6px 12px;
-      margin-right: 4px;
-    }
+th, td {
+  padding: 8px;
+  border: 1px solid #000;
+  text-align: left;
+}
 
-    .controls {
-      margin-bottom: 15px;
-    }
+th {
+  background: #f1f5f9;
+}
 
-    .controls select {
-      padding: 6px;
-    }
+.pagination {
+  margin-top: 15px;
+}
 
-    footer {
-      margin-top: 30px;
-      padding: 24px;
-      text-align: center;
-      background: #020617;
-      color: white;
-    }
-  </style>
+.pagination button {
+  padding: 6px 12px;
+  margin-right: 4px;
+}
+
+footer {
+  margin-top: 30px;
+  padding: 20px;
+  text-align: center;
+  background: #020617;
+  color: white;
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <h1>Data BWA Cambium</h1>
-    <p>Lintasarta</p>
-  </header>
+<header>
+  <h1>Data BWA Cambium</h1>
+  <p>Lintasarta</p>
+</header>
 
-  <nav>
-    <a href="index.html">Profil</a>
-    <a href="data.html">Data WiBAS</a>
-    <a href="wibas.html">WiBAS</a>
-    <a href="map.html">Map</a>
-    <a href="incident.html">Incident</a>
-    <a href="cambium.html">Data Cambium</a>
-  </nav>
+<nav>
+  <a href="index.html">Profil</a>
+  <a href="data.html">Data WiBAS</a>
+  <a href="wibas.html">WiBAS</a>
+  <a href="map.html">Map</a>
+  <a href="incident.html">Incident</a>
+  <a href="cambium.html">Data Cambium</a>
+</nav>
 
-  <div class="container">
-    <input id="search" placeholder="Cari data...">
-    <div class="controls">
-      <button onclick="exportToExcel()">Ekspor ke Excel</button>
-    </div>
+<div class="container">
 
-    <table>
-      <thead>
-        <tr id="thead"></tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+<input type="text" id="search" placeholder="Cari data...">
 
-    <div class="pagination" id="pagination"></div>
-  </div>
+<div class="controls">
+  <label>
+    Tampilkan
+    <select id="rowsPerPage" onchange="changeRowsPerPage()">
+      <option value="5">5</option>
+      <option value="20" selected>20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+    baris
+  </label>
 
-  <footer>
-    © 2026 BWA Cambium – Lintasarta
-  </footer>
+  <button onclick="exportToExcel()">Ekspor ke Excel</button>
+</div>
 
-  <script>
-    const csvFile = 'cambium.csv'; // Ganti dengan nama file CSV Anda
+<table>
+  <thead>
+    <tr id="thead"></tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
 
-    let rowsPerPage = 20;
-    let data = [];
-    let filtered = [];
-    let page = 1;
-    let sortKey = '';
-    let sortAsc = true;
+<div class="pagination" id="pagination"></div>
 
-    fetch(csvFile)
-      .then(res => res.text())
-      .then(text => {
-        const lines = text.trim().split(/\r?\n/);
-        const delimiter = lines[0].includes(';') ? ';' : ',';
-        const headers = lines[0].split(delimiter).map(h => h.trim());
+</div>
 
-        data = lines.slice(1).map(line => {
-          const values = line.split(delimiter);
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
-          return obj;
-        });
+<footer>
+© 2026 BWA Cambium – Lintasarta
+</footer>
 
-        filtered = [...data];
-        render();
+<script>
+const csvFile = 'cambium.csv';
+
+let data = [];
+let filtered = [];
+let page = 1;
+let rowsPerPage = 20;
+
+const headers = [
+  "No","Region","Area","Node","Sektor","MAC","Device Name","Remote",
+  "Lat","Long","Distance","IP Address","Device Type","Device",
+  "Serial Number","Description","Status","Bandwidth","Keterangan",
+  "FO","WIBAS","STARLINK","M2M","Status Mig","Keterangan"
+];
+
+// Load CSV
+fetch(csvFile)
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.trim().split(/\r?\n/);
+    const delimiter = lines[0].includes(';') ? ';' : ',';
+
+    const csvHeaders = lines[0].split(delimiter);
+
+    data = lines.slice(1).map(line => {
+      const values = line.split(delimiter);
+      let obj = {};
+      headers.forEach((h, i) => {
+        obj[h] = values[i] || '';
       });
+      return obj;
+    });
 
-    // Render tabel
-    function render() {
-      if (filtered.length === 0) return;
+    filtered = [...data];
+    render();
+  });
 
-      const headers = ["No", "Region", "Area", "Node", "Sektor", "MAC", "Device Name", "Remote", 
-                       "Lat", "Long", "Distance", "IP Address", "Device Type", "Device", 
-                       "Serial Number", "Description", "Status", "Bandwidth", "Keterangan", 
-                       "FO", "WIBAS", "STARLINK", "M2M", "Status Mig", "Keterangan"];
+// Render table
+function render() {
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
 
-      const thead = document.getElementById('thead');
-      const tbody = document.getElementById('tbody');
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
 
-      thead.innerHTML = '';
-      tbody.innerHTML = '';
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    thead.appendChild(th);
+  });
 
-      // Tambahkan kolom header tanpa filter
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        thead.appendChild(th);
-      });
+  const start = (page - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = filtered.slice(start, end);
 
-      // Tambahkan data ke tabel
-      filtered.forEach(row => {
-        const tr = document.createElement('tr');
+  pageData.forEach(row => {
+    const tr = document.createElement('tr');
+    headers.forEach(h => {
+      const td = document.createElement('td');
+      td.textContent = row[h];
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
 
-        headers.forEach(h => {
-          const td = document.createElement('td');
-          td.textContent = row[h];
-          tr.appendChild(td);
-        });
+  pagination();
+}
 
-        tbody.appendChild(tr);
-      });
+// Pagination
+function pagination() {
+  const p = document.getElementById('pagination');
+  p.innerHTML = '';
 
-      pagination();
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  if (totalPages <= 1) return;
+
+  const prev = document.createElement('button');
+  prev.textContent = '« Prev';
+  prev.disabled = page === 1;
+  prev.onclick = () => { page--; render(); };
+  p.appendChild(prev);
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (i < page - 2 || i > page + 2) continue;
+
+    const b = document.createElement('button');
+    b.textContent = i;
+    if (i === page) {
+      b.style.fontWeight = 'bold';
+      b.style.background = '#1e293b';
+      b.style.color = 'white';
     }
+    b.onclick = () => { page = i; render(); };
+    p.appendChild(b);
+  }
 
-    // Fungsi pagination
-    function pagination() {
-      const p = document.getElementById('pagination');
-      p.innerHTML = '';
+  const next = document.createElement('button');
+  next.textContent = 'Next »';
+  next.disabled = page === totalPages;
+  next.onclick = () => { page++; render(); };
+  p.appendChild(next);
+}
 
-      const totalPages = Math.ceil(filtered.length / rowsPerPage);
-      const maxButtons = 5;
+// Search
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  filtered = data.filter(row =>
+    Object.values(row).some(val =>
+      val.toLowerCase().includes(q)
+    )
+  );
+  page = 1;
+  render();
+});
 
-      let start = Math.max(1, page - Math.floor(maxButtons / 2));
-      let end = start + maxButtons - 1;
+// Change rows per page
+function changeRowsPerPage() {
+  rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+  page = 1;
+  render();
+}
 
-      if (end > totalPages) {
-        end = totalPages;
-        start = Math.max(1, end - maxButtons + 1);
-      }
-
-      // Tombol Prev
-      const prev = document.createElement('button');
-      prev.textContent = '« Sebelumnya';
-      prev.disabled = page === 1;
-      prev.onclick = () => { page--; render(); };
-      p.appendChild(prev);
-
-      // Nomor Halaman
-      for (let i = start; i <= end; i++) {
-        const b = document.createElement('button');
-        b.textContent = i;
-        if (i === page) {
-          b.style.fontWeight = 'bold';
-          b.style.background = '#1e293b';
-          b.style.color = 'white';
-        }
-        b.onclick = () => { page = i; render(); };
-        p.appendChild(b);
-      }
-
-      // Tombol Next
-      const next = document.createElement('button');
-      next.textContent = 'Selanjutnya »';
-      next.disabled = page === totalPages;
-      next.onclick = () => { page++; render(); };
-      p.appendChild(next);
-    }
-
-    // Ekspor ke Excel
-    function exportToExcel() {
-      const table = document.querySelector("table");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "cambium.xlsx");
-    }
-  </script>
+// Export to Excel
+function exportToExcel() {
+  const table = document.querySelector("table");
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Cambium" });
+  XLSX.writeFile(wb, "cambium.xlsx");
+}
+</script>
 
 </body>
 </html>
