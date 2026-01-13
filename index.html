@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Profil BWA & WiBAS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
@@ -55,62 +55,90 @@
       color: white;
     }
 
-    .popup-content {
-      display: none;
-      background-color: white;
-      color: black;
-      padding: 20px;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
-      margin-top: 10px;
+    /* Styling for the image slider */
+    .slider-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+      overflow: hidden;
     }
 
-    .popup-button {
-      font-size: 20px;
-      font-weight: bold;
-      color: #1e293b;
-      cursor: pointer;
-    }
-
-    .popup-button:hover {
-      color: #0f172a;
-    }
-
-    .logos {
+    .slider-images {
       display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 20px;
+      transition: transform 0.5s ease-in-out;
     }
 
-    .logos img {
-      width: 150px;
+    .slider-images img {
+      width: 100%;
       height: auto;
     }
 
-    /* Styling for active sections */
-    .active {
-      display: block;
+    .text-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      width: 100%;
     }
 
-    /* Shrink the border */
-    header, footer {
-      border: 1px solid #1e293b;
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      font-size: 24px;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .prev-btn {
+      left: 0;
+    }
+
+    .next-btn {
+      right: 0;
     }
 
   </style>
 
   <script>
-    function togglePopup(id) {
-      // Hide all popups
-      var popups = document.querySelectorAll('.popup-content');
-      popups.forEach(function(popup) {
-        popup.classList.remove('active');
-      });
+    let currentSlide = 0;
+    let slides = [
+      {src: "bgpertama.jpg", text: "Penjelasan Gambar 1"},
+      {src: "bgkedua.jpg", text: "Penjelasan Gambar 2"},
+      {src: "bgketiga.jpg", text: "Penjelasan Gambar 3"},
+    ];
 
-      // Show the selected popup
-      var selectedPopup = document.getElementById(id);
-      selectedPopup.classList.add('active');
+    function showSlide(index) {
+      const sliderImages = document.querySelector('.slider-images');
+      const overlayText = document.querySelector('.text-overlay');
+      if (index >= slides.length) currentSlide = 0;
+      if (index < 0) currentSlide = slides.length - 1;
+
+      sliderImages.style.transform = `translateX(-${currentSlide * 100}%)`;
+      overlayText.textContent = slides[currentSlide].text;
+    }
+
+    function nextSlide() {
+      currentSlide++;
+      showSlide(currentSlide);
+    }
+
+    function prevSlide() {
+      currentSlide--;
+      showSlide(currentSlide);
+    }
+
+    window.onload = function() {
+      showSlide(currentSlide);
     }
   </script>
 
@@ -128,39 +156,25 @@
   <a href="cambium.html">Data Cambium</a>
   <a href="wibas.html">WiBAS</a>
   <a href="biumca.html">Cambium</a>
-  <a href="map.html">Map</a>
+  <a href="map.html">Peta</a>
   <a href="incident.html">Insiden</a>
 </nav>
 
 <div class="profile">
-  <h2>Apa itu BWA?</h2>
-  <button class="popup-button" onclick="togglePopup('bwa')">Apa itu BWA?</button>
-  <div class="popup-content" id="bwa">
-    <p>
-      <b>BWA (Broadband Wireless Access)</b> adalah layanan akses broadband nirkabel
-      yang digunakan untuk menyediakan konektivitas data berkecepatan tinggi tanpa media kabel.
-    </p>
-    <p>
-      BWA banyak dimanfaatkan untuk mendukung konektivitas di wilayah perkotaan
-      maupun daerah yang sulit dijangkau infrastruktur kabel.
-    </p>
+  <h2>Profil BWA & WiBAS</h2>
+  
+  <!-- Image Slider -->
+  <div class="slider-container">
+    <div class="slider-images">
+      <img src="bgpertama.jpg" alt="Image 1">
+      <img src="bgkedua.jpg" alt="Image 2">
+      <img src="bgketiga.jpg" alt="Image 3">
+    </div>
+    <div class="text-overlay">Penjelasan Gambar 1</div>
+    <button class="slider-btn prev-btn" onclick="prevSlide()">&#10094;</button>
+    <button class="slider-btn next-btn" onclick="nextSlide()">&#10095;</button>
   </div>
 
-  <h2>PMP (Point to MultiPoint)</h2>
-  <button class="popup-button" onclick="togglePopup('pmp')">PMP</button>
-  <div class="popup-content" id="pmp">
-    <p>
-      PMP adalah solusi untuk menyediakan konektivitas nirkabel point-to-multipoint berkapasitas tinggi untuk jaringan area luas. Teknologi ini sering digunakan untuk menghubungkan beberapa lokasi dalam area yang luas.
-    </p>
-  </div>
-
-  <h2>PTP (Point to Point)</h2>
-  <button class="popup-button" onclick="togglePopup('ptp')">PTP</button>
-  <div class="popup-content" id="ptp">
-    <p>
-      PTP adalah solusi konektivitas nirkabel point-to-point yang cepat dan rendah latensi, cocok untuk konektivitas jarak jauh antara dua titik yang terpisah.
-    </p>
-  </div>
 </div>
 
 <div class="logos">
@@ -175,4 +189,3 @@
 
 </body>
 </html>
-
