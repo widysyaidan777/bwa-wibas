@@ -112,6 +112,26 @@ function applyRowStyle(tr, row) {
   }
 }
 
+function downloadCSV() {
+  const csvRows = [];
+  const headers = Object.keys(filtered[0]);
+  csvRows.push(headers.join(',')); // Add header row
+  
+  filtered.forEach(row => {
+    const values = headers.map(header => `"${row[header]}"`); // Wrap values in quotes
+    csvRows.push(values.join(','));
+  });
+
+  const csvString = csvRows.join('\n');
+  const blob = new Blob([csvString], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data_bwa_wibas.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 </script>
 
 <body>
@@ -132,6 +152,7 @@ function applyRowStyle(tr, row) {
 
 <div class="container">
   <input id="search" placeholder="Search data...">
+  <button onclick="downloadCSV()">Export to CSV</button>
   <table>
     <thead>
       <tr id="thead"></tr>
@@ -280,7 +301,6 @@ document.getElementById('rowsSelect').onchange = e => {
   page = 1;
   render();
 };
-
 </script>
 
 </body>
