@@ -127,12 +127,14 @@
   </footer>
 
   <script>
-    const csvFile = 'data.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
     let filtered = [];
     let page = 1;
+    let sortKey = '';
+    let sortAsc = true;
 
     fetch(csvFile)
       .then(res => res.text())
@@ -238,9 +240,9 @@
     function exportToExcel() {
       const table = document.querySelector("table");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "WiBAS.xlsx");
+      XLSX.writeFile(wb, "data.xlsx");
     }
   </script>
 
 </body>
-</html>
+</html>  buatkan juga codingan ini tanpa filter dan buatkan codingan lengkapnya
