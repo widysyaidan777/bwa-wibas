@@ -23,9 +23,7 @@
     }
 
     section.profile {
-      padding: 20px;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
+      padding: 0; /* Menghapus padding untuk slider */
       margin: 20px;
       background-color: #ffffff;
     }
@@ -59,7 +57,7 @@
     .slider-container {
       position: relative;
       width: 100%;
-      max-width: 800px;
+      height: 400px; /* Menentukan tinggi slider */
       margin: auto;
       overflow: hidden;
     }
@@ -71,7 +69,8 @@
 
     .slider-images img {
       width: 100%;
-      height: auto;
+      height: 400px; /* Menjaga gambar tetap sesuai dengan tinggi slider */
+      object-fit: cover; /* Membuat gambar mengisi area penuh */
     }
 
     .text-overlay {
@@ -105,6 +104,19 @@
 
     .next-btn {
       right: 0;
+    }
+
+    /* Styling for the logos */
+    .logos {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .logos img {
+      width: 100px; /* Memperkecil ukuran logo */
+      height: auto;
     }
 
   </style>
@@ -161,8 +173,6 @@
 </nav>
 
 <div class="profile">
-  <h2>Profil BWA & WiBAS</h2>
-  
   <!-- Image Slider -->
   <div class="slider-container">
     <div class="slider-images">
@@ -174,11 +184,10 @@
     <button class="slider-btn prev-btn" onclick="prevSlide()">&#10094;</button>
     <button class="slider-btn next-btn" onclick="nextSlide()">&#10095;</button>
   </div>
-
 </div>
 
 <div class="logos">
-  <img src="wibas.png" alt="WiBAS Logo">
+  <img src="wibas.png" alt="Intracom Logo">
   <img src="cambium.png" alt="Cambium Logo">
   <img src="radwin.png" alt="Radwin Logo">
 </div>
