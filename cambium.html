@@ -127,7 +127,7 @@
   </footer>
 
   <script>
-    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'cambium.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
@@ -240,7 +240,7 @@
     function exportToExcel() {
       const table = document.querySelector("table");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "data.xlsx");
+      XLSX.writeFile(wb, "cambium.xlsx");
     }
   </script>
 
