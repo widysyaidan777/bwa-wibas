@@ -1,118 +1,99 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Data BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Data BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
 
-header {
-  background: linear-gradient(90deg,#0f172a,#020617);
-  color: white;
-  padding: 12px 24px;   /* DIPERKECIL */
-}
+    header {
+      background: linear-gradient(90deg, #0f172a, #020617);
+      color: white;
+      padding: 12px 24px;
+    }
 
-nav {
-  background: #1e293b;
-  padding: 6px 24px;    /* DIPERKECIL */
-}
+    nav {
+      background: #1e293b;
+      padding: 6px 24px;
+    }
 
-nav a {
-  color: white;
-  text-decoration: none;
-  margin-right: 20px;
-  font-weight: bold;
-}
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: bold;
+    }
 
-.container {
-  padding: 24px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
+    .container {
+      padding: 24px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
 
-input {
-  padding: 10px;
-  width: 300px;
-  margin-bottom: 15px;
-}
+    input {
+      padding: 10px;
+      width: 300px;
+      margin-bottom: 15px;
+    }
 
-table {
-  width: 100%;
-  table-layout: auto;
-  border-collapse: collapse;
-  background: white;
-}
+    table {
+      width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
+      background: white;
+    }
 
-th, td {
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-}
+    th, td {
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
 
-th {
-  cursor: pointer;
-  background: #f1f5f9;
-}
+    th {
+      cursor: pointer;
+      background: #f1f5f9;
+    }
 
-.pagination {
-  margin-top: 15px;
-}
+    .pagination {
+      margin-top: 15px;
+    }
 
-.pagination button {
-  padding: 6px 12px;
-  margin-right: 4px;
-}
-  .controls {
-  margin-bottom: 15px;
-}
+    .pagination button {
+      padding: 6px 12px;
+      margin-right: 4px;
+    }
 
-.controls select {
-  padding: 6px;
-}
-  .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 15px;
-}
+    footer {
+      margin-top: 30px;
+      padding: 16px;
+      text-align: center;
+      background: #020617;
+      color: white;
+    }
 
-.controls select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: white;
-}
+    .status-active {
+      color: #16a34a;
+      font-weight: bold;
+    }
 
-footer {
-  margin-top: 30px;
-  padding: 16px;
-  text-align: center;
-  background: #020617;
-  color: white;
-}
-  .status-active {
-  color: #16a34a;
-  font-weight: bold;
-}
+    .status-inactive {
+      color: #dc2626;
+      font-weight: bold;
+    }
 
-.status-inactive {
-  color: #dc2626;
-  font-weight: bold;
-}
-
-.status-nonts {
-  background: #dcfce7;
-}
-
-</style>
+    .status-nonts {
+      background: #dcfce7;
+    }
+  </style>
 </head>
+
 <script>
 function applyRowStyle(tr, row) {
   const status = (row['State'] || row['Status'] || '').toLowerCase();
@@ -130,6 +111,7 @@ function applyRowStyle(tr, row) {
     tr.classList.add('status-nonts');
   }
 }
+
 </script>
 
 <body>
@@ -146,23 +128,10 @@ function applyRowStyle(tr, row) {
   <a href="map.html">Map</a>
   <a href="incident.html">Incident</a>
   <a href="cambium.html">Data Cambium</a>
-  
 </nav>
 
 <div class="container">
   <input id="search" placeholder="Search data...">
-  <div class="controls" id="filters"></div>
-<div class="controls">
-  Rows:
-  <select id="rowsSelect">
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="20" selected>20</option>
-    <option value="30">30</option>
-    <option value="50">50</option>
-    <option value="0">All</option>
-  </select>
-</div>
   <table>
     <thead>
       <tr id="thead"></tr>
@@ -178,7 +147,7 @@ function applyRowStyle(tr, row) {
 </footer>
 
 <script>
-const csvFile = 'data.csv';
+const csvFile = 'data.csv'; // Ganti sesuai dengan path file CSV yang sesuai
 let rowsPerPage = 20;
 
 let data = [];
@@ -186,8 +155,6 @@ let filtered = [];
 let page = 1;
 let sortKey = '';
 let sortAsc = true;
-
-let activeFilters = {};
 
 fetch(csvFile)
   .then(res => res.text())
@@ -204,76 +171,9 @@ fetch(csvFile)
     });
 
     filtered = [...data];
-    initFilters();
     render();
   });
 
-/* ============================
-   INIT FILTER (SEMUA KOLOM)
-============================ */
-function initFilters() {
-  const box = document.getElementById('filters');
-  box.innerHTML = '';
-  activeFilters = {};
-
-  Object.keys(data[0]).forEach(col => {
-    const select = document.createElement('select');
-    select.dataset.col = col;
-    select.innerHTML = <option value="">All ${col}</option>;
-    select.onchange = () => applyFilters(col);
-    box.appendChild(select);
-  });
-
-  rebuildFilters(data);
-}
-
-/* ============================
-   REBUILD FILTER OPTIONS
-============================ */
-function rebuildFilters(sourceData) {
-  document.querySelectorAll('#filters select').forEach(select => {
-    const col = select.dataset.col;
-    const currentValue = select.value;
-
-    const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
-
-    select.innerHTML = <option value="">All ${col}</option>;
-    values.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v;
-      opt.textContent = v;
-      select.appendChild(opt);
-    });
-
-    if (values.includes(currentValue)) {
-      select.value = currentValue;
-    }
-  });
-}
-
-/* ============================
-   APPLY FILTER (CASCADING)
-============================ */
-function applyFilters(changedCol) {
-  activeFilters = {};
-  document.querySelectorAll('#filters select').forEach(s => {
-    if (s.value) activeFilters[s.dataset.col] = s.value;
-  });
-
-  filtered = data.filter(row => {
-    return Object.entries(activeFilters).every(
-      ([col, val]) => row[col] === val
-    );
-  });
-
-  rebuildFilters(filtered);
-  page = 1;
-  render();
-}
-
-/* ============================
-   SEARCH GLOBAL
-============================ */
 document.getElementById('search').oninput = () => {
   const q = search.value.toLowerCase();
 
@@ -281,14 +181,10 @@ document.getElementById('search').oninput = () => {
     Object.values(row).join(' ').toLowerCase().includes(q)
   );
 
-  rebuildFilters(filtered);
   page = 1;
   render();
 };
 
-/* ============================
-   RENDER TABLE
-============================ */
 function render() {
   if (filtered.length === 0) return;
 
@@ -327,10 +223,6 @@ function render() {
   pagination();
 }
 
-
-/* ============================
-   SORT
-============================ */
 function sort(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
   sortKey = key;
@@ -341,9 +233,6 @@ function sort(key) {
   render();
 }
 
-/* ============================
-   PAGINATION
-============================ */
 function pagination() {
   const p = document.getElementById('pagination');
   p.innerHTML = '';
@@ -361,14 +250,12 @@ function pagination() {
     start = Math.max(1, end - maxButtons + 1);
   }
 
-  // Prev
   const prev = document.createElement('button');
   prev.textContent = '« Prev';
   prev.disabled = page === 1;
   prev.onclick = () => { page--; render(); };
   p.appendChild(prev);
 
-  // Page numbers
   for (let i = start; i <= end; i++) {
     const b = document.createElement('button');
     b.textContent = i;
@@ -381,13 +268,13 @@ function pagination() {
     p.appendChild(b);
   }
 
-  // Next
   const next = document.createElement('button');
   next.textContent = 'Next »';
   next.disabled = page === totalPages;
   next.onclick = () => { page++; render(); };
   p.appendChild(next);
 }
+
 document.getElementById('rowsSelect').onchange = e => {
   rowsPerPage = Number(e.target.value);
   page = 1;
@@ -398,4 +285,3 @@ document.getElementById('rowsSelect').onchange = e => {
 
 </body>
 </html>
-
