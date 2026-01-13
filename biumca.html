@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Home - BWA WiBAS</title>
+<title>Home - BWA Cambium</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Chart.js -->
@@ -150,7 +150,7 @@ footer {
 </div>
 
 <footer>
-  © 2026 BWA WiBAS – Lintasarta
+  © 2026 BWA Cambium – Lintasarta
 </footer>
 
 <script>
@@ -170,11 +170,11 @@ fetch(csvFile)
       return obj;
     });
 
-    // === AUTO DETECT COLUMN ===
+    // AUTO DETECT COLUMN
     const sectorCol = headers.find(h => h.toLowerCase().includes('sektor'));
     const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
-    const userCol   = headers.find(h => h.toLowerCase().includes('remote') || h.toLowerCase().includes('msisdn'));
-    const stateCol = headers.find(h => h.toLowerCase().includes('status'));
+    const userCol   = headers.find(h => h.toLowerCase().includes('remote'));
+    const stateCol  = headers.find(h => h.toLowerCase().includes('status'));
     const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
     const regionCol = headers.find(h => h.toLowerCase().includes('region'));
 
@@ -189,67 +189,55 @@ fetch(csvFile)
     const sectorArea = {};
 
     rows.forEach(r => {
-      if (sectorCol && r[sectorCol]) sektors.add(r[sectorCol]);
+      if (sectorCol && r[sectorCol]) sectors.add(r[sectorCol]);
       if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
-      if (userCol && r[userCol]) remotes++;
+      if (userCol && r[userCol]) users++;
 
-if (stateCol && r[stateCol]) {
-  const s = r[stateCol].toString().trim().toLowerCase();
+      if (stateCol && r[stateCol]) {
+        const s = r[stateCol].toLowerCase();
+        if (s === 'online' || s === 'active') active++;
+        else inactive++;
+      }
 
-  if (s === 'online') {
-    online++;
-  } else {
-    offline++;
-  }
-}
-
-
-      // USER PER AREA
       if (areaCol && userCol && r[userCol]) {
         const a = r[areaCol] || 'Unknown';
         userArea[a] = (userArea[a] || 0) + 1;
       }
 
-      // NODE PER REGION
       if (regionCol && nodeCol && r[nodeCol]) {
         const rg = r[regionCol] || 'Unknown';
         nodeRegion[rg] = (nodeRegion[rg] || 0) + 1;
       }
 
-      // SECTOR PER AREA
       if (areaCol && sectorCol && r[sectorCol]) {
         const a = r[areaCol] || 'Unknown';
         sectorArea[a] = (sectorArea[a] || 0) + 1;
       }
     });
 
-    // OVERVIEW
-    document.getElementById('totalSector').textContent = sektors.size;
+    document.getElementById('totalSector').textContent = sectors.size;
     document.getElementById('totalNode').textContent = nodes.size;
-    document.getElementById('totalUser').textContent = remotes;
-    document.getElementById('activeCount').textContent = online;
-    document.getElementById('inactiveCount').textContent = offline;
+    document.getElementById('totalUser').textContent = users;
+    document.getElementById('activeCount').textContent = active;
+    document.getElementById('inactiveCount').textContent = inactive;
 
-    // PIE CHART FUNCTION
     const makePie = (id, dataObj) => {
       new Chart(document.getElementById(id), {
         type: 'pie',
         data: {
           labels: Object.keys(dataObj),
-          datasets: [{
-            data: Object.values(dataObj)
-          }]
+          datasets: [{ data: Object.values(dataObj) }]
         }
       });
     };
 
-    makePie('userAreaChart', remoteArea);
+    makePie('userAreaChart', userArea);
     makePie('nodeRegionChart', nodeRegion);
-    makePie('sectorAreaChart', sektorArea);
+    makePie('sectorAreaChart', sectorArea);
   })
   .catch(err => {
     console.error(err);
-    alert('Gagal membaca data.csv');
+    alert('Gagal membaca cambium.csv');
   });
 </script>
 
