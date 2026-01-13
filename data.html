@@ -1,138 +1,111 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Data BWA WiBAS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Data BWA WiBAS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
 
-    header {
-      background: linear-gradient(90deg, #0f172a, #020617);
-      color: white;
-      padding: 12px 24px;
-    }
+header {
+  background: linear-gradient(90deg, #0f172a, #020617);
+  color: white;
+  padding: 12px 24px;
+}
 
-    nav {
-      background: #1e293b;
-      padding: 6px 24px;
-    }
+nav {
+  background: #1e293b;
+  padding: 6px 24px;
+}
 
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-right: 20px;
-      font-weight: bold;
-    }
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
 
-    .container {
-      padding: 24px;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
+.container {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
 
-    input {
-      padding: 10px;
-      width: 300px;
-      margin-bottom: 15px;
-    }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
 
-    table {
-      width: 100%;
-      table-layout: auto;
-      border-collapse: collapse;
-      background: white;
-    }
+.toolbar input {
+  padding: 10px;
+  width: 300px;
+}
 
-    th, td {
-      padding: 10px;
-      border: 1px solid #e5e7eb;
-      text-align: left;
-    }
+.toolbar select {
+  padding: 10px;
+}
 
-    th {
-      cursor: pointer;
-      background: #f1f5f9;
-    }
+.toolbar button {
+  padding: 10px 14px;
+  cursor: pointer;
+}
 
-    .pagination {
-      margin-top: 15px;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
 
-    .pagination button {
-      padding: 6px 12px;
-      margin-right: 4px;
-    }
+th, td {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
 
-    footer {
-      margin-top: 30px;
-      padding: 16px;
-      text-align: center;
-      background: #020617;
-      color: white;
-    }
+th {
+  background: #f1f5f9;
+  cursor: pointer;
+}
 
-    .status-active {
-      color: #16a34a;
-      font-weight: bold;
-    }
+.pagination {
+  margin-top: 15px;
+}
 
-    .status-inactive {
-      color: #dc2626;
-      font-weight: bold;
-    }
+.pagination button {
+  padding: 6px 12px;
+  margin-right: 4px;
+}
 
-    .status-nonts {
-      background: #dcfce7;
-    }
-  </style>
+.status-active {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.status-nonts {
+  background: #dcfce7;
+}
+
+footer {
+  margin-top: 30px;
+  padding: 16px;
+  text-align: center;
+  background: #020617;
+  color: white;
+}
+</style>
 </head>
-
-<script>
-function applyRowStyle(tr, row) {
-  const status = (row['State'] || row['Status'] || '').toLowerCase();
-
-  if (status === 'active') {
-    tr.querySelectorAll('td').forEach(td => td.classList.add('status-active'));
-  }
-
-  if (status === 'inactive' || status === 'dismantle') {
-    tr.querySelectorAll('td').forEach(td => td.classList.add('status-inactive'));
-  }
-
-  const terminal = (row['Total Terminal'] || '').toLowerCase();
-  if (terminal.includes('non')) {
-    tr.classList.add('status-nonts');
-  }
-}
-
-function downloadCSV() {
-  const csvRows = [];
-  const headers = Object.keys(filtered[0]);
-  csvRows.push(headers.join(',')); // Add header row
-  
-  filtered.forEach(row => {
-    const values = headers.map(header => `"${row[header]}"`); // Wrap values in quotes
-    csvRows.push(values.join(','));
-  });
-
-  const csvString = csvRows.join('\n');
-  const blob = new Blob([csvString], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'data_bwa_wibas.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-</script>
 
 <body>
 
@@ -151,8 +124,23 @@ function downloadCSV() {
 </nav>
 
 <div class="container">
-  <input id="search" placeholder="Search data...">
-  <button onclick="downloadCSV()">Export to CSV</button>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input id="search" placeholder="Search data...">
+
+    <select id="rowsSelect">
+      <option value="5">5</option>
+      <option value="20" selected>20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="0">All</option>
+    </select>
+
+    <button onclick="downloadCSV()">Ekspor ke Excel</button>
+  </div>
+
+  <!-- TABLE -->
   <table>
     <thead>
       <tr id="thead"></tr>
@@ -160,7 +148,9 @@ function downloadCSV() {
     <tbody id="tbody"></tbody>
   </table>
 
+  <!-- PAGINATION -->
   <div class="pagination" id="pagination"></div>
+
 </div>
 
 <footer>
@@ -168,15 +158,15 @@ function downloadCSV() {
 </footer>
 
 <script>
-const csvFile = 'data.csv'; // Ganti sesuai dengan path file CSV yang sesuai
-let rowsPerPage = 20;
-
+const csvFile = 'data.csv';
 let data = [];
 let filtered = [];
 let page = 1;
+let rowsPerPage = 20;
 let sortKey = '';
 let sortAsc = true;
 
+// ================= FETCH CSV =================
 fetch(csvFile)
   .then(res => res.text())
   .then(text => {
@@ -195,19 +185,26 @@ fetch(csvFile)
     render();
   });
 
-document.getElementById('search').oninput = () => {
-  const q = search.value.toLowerCase();
-
+// ================= SEARCH =================
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
   filtered = data.filter(row =>
     Object.values(row).join(' ').toLowerCase().includes(q)
   );
-
   page = 1;
   render();
-};
+});
 
+// ================= ROW SELECT =================
+document.getElementById('rowsSelect').addEventListener('change', e => {
+  rowsPerPage = Number(e.target.value);
+  page = 1;
+  render();
+});
+
+// ================= RENDER =================
 function render() {
-  if (filtered.length === 0) return;
+  if (!filtered.length) return;
 
   const headers = Object.keys(filtered[0]);
   const thead = document.getElementById('thead');
@@ -224,9 +221,8 @@ function render() {
   });
 
   const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-  const slice = rowsPerPage === 0
-    ? filtered
-    : filtered.slice(start, start + rowsPerPage);
+  const end = rowsPerPage === 0 ? filtered.length : start + rowsPerPage;
+  const slice = filtered.slice(start, end);
 
   slice.forEach(row => {
     const tr = document.createElement('tr');
@@ -237,13 +233,14 @@ function render() {
       tr.appendChild(td);
     });
 
-    applyRowStyle(tr, row); // ✅ INI BARU BENAR
+    applyRowStyle(tr, row);
     tbody.appendChild(tr);
   });
 
   pagination();
 }
 
+// ================= SORT =================
 function sort(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
   sortKey = key;
@@ -254,6 +251,7 @@ function sort(key) {
   render();
 }
 
+// ================= PAGINATION =================
 function pagination() {
   const p = document.getElementById('pagination');
   p.innerHTML = '';
@@ -261,15 +259,6 @@ function pagination() {
   if (rowsPerPage === 0) return;
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
-  const maxButtons = 5;
-
-  let start = Math.max(1, page - Math.floor(maxButtons / 2));
-  let end = start + maxButtons - 1;
-
-  if (end > totalPages) {
-    end = totalPages;
-    start = Math.max(1, end - maxButtons + 1);
-  }
 
   const prev = document.createElement('button');
   prev.textContent = '« Prev';
@@ -277,7 +266,8 @@ function pagination() {
   prev.onclick = () => { page--; render(); };
   p.appendChild(prev);
 
-  for (let i = start; i <= end; i++) {
+  for (let i = 1; i <= totalPages; i++) {
+    if (i > page + 2 || i < page - 2) continue;
     const b = document.createElement('button');
     b.textContent = i;
     if (i === page) {
@@ -296,11 +286,44 @@ function pagination() {
   p.appendChild(next);
 }
 
-document.getElementById('rowsSelect').onchange = e => {
-  rowsPerPage = Number(e.target.value);
-  page = 1;
-  render();
-};
+// ================= ROW STYLE =================
+function applyRowStyle(tr, row) {
+  const status = (row['State'] || row['Status'] || '').toLowerCase();
+  const terminal = (row['Total Terminal'] || '').toLowerCase();
+
+  if (status === 'active') {
+    tr.classList.add('status-active');
+  }
+
+  if (status === 'inactive' || status === 'dismantle') {
+    tr.classList.add('status-inactive');
+  }
+
+  if (terminal.includes('non')) {
+    tr.classList.add('status-nonts');
+  }
+}
+
+// ================= EXPORT CSV =================
+function downloadCSV() {
+  if (!filtered.length) return;
+
+  const headers = Object.keys(filtered[0]);
+  const rows = filtered.map(row =>
+    headers.map(h => `"${row[h]}"`).join(',')
+  );
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'wibas.csv';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
 </script>
 
 </body>
