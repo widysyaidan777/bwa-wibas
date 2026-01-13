@@ -14,15 +14,16 @@ body {
   background: #f4f6f8;
 }
 
+/* HEADER */
 header {
   background: linear-gradient(90deg,#0f172a,#020617);
   color: white;
-  padding: 12px 24px;
+  padding: 14px 24px;
 }
 
 nav {
   background: #1e293b;
-  padding: 6px 24px;
+  padding: 8px 24px;
 }
 
 nav a {
@@ -32,21 +33,31 @@ nav a {
   font-weight: bold;
 }
 
+/* CONTAINER */
 .container {
   padding: 24px;
 }
 
+/* CONTROLS */
 .controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
+.controls input,
 .controls select,
-.controls button,
-#search {
-  padding: 8px;
-  margin-right: 10px;
+.controls button {
+  padding: 8px 10px;
+  font-size: 14px;
 }
 
+#search {
+  width: 220px;
+}
+
+/* TABLE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -61,8 +72,12 @@ th, td {
 
 th {
   background: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
+/* PAGINATION */
 .pagination {
   margin-top: 15px;
 }
@@ -72,6 +87,7 @@ th {
   margin-right: 4px;
 }
 
+/* FOOTER */
 footer {
   margin-top: 30px;
   padding: 20px;
@@ -100,19 +116,16 @@ footer {
 
 <div class="container">
 
-<input type="text" id="search" placeholder="Cari data...">
-
+<!-- CONTROLS -->
 <div class="controls">
-  <label>
-    Tampilkan
-    <select id="rowsPerPage" onchange="changeRowsPerPage()">
-      <option value="5">5</option>
-      <option value="20" selected>20</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-    </select>
-    baris
-  </label>
+  <input type="text" id="search" placeholder="Cari data...">
+
+  <select id="rowsPerPage" onchange="changeRowsPerPage()">
+    <option value="5">5</option>
+    <option value="20" selected>20</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
 
   <button onclick="exportToExcel()">Ekspor ke Excel</button>
 </div>
@@ -147,14 +160,12 @@ const headers = [
   "FO","WIBAS","STARLINK","M2M","Status Mig","Keterangan"
 ];
 
-// Load CSV
+// LOAD CSV
 fetch(csvFile)
   .then(res => res.text())
   .then(text => {
     const lines = text.trim().split(/\r?\n/);
     const delimiter = lines[0].includes(';') ? ';' : ',';
-
-    const csvHeaders = lines[0].split(delimiter);
 
     data = lines.slice(1).map(line => {
       const values = line.split(delimiter);
@@ -169,7 +180,7 @@ fetch(csvFile)
     render();
   });
 
-// Render table
+// RENDER TABLE
 function render() {
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
@@ -200,7 +211,7 @@ function render() {
   pagination();
 }
 
-// Pagination
+// PAGINATION
 function pagination() {
   const p = document.getElementById('pagination');
   p.innerHTML = '';
@@ -209,7 +220,7 @@ function pagination() {
   if (totalPages <= 1) return;
 
   const prev = document.createElement('button');
-  prev.textContent = '« Prev';
+  prev.textContent = '« Sebelumnya';
   prev.disabled = page === 1;
   prev.onclick = () => { page--; render(); };
   p.appendChild(prev);
@@ -229,13 +240,13 @@ function pagination() {
   }
 
   const next = document.createElement('button');
-  next.textContent = 'Next »';
+  next.textContent = 'Selanjutnya »';
   next.disabled = page === totalPages;
   next.onclick = () => { page++; render(); };
   p.appendChild(next);
 }
 
-// Search
+// SEARCH
 document.getElementById('search').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   filtered = data.filter(row =>
@@ -247,14 +258,14 @@ document.getElementById('search').addEventListener('input', e => {
   render();
 });
 
-// Change rows per page
+// CHANGE ROWS
 function changeRowsPerPage() {
   rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
   page = 1;
   render();
 }
 
-// Export to Excel
+// EXPORT EXCEL
 function exportToExcel() {
   const table = document.querySelector("table");
   const wb = XLSX.utils.table_to_book(table, { sheet: "Cambium" });
