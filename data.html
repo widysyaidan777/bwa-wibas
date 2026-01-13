@@ -1,461 +1,246 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Data BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Data BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
+    header {
+      background: linear-gradient(90deg,#0f172a,#020617);
+      color: white;
+      padding: 12px 24px;
+      text-align: left;
+    }
 
-header {
-  background: linear-gradient(90deg,#0f172a,#020617);
-  color: white;
-  padding: 12px 24px;   /* DIPERKECIL */
-  text-align: left;
-}
+    nav {
+      background: #1e293b;
+      width: 100%;
+      padding: 6px 24px;
+      text-align: left;
+    }
 
-nav {
-  background: #1e293b;
-  width: 100%;
-  padding: 6px 24px;    /* DIPERKECIL */
-  text-align: left;
-}
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: bold;
+    }
 
-nav a {
-  color: white;
-  text-decoration: none;
-  margin-right: 20px;
-  font-weight: bold;
-}
+    .container {
+      padding: 24px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
 
-.container {
-  padding: 24px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
+    input {
+      padding: 10px;
+      width: 300px;
+      margin-bottom: 15px;
+    }
 
-input {
-  padding: 10px;
-  width: 300px;
-  margin-bottom: 15px;
-}
+    table {
+      width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
+      background: white;
+    }
 
-table {
-  width: 100%;
-  table-layout: auto;
-  border-collapse: collapse;
-  background: white;
-}
+    th, td {
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
 
-th, td {
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-}
+    th {
+      cursor: pointer;
+      background: #f1f5f9;
+    }
 
-th {
-  cursor: pointer;
-  background: #f1f5f9;
-}
+    .pagination {
+      margin-top: 15px;
+    }
 
-.pagination {
-  margin-top: 15px;
-}
+    .pagination button {
+      padding: 6px 12px;
+      margin-right: 4px;
+    }
 
-.pagination button {
-  padding: 6px 12px;
-  margin-right: 4px;
-}
-  .controls {
-  margin-bottom: 15px;
-}
+    .controls {
+      margin-bottom: 15px;
+    }
 
-.controls select {
-  padding: 6px;
-}
-  .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 15px;
-}
+    .controls select {
+      padding: 6px;
+    }
 
-.controls select {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: white;
-}
-
-footer {
-  margin-top: 30px;
-  padding: 24px;
-  text-align: center;
-  background: #020617;
-  color: white;
-}
-  .status-active {
-  color: #16a34a;
-  font-weight: bold;
-}
-
-.status-inactive {
-  color: #dc2626;
-  font-weight: bold;
-}
-
-.status-nonts {
-  background: #dcfce7;
-}
-
-</style>
+    footer {
+      margin-top: 30px;
+      padding: 24px;
+      text-align: center;
+      background: #020617;
+      color: white;
+    }
+  </style>
 </head>
-<script>
-function applyRowStyle(tr, row) {
-  const status = (row['State'] || row['Status'] || '').toLowerCase();
-
-  if (status === 'active') {
-    tr.querySelectorAll('td').forEach(td => td.classList.add('status-active'));
-  }
-
-  if (status === 'inactive' || status === 'dismantle') {
-    tr.querySelectorAll('td').forEach(td => td.classList.add('status-inactive'));
-  }
-
-  const terminal = (row['Total Terminal'] || '').toLowerCase();
-  if (terminal.includes('non')) {
-    tr.classList.add('status-nonts');
-  }
-}
-</script>
 
 <body>
 
-<header>
-  <h1>Data BWA WiBAS</h1>
-  <p>Lintasarta</p>
-</header>
+  <header>
+    <h1>Data BWA WiBAS</h1>
+    <p>Lintasarta</p>
+  </header>
 
-<nav>
-  <a href="index.html">Home</a>
-  <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
-  <a href="cambium.html">Data Cambium</a>
-</nav>
+  <nav>
+    <a href="index.html">Beranda</a>
+    <a href="data.html">Data</a>
+    <a href="wibas.html">WiBAS</a>
+    <a href="map.html">Peta</a>
+    <a href="incident.html">Insiden</a>
+  </nav>
 
-<div class="container">
-  <input id="search" placeholder="Search data...">
-  <div class="controls" id="filters"></div>
-<div class="controls">
-  Rows:
-  <select id="rowsSelect">
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="20" selected>20</option>
-    <option value="30">30</option>
-    <option value="50">50</option>
-    <option value="0">All</option>
-  </select>
-</div>
+  <div class="container">
+    <input id="search" placeholder="Cari data...">
+    <div class="controls">
+      <button onclick="exportToExcel()">Ekspor ke Excel</button>
+    </div>
 
-<div class="controls">
-    <button onclick="exportToExcel()">Export to Excel</button>
+    <table>
+      <thead>
+        <tr id="thead"></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="pagination" id="pagination"></div>
   </div>
-  
-  <table>
-    <thead>
-      <tr id="thead"></tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
 
-  <div class="pagination" id="pagination"></div>
-</div>
+  <footer>
+    © 2026 BWA WiBAS – Lintasarta
+  </footer>
 
-<footer>
-  © 2026 BWA WiBAS – Lintasarta
-</footer>
-<script>
+  <script>
+    const csvFile = 'data.csv'; // Ganti dengan nama file CSV Anda
+
+    let rowsPerPage = 20;
+    let data = [];
+    let filtered = [];
+    let page = 1;
+
+    fetch(csvFile)
+      .then(res => res.text())
+      .then(text => {
+        const lines = text.trim().split(/\r?\n/);
+        const delimiter = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(delimiter).map(h => h.trim());
+
+        data = lines.slice(1).map(line => {
+          const values = line.split(delimiter);
+          const obj = {};
+          headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
+          return obj;
+        });
+
+        filtered = [...data];
+        render();
+      });
+
+    // Render tabel
+    function render() {
+      if (filtered.length === 0) return;
+
+      const headers = ["No", "Region", "Area", "Node", "Sektor", "MAC", "Device Name", "Remote", 
+                       "Lat", "Long", "Distance", "IP Address", "Device Type", "Device", 
+                       "Serial Number", "Description", "Status", "Bandwidth", "Keterangan", 
+                       "FO", "WIBAS", "STARLINK", "M2M", "Status Mig", "Keterangan"];
+
+      const thead = document.getElementById('thead');
+      const tbody = document.getElementById('tbody');
+
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      // Tambahkan kolom header tanpa filter
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        thead.appendChild(th);
+      });
+
+      // Tambahkan data ke tabel
+      filtered.forEach(row => {
+        const tr = document.createElement('tr');
+
+        headers.forEach(h => {
+          const td = document.createElement('td');
+          td.textContent = row[h];
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      pagination();
+    }
+
+    // Fungsi pagination
+    function pagination() {
+      const p = document.getElementById('pagination');
+      p.innerHTML = '';
+
+      const totalPages = Math.ceil(filtered.length / rowsPerPage);
+      const maxButtons = 5;
+
+      let start = Math.max(1, page - Math.floor(maxButtons / 2));
+      let end = start + maxButtons - 1;
+
+      if (end > totalPages) {
+        end = totalPages;
+        start = Math.max(1, end - maxButtons + 1);
+      }
+
+      // Tombol Prev
+      const prev = document.createElement('button');
+      prev.textContent = '« Sebelumnya';
+      prev.disabled = page === 1;
+      prev.onclick = () => { page--; render(); };
+      p.appendChild(prev);
+
+      // Nomor Halaman
+      for (let i = start; i <= end; i++) {
+        const b = document.createElement('button');
+        b.textContent = i;
+        if (i === page) {
+          b.style.fontWeight = 'bold';
+          b.style.background = '#1e293b';
+          b.style.color = 'white';
+        }
+        b.onclick = () => { page = i; render(); };
+        p.appendChild(b);
+      }
+
+      // Tombol Next
+      const next = document.createElement('button');
+      next.textContent = 'Selanjutnya »';
+      next.disabled = page === totalPages;
+      next.onclick = () => { page++; render(); };
+      p.appendChild(next);
+    }
+
+    // Ekspor ke Excel
     function exportToExcel() {
-  const table = document.querySelector("table");
-  const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-  XLSX.writeFile(wb, "data.xlsx");
-}
-
-const csvFile = 'data.csv';
-let rowsPerPage = 20;
-
-let data = [];
-let filtered = [];
-let page = 1;
-let sortKey = '';
-let sortAsc = true;
-
-let activeFilters = {};
-
-fetch(csvFile)
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.trim().split(/\r?\n/);
-    const delimiter = lines[0].includes(';') ? ';' : ',';
-    const headers = lines[0].split(delimiter).map(h => h.trim());
-
-    data = lines.slice(1).map(line => {
-      const values = line.split(delimiter);
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
-      return obj;
-    });
-
-    filtered = [...data];
-    initFilters();
-    render();
-  });
-
-/* ============================
-   INIT FILTER (SEMUA KOLOM)
-============================ */
-function initFilters() {
-  const box = document.getElementById('filters');
-  box.innerHTML = '';
-  activeFilters = {};
-
-  Object.keys(data[0]).forEach(col => {
-    const select = document.createElement('select');
-    select.dataset.col = col;
-    select.innerHTML = `<option value="">All ${col}</option>`;
-    select.onchange = () => applyFilters(col);
-    box.appendChild(select);
-  });
-
-  rebuildFilters(data);
-}
-
-/* ============================
-   REBUILD FILTER OPTIONS
-============================ */
-function rebuildFilters(sourceData) {
-  document.querySelectorAll('#filters select').forEach(select => {
-    const col = select.dataset.col;
-    const currentValue = select.value;
-
-    const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
-
-    select.innerHTML = `<option value="">All ${col}</option>`;
-    values.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v;
-      opt.textContent = v;
-      select.appendChild(opt);
-    });
-
-    if (values.includes(currentValue)) {
-      select.value = currentValue;
+      const table = document.querySelector("table");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      XLSX.writeFile(wb, "WiBAS.xlsx");
     }
-  });
-}
-
-/* ============================
-   APPLY FILTER (CASCADING)
-============================ */
-function applyFilters(changedCol) {
-  activeFilters = {};
-  document.querySelectorAll('#filters select').forEach(s => {
-    if (s.value) activeFilters[s.dataset.col] = s.value;
-  });
-
-  filtered = data.filter(row => {
-    return Object.entries(activeFilters).every(
-      ([col, val]) => row[col] === val
-    );
-  });
-
-  rebuildFilters(filtered);
-  page = 1;
-  render();
-}
-
-/* ============================
-   SEARCH GLOBAL
-============================ */
-document.getElementById('search').oninput = () => {
-  const q = search.value.toLowerCase();
-
-  filtered = data.filter(row =>
-    Object.values(row).join(' ').toLowerCase().includes(q)
-  );
-
-  rebuildFilters(filtered);
-  page = 1;
-  render();
-};
-
-/* ============================
-   RENDER TABLE
-============================ */
-function render() {
-  if (filtered.length === 0) return;
-
-  const headers = Object.keys(filtered[0]);
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
-
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
-
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    th.onclick = () => sort(h);
-    thead.appendChild(th);
-  });
-
-  const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-  const slice = rowsPerPage === 0
-    ? filtered
-    : filtered.slice(start, start + rowsPerPage);
-
-  slice.forEach(row => {
-    const tr = document.createElement('tr');
-
-    headers.forEach(h => {
-      const td = document.createElement('td');
-      td.textContent = row[h];
-      tr.appendChild(td);
-    });
-
-    applyRowStyle(tr, row); // ✅ INI BARU BENAR
-    tbody.appendChild(tr);
-  });
-
-  pagination();
-}
-
-
-/* ============================
-   SORT
-============================ */
-function sort(key) {
-  sortAsc = sortKey === key ? !sortAsc : true;
-  sortKey = key;
-
-  filtered.sort((a, b) =>
-    (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
-  );
-  render();
-}
-
-/* ============================
-   PAGINATION
-============================ */
-function pagination() {
-  const p = document.getElementById('pagination');
-  p.innerHTML = '';
-
-  if (rowsPerPage === 0) return;
-
-  const totalPages = Math.ceil(filtered.length / rowsPerPage);
-  const maxButtons = 5;
-
-  let start = Math.max(1, page - Math.floor(maxButtons / 2));
-  let end = start + maxButtons - 1;
-
-  if (end > totalPages) {
-    end = totalPages;
-    start = Math.max(1, end - maxButtons + 1);
-  }
-
-  // Prev
-  const prev = document.createElement('button');
-  prev.textContent = '« Prev';
-  prev.disabled = page === 1;
-  prev.onclick = () => { page--; render(); };
-  p.appendChild(prev);
-
-  // Page numbers
-  for (let i = start; i <= end; i++) {
-    const b = document.createElement('button');
-    b.textContent = i;
-    if (i === page) {
-      b.style.fontWeight = 'bold';
-      b.style.background = '#1e293b';
-      b.style.color = 'white';
-    }
-    b.onclick = () => { page = i; render(); };
-    p.appendChild(b);
-  }
-
-  // Next
-  const next = document.createElement('button');
-  next.textContent = 'Next »';
-  next.disabled = page === totalPages;
-  next.onclick = () => { page++; render(); };
-  p.appendChild(next);
-}
-document.getElementById('rowsSelect').onchange = e => {
-  rowsPerPage = Number(e.target.value);
-  page = 1;
-  render();
-};
-
-</script>
+  </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
