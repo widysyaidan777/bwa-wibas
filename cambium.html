@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Data BWA WiBAS</title>
+  <title>Data BWA Cambium</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
   <style>
@@ -102,16 +102,17 @@
 <body>
 
   <header>
-    <h1>Data BWA WiBAS</h1>
+    <h1>Data BWA Cambium</h1>
     <p>Lintasarta</p>
   </header>
 
   <nav>
-    <a href="index.html">Beranda</a>
-    <a href="data.html">Data</a>
+    <a href="index.html">Profil</a>
+    <a href="data.html">Data WiBAS</a>
     <a href="wibas.html">WiBAS</a>
-    <a href="map.html">Peta</a>
-    <a href="incident.html">Insiden</a>
+    <a href="map.html">Map</a>
+    <a href="incident.html">Incident</a>
+    <a href="cambium.html">Data Cambium</a>
   </nav>
 
   <div class="container">
@@ -135,7 +136,7 @@
   </footer>
 
   <script>
-    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'cambium.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
@@ -177,15 +178,10 @@
       thead.innerHTML = '';
       tbody.innerHTML = '';
 
-      // Tambahkan kolom header dan dropdown untuk filter
+      // Tambahkan kolom header tanpa filter dropdown
       headers.forEach(h => {
         const th = document.createElement('th');
-        th.innerHTML = `
-          ${h} 
-          <select onchange="filterColumn('${h}', this.value)">
-            <option value="">Semua ${h}</option>
-          </select>
-        `;
+        th.textContent = h;
         thead.appendChild(th);
       });
 
@@ -203,31 +199,6 @@
       });
 
       pagination();
-      buildFilters(headers);
-    }
-
-    // Menambahkan filter dropdown pada header
-    function buildFilters(headers) {
-      headers.forEach((h, index) => {
-        const select = document.querySelectorAll('th select')[index];
-        const values = [...new Set(filtered.map(row => row[h]).filter(v => v))].sort();
-        values.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v;
-          opt.textContent = v;
-          select.appendChild(opt);
-        });
-      });
-    }
-
-    // Filter berdasarkan kolom
-    function filterColumn(col, value) {
-      if (value === '') {
-        filtered = [...data];
-      } else {
-        filtered = data.filter(row => row[col] === value);
-      }
-      render();
     }
 
     // Fungsi pagination
@@ -248,39 +219,3 @@
 
       // Tombol Prev
       const prev = document.createElement('button');
-      prev.textContent = '« Sebelumnya';
-      prev.disabled = page === 1;
-      prev.onclick = () => { page--; render(); };
-      p.appendChild(prev);
-
-      // Nomor Halaman
-      for (let i = start; i <= end; i++) {
-        const b = document.createElement('button');
-        b.textContent = i;
-        if (i === page) {
-          b.style.fontWeight = 'bold';
-          b.style.background = '#1e293b';
-          b.style.color = 'white';
-        }
-        b.onclick = () => { page = i; render(); };
-        p.appendChild(b);
-      }
-
-      // Tombol Next
-      const next = document.createElement('button');
-      next.textContent = 'Selanjutnya »';
-      next.disabled = page === totalPages;
-      next.onclick = () => { page++; render(); };
-      p.appendChild(next);
-    }
-
-    // Ekspor ke Excel
-    function exportToExcel() {
-      const table = document.querySelector("table");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "data.xlsx");
-    }
-  </script>
-
-</body>
-</html>
