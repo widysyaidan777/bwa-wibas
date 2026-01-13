@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Data BWA Cambium</title>
+  <title>Data BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
   <style>
@@ -88,31 +88,22 @@
       background: #020617;
       color: white;
     }
-
-    th select {
-      width: 100%;
-      padding: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
   </style>
 </head>
 
 <body>
 
   <header>
-    <h1>Data BWA Cambium</h1>
+    <h1>Data BWA WiBAS</h1>
     <p>Lintasarta</p>
   </header>
 
   <nav>
-    <a href="index.html">Profil</a>
-    <a href="data.html">Data WiBAS</a>
+    <a href="index.html">Beranda</a>
+    <a href="data.html">Data</a>
     <a href="wibas.html">WiBAS</a>
-    <a href="map.html">Map</a>
-    <a href="incident.html">Incident</a>
-    <a href="cambium.html">Data Cambium</a>
+    <a href="map.html">Peta</a>
+    <a href="incident.html">Insiden</a>
   </nav>
 
   <div class="container">
@@ -136,7 +127,7 @@
   </footer>
 
   <script>
-    const csvFile = 'cambium.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
@@ -178,7 +169,7 @@
       thead.innerHTML = '';
       tbody.innerHTML = '';
 
-      // Tambahkan kolom header tanpa filter dropdown
+      // Tambahkan kolom header tanpa filter
       headers.forEach(h => {
         const th = document.createElement('th');
         th.textContent = h;
@@ -219,3 +210,39 @@
 
       // Tombol Prev
       const prev = document.createElement('button');
+      prev.textContent = '« Sebelumnya';
+      prev.disabled = page === 1;
+      prev.onclick = () => { page--; render(); };
+      p.appendChild(prev);
+
+      // Nomor Halaman
+      for (let i = start; i <= end; i++) {
+        const b = document.createElement('button');
+        b.textContent = i;
+        if (i === page) {
+          b.style.fontWeight = 'bold';
+          b.style.background = '#1e293b';
+          b.style.color = 'white';
+        }
+        b.onclick = () => { page = i; render(); };
+        p.appendChild(b);
+      }
+
+      // Tombol Next
+      const next = document.createElement('button');
+      next.textContent = 'Selanjutnya »';
+      next.disabled = page === totalPages;
+      next.onclick = () => { page++; render(); };
+      p.appendChild(next);
+    }
+
+    // Ekspor ke Excel
+    function exportToExcel() {
+      const table = document.querySelector("table");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      XLSX.writeFile(wb, "data.xlsx");
+    }
+  </script>
+
+</body>
+</html>
