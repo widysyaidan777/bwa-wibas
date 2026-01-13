@@ -88,6 +88,14 @@
       background: #020617;
       color: white;
     }
+
+    th select {
+      width: 100%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -100,28 +108,14 @@
 
   <nav>
     <a href="index.html">Beranda</a>
-    <a href="data.html">Data WiBAS</a>
+    <a href="data.html">Data</a>
     <a href="wibas.html">WiBAS</a>
     <a href="map.html">Peta</a>
     <a href="incident.html">Insiden</a>
-    <a href="cambium.html">Data Cambium</a>
   </nav>
 
   <div class="container">
     <input id="search" placeholder="Cari data...">
-    <div class="controls" id="filters"></div>
-    <div class="controls">
-      Baris:
-      <select id="rowsSelect">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20" selected>20</option>
-        <option value="30">30</option>
-        <option value="50">50</option>
-        <option value="0">Semua</option>
-      </select>
-    </div>
-
     <div class="controls">
       <button onclick="exportToExcel()">Ekspor ke Excel</button>
     </div>
@@ -141,7 +135,7 @@
   </footer>
 
   <script>
-    const csvFile = 'cambium.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
@@ -149,7 +143,6 @@
     let page = 1;
     let sortKey = '';
     let sortAsc = true;
-    let activeFilters = {};
 
     fetch(csvFile)
       .then(res => res.text())
@@ -166,89 +159,10 @@
         });
 
         filtered = [...data];
-        initFilters();
         render();
       });
 
-    // Inisialisasi filter berdasarkan nama kolom
-    function initFilters() {
-      const box = document.getElementById('filters');
-      box.innerHTML = '';
-      activeFilters = {};
-
-      // Kolom yang digunakan pada data
-      const columns = [
-        "No", "Region", "Area", "Node", "Sektor", "MAC", "Device Name", "Remote", 
-        "Lat", "Long", "Distance", "IP Address", "Device Type", "Device", 
-        "Serial Number", "Description", "Status", "Bandwidth", "Keterangan", 
-        "FO", "WIBAS", "STARLINK", "M2M", "Status Mig", "Keterangan"
-      ];
-
-      columns.forEach(col => {
-        const select = document.createElement('select');
-        select.dataset.col = col;
-        select.innerHTML = `<option value="">Semua ${col}</option>`;
-        select.onchange = () => applyFilters(col);
-        box.appendChild(select);
-      });
-
-      rebuildFilters(data);
-    }
-
-    // Membangun ulang opsi filter berdasarkan data
-    function rebuildFilters(sourceData) {
-      document.querySelectorAll('#filters select').forEach(select => {
-        const col = select.dataset.col;
-        const currentValue = select.value;
-
-        const values = [...new Set(sourceData.map(r => r[col]).filter(v => v))].sort();
-
-        select.innerHTML = `<option value="">Semua ${col}</option>`;
-        values.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v;
-          opt.textContent = v;
-          select.appendChild(opt);
-        });
-
-        if (values.includes(currentValue)) {
-          select.value = currentValue;
-        }
-      });
-    }
-
-    // Terapkan filter berdasarkan kolom yang dipilih
-    function applyFilters(changedCol) {
-      activeFilters = {};
-      document.querySelectorAll('#filters select').forEach(s => {
-        if (s.value) activeFilters[s.dataset.col] = s.value;
-      });
-
-      filtered = data.filter(row => {
-        return Object.entries(activeFilters).every(
-          ([col, val]) => row[col] === val
-        );
-      });
-
-      rebuildFilters(filtered);
-      page = 1;
-      render();
-    }
-
-    // Fungsi pencarian global
-    document.getElementById('search').oninput = () => {
-      const q = search.value.toLowerCase();
-
-      filtered = data.filter(row =>
-        Object.values(row).join(' ').toLowerCase().includes(q)
-      );
-
-      rebuildFilters(filtered);
-      page = 1;
-      render();
-    };
-
-    // Fungsi untuk merender tabel
+    // Render tabel
     function render() {
       if (filtered.length === 0) return;
 
@@ -263,19 +177,20 @@
       thead.innerHTML = '';
       tbody.innerHTML = '';
 
+      // Tambahkan kolom header dan dropdown untuk filter
       headers.forEach(h => {
         const th = document.createElement('th');
-        th.textContent = h;
-        th.onclick = () => sort(h);
+        th.innerHTML = `
+          ${h} 
+          <select onchange="filterColumn('${h}', this.value)">
+            <option value="">Semua ${h}</option>
+          </select>
+        `;
         thead.appendChild(th);
       });
 
-      const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-      const slice = rowsPerPage === 0
-        ? filtered
-        : filtered.slice(start, start + rowsPerPage);
-
-      slice.forEach(row => {
+      // Tambahkan data ke tabel
+      filtered.forEach(row => {
         const tr = document.createElement('tr');
 
         headers.forEach(h => {
@@ -288,16 +203,30 @@
       });
 
       pagination();
+      buildFilters(headers);
     }
 
-    // Fungsi untuk mengurutkan data berdasarkan kolom
-    function sort(key) {
-      sortAsc = sortKey === key ? !sortAsc : true;
-      sortKey = key;
+    // Menambahkan filter dropdown pada header
+    function buildFilters(headers) {
+      headers.forEach((h, index) => {
+        const select = document.querySelectorAll('th select')[index];
+        const values = [...new Set(filtered.map(row => row[h]).filter(v => v))].sort();
+        values.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          select.appendChild(opt);
+        });
+      });
+    }
 
-      filtered.sort((a, b) =>
-        (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
-      );
+    // Filter berdasarkan kolom
+    function filterColumn(col, value) {
+      if (value === '') {
+        filtered = [...data];
+      } else {
+        filtered = data.filter(row => row[col] === value);
+      }
       render();
     }
 
@@ -305,8 +234,6 @@
     function pagination() {
       const p = document.getElementById('pagination');
       p.innerHTML = '';
-
-      if (rowsPerPage === 0) return;
 
       const totalPages = Math.ceil(filtered.length / rowsPerPage);
       const maxButtons = 5;
@@ -347,18 +274,11 @@
       p.appendChild(next);
     }
 
-    // Menangani perubahan jumlah baris yang ditampilkan
-    document.getElementById('rowsSelect').onchange = e => {
-      rowsPerPage = Number(e.target.value);
-      page = 1;
-      render();
-    };
-
     // Ekspor ke Excel
     function exportToExcel() {
       const table = document.querySelector("table");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "cambium.xlsx");
+      XLSX.writeFile(wb, "data.xlsx");
     }
   </script>
 
