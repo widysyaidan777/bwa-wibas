@@ -99,11 +99,12 @@
   </header>
 
   <nav>
-    <a href="index.html">Beranda</a>
-    <a href="data.html">Data</a>
+    <a href="index.html">Profil</a>
+    <a href="data.html">Data WiBAS</a>
     <a href="wibas.html">WiBAS</a>
-    <a href="map.html">Peta</a>
-    <a href="incident.html">Insiden</a>
+    <a href="map.html">Map</a>
+    <a href="incident.html">Incident</a>
+    <a href="cambium.html">Data Cambium</a>
   </nav>
 
   <div class="container">
@@ -127,7 +128,7 @@
   </footer>
 
   <script>
-    const csvFile = 'data_baru.csv'; // Ganti dengan nama file CSV Anda
+    const csvFile = 'data.csv'; // Ganti dengan nama file CSV Anda
 
     let rowsPerPage = 20;
     let data = [];
@@ -240,9 +241,10 @@
     function exportToExcel() {
       const table = document.querySelector("table");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-      XLSX.writeFile(wb, "data.xlsx");
+      XLSX.writeFile(wb, "WiBAS.xlsx");
     }
   </script>
 
 </body>
 </html>  buatkan juga codingan ini tanpa filter dan buatkan codingan lengkapnya
+
