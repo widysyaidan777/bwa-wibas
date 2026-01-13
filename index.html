@@ -16,16 +16,10 @@
       background: linear-gradient(90deg, #0f172a, #020617);
       color: white;
       padding: 12px 24px;
-      text-align: center;
-      font-size: 36px;
-      border-bottom: 2px solid #ffffff;
-    }
-
-    h1, h2, h3 {
-      color: #0f172a;
-      font-size: 32px;
-      margin: 0;
-      padding: 10px;
+      text-align: left;
+      font-size: 24px;
+      font-weight: bold;
+      border-bottom: 1px solid #0f172a;
     }
 
     section.profile {
@@ -61,6 +55,27 @@
       color: white;
     }
 
+    .popup-content {
+      display: none;
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .popup-button {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1e293b;
+      cursor: pointer;
+    }
+
+    .popup-button:hover {
+      color: #0f172a;
+    }
+
     .logos {
       display: flex;
       justify-content: center;
@@ -72,15 +87,39 @@
       width: 150px;
       height: auto;
     }
+
+    /* Styling for active sections */
+    .active {
+      display: block;
+    }
+
+    /* Shrink the border */
+    header, footer {
+      border: 1px solid #1e293b;
+    }
+
   </style>
+
+  <script>
+    function togglePopup(id) {
+      // Hide all popups
+      var popups = document.querySelectorAll('.popup-content');
+      popups.forEach(function(popup) {
+        popup.classList.remove('active');
+      });
+
+      // Show the selected popup
+      var selectedPopup = document.getElementById(id);
+      selectedPopup.classList.add('active');
+    }
+  </script>
+
 </head>
 
 <body>
 
 <header>
-  <h1>BWA & WiBAS</h1>
-  <p>PROFIL</p>
-  <p>Informasi Sistem Broadband Wireless Access</p>
+  BWA & WiBAS | Informasi Sistem Broadband Wireless Access
 </header>
 
 <nav>
@@ -89,37 +128,45 @@
   <a href="cambium.html">Data Cambium</a>
   <a href="wibas.html">WiBAS</a>
   <a href="biumca.html">Cambium</a>
-  <a href="map.html">Peta</a>
+  <a href="map.html">Map</a>
   <a href="incident.html">Insiden</a>
 </nav>
 
 <div class="profile">
   <h2>Apa itu BWA?</h2>
-  <p>
-    <b>BWA (Broadband Wireless Access)</b> adalah layanan akses broadband nirkabel
-    yang digunakan untuk menyediakan konektivitas data berkecepatan tinggi tanpa media kabel.
-  </p>
-  <p>
-    BWA banyak dimanfaatkan untuk mendukung konektivitas di wilayah perkotaan
-    maupun daerah yang sulit dijangkau infrastruktur kabel.
-  </p>
+  <button class="popup-button" onclick="togglePopup('bwa')">Apa itu BWA?</button>
+  <div class="popup-content" id="bwa">
+    <p>
+      <b>BWA (Broadband Wireless Access)</b> adalah layanan akses broadband nirkabel
+      yang digunakan untuk menyediakan konektivitas data berkecepatan tinggi tanpa media kabel.
+    </p>
+    <p>
+      BWA banyak dimanfaatkan untuk mendukung konektivitas di wilayah perkotaan
+      maupun daerah yang sulit dijangkau infrastruktur kabel.
+    </p>
+  </div>
 
   <h2>PMP (Point to MultiPoint)</h2>
-  <p>
-    PMP adalah solusi untuk menyediakan konektivitas nirkabel point-to-multipoint berkapasitas tinggi untuk jaringan area luas. Teknologi ini sering digunakan untuk menghubungkan beberapa lokasi dalam area yang luas.
-  </p>
+  <button class="popup-button" onclick="togglePopup('pmp')">PMP</button>
+  <div class="popup-content" id="pmp">
+    <p>
+      PMP adalah solusi untuk menyediakan konektivitas nirkabel point-to-multipoint berkapasitas tinggi untuk jaringan area luas. Teknologi ini sering digunakan untuk menghubungkan beberapa lokasi dalam area yang luas.
+    </p>
+  </div>
 
   <h2>PTP (Point to Point)</h2>
-  <p>
-    PTP adalah solusi konektivitas nirkabel point-to-point yang cepat dan rendah latensi, cocok untuk konektivitas jarak jauh antara dua titik yang terpisah.
-  </p>
-
+  <button class="popup-button" onclick="togglePopup('ptp')">PTP</button>
+  <div class="popup-content" id="ptp">
+    <p>
+      PTP adalah solusi konektivitas nirkabel point-to-point yang cepat dan rendah latensi, cocok untuk konektivitas jarak jauh antara dua titik yang terpisah.
+    </p>
+  </div>
 </div>
 
 <div class="logos">
   <img src="wibas.png" alt="WiBAS Logo">
   <img src="cambium.png" alt="Cambium Logo">
-  <img src="ridwan.png" alt="Radwin Logo">
+  <img src="radwin.png" alt="Radwin Logo">
 </div>
 
 <footer>
