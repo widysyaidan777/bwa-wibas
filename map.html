@@ -5,9 +5,10 @@
   <title>Peta Topologi – BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- MapTiler Peta -->
+  <!-- Leaflet -->  
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
   <style>
     body {
@@ -58,7 +59,6 @@
 <button id="back-button" onclick="window.location.href='index.html';">Kembali ke Menu</button>
 
 <script>
-  // Inisialisasi peta
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
   
   // Menambahkan TileLayer dari MapTiler
@@ -66,39 +66,9 @@
     attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
-  // Menambahkan sektor cakupan sinyal (misalnya sektor 1 - hijau, sektor 2 - oranye, sektor 3 - merah)
-  
-  // Sektor 1 - Hijau (cakupan sinyal baik)
-  L.polygon([
-    [-6.291, 106.786], [-6.271, 106.811], [-6.251, 106.786], [-6.271, 106.761]
-  ], {
-    color: 'green',
-    fillColor: 'green',
-    fillOpacity: 0.5
-  }).addTo(map);
-
-  // Sektor 2 - Oranye (cakupan sinyal sedang)
-  L.polygon([
-    [-6.251, 106.786], [-6.231, 106.811], [-6.211, 106.786], [-6.231, 106.761]
-  ], {
-    color: 'orange',
-    fillColor: 'orange',
-    fillOpacity: 0.5
-  }).addTo(map);
-
-  // Sektor 3 - Merah (cakupan sinyal buruk)
-  L.polygon([
-    [-6.211, 106.786], [-6.191, 106.811], [-6.171, 106.786], [-6.191, 106.761]
-  ], {
-    color: 'red',
-    fillColor: 'red',
-    fillOpacity: 0.5
-  }).addTo(map);
-
-  // Menambahkan marker untuk lokasi lainnya atau titik sektor
-  L.marker([-6.291, 106.786]).addTo(map).bindPopup('Sektor 1 - Cakupan Sinyal Baik');
-  L.marker([-6.251, 106.786]).addTo(map).bindPopup('Sektor 2 - Cakupan Sinyal Sedang');
-  L.marker([-6.211, 106.786]).addTo(map).bindPopup('Sektor 3 - Cakupan Sinyal Buruk');
+  // Memuat file KML menggunakan Omnivore
+  var kmlLayer = omnivore.kml('https://raw.githubusercontent.com/widysyaidan777/bwa-wibas/refs/heads/main/wirelesswibas.kml')  // Gantilah 'path/to/yourfile.kml' dengan URL atau lokasi file KML Anda
+    .addTo(map);
 </script>
 
 </body>
