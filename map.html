@@ -5,10 +5,9 @@
   <title>Peta Topologi – BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Leaflet -->  
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
   <style>
     body {
@@ -59,16 +58,48 @@
 <button id="back-button" onclick="window.location.href='index.html';">Kembali ke Menu</button>
 
 <script>
-  const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
+  // Menetapkan peta dan titik pusat
+  const map = L.map('map').setView([-6.291, 106.786], 12);  // Menetapkan posisi peta awal
   
   // Menambahkan TileLayer dari MapTiler
-  L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
+  L.tileLayer('https://api.maptiler.com/maps/streets-v4/256/{z}/{x}/{y}.png?key=YOUR_API_KEY', {
     attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
-  // Memuat file KML menggunakan Omnivore
-  var kmlLayer = omnivore.kml('https://raw.githubusercontent.com/widysyaidan777/bwa-wibas/refs/heads/main/wirelesswibas.kml')  // Gantilah 'path/to/yourfile.kml' dengan URL atau lokasi file KML Anda
-    .addTo(map);
+  // Titik koordinat untuk node
+  const latLng = [-6.291, 106.786];  // Ganti dengan koordinat yang diinginkan
+
+  // Fungsi untuk menghitung koordinat titik sektor berdasarkan sudut dan radius
+  function getSectorCoordinates(center, angle, radius) {
+    const radian = angle * (Math.PI / 180);
+    return [
+      [center[0] + (radius * Math.cos(radian)), center[1] + (radius * Math.sin(radian))]
+    ];
+  }
+
+  // Fungsi untuk menggambar sektor
+  function drawSector(center, angleStart, angleEnd, radius, color) {
+    const sectorCoords = [];
+    for (let angle = angleStart; angle <= angleEnd; angle++) {
+      const coords = getSectorCoordinates(center, angle, radius);
+      sectorCoords.push(coords[0]);
+    }
+    return L.polygon([center, ...sectorCoords], {
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.5
+    }).addTo(map);
+  }
+
+  // Menambahkan sektor ke peta
+  drawSector(latLng, 0, 45, 0.05, 'green');  // Sektor 1 (45 derajat)
+  drawSector(latLng, 45, 135, 0.05, 'orange');  // Sektor 2 (135 derajat)
+  drawSector(latLng, 135, 225, 0.05, 'red');  // Sektor 3 (225 derajat)
+
+  // Menambahkan marker untuk node
+  L.circleMarker(latLng, { radius: 10, color: 'blue', fillColor: 'blue', fillOpacity: 0.6 })
+    .addTo(map)
+    .bindPopup('Node - Pusat Sinyal');
 </script>
 
 </body>
