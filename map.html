@@ -1,13 +1,14 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <title>Peta Topologi – BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Leaflet -->
+<!-- Leaflet -->  
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
 <style>
 body {
@@ -44,19 +45,6 @@ button:hover {
   background-color: #555;
 }
 
-/* Animasi kedip untuk status online dan offline */
-@keyframes blinkGreen {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-@keyframes blinkRed {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
 .leaflet-div-icon.green {
   animation: blinkGreen 1s infinite;
 }
@@ -68,36 +56,33 @@ button:hover {
 .leaflet-div-icon img {
   width: 40px;
   height: 40px;
-  border: none !important; /* Menghilangkan border pada gambar ikon */
-  margin: 0 !important; /* Menghilangkan margin */
-  padding: 0 !important; /* Menghilangkan padding */
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Menghilangkan kotak putih di sekitar popup */
 .leaflet-popup-content {
-  background-color: transparent !important; /* Menghilangkan latar belakang putih */
-  padding: 10px 15px !important; /* Memberikan padding lebih untuk informasi */
-  margin: 0 !important; /* Menghilangkan margin */
-  box-shadow: none !important; /* Menghilangkan bayangan */
-  border: 1px solid #333 !important; /* Menambahkan border untuk popup */
+  background-color: transparent !important;
+  padding: 10px 15px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: 1px solid #333 !important;
 }
 
 .leaflet-popup-tip {
-  display: none !important; /* Menghilangkan ujung segitiga pada popup */
+  display: none !important;
 }
 
-/* Popup content customizations */
 .leaflet-popup {
-  border: none !important; /* Menghilangkan border pada popup */
-  background-color: transparent !important; /* Menghilangkan background pada popup */
-  box-shadow: none !important; /* Menghilangkan bayangan pada popup */
-  padding: 0 !important; /* Menghilangkan padding tambahan */
-  margin: 0 !important; /* Menghilangkan margin tambahan */
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* Customizing the Node and Region fields with a blue border below */
 .node-region {
-  border-bottom: 2px solid #003366; /* Dark blue border */
+  border-bottom: 2px solid #003366;
   padding-bottom: 5px;
   margin-bottom: 10px;
 }
@@ -106,9 +91,8 @@ button:hover {
   color: #003366;
 }
 
-/* Memperbaiki posisi tombol tutup (X) pada popup */
 .leaflet-popup-close-button {
-  right: 10px !important; /* Memindahkan tombol tutup ke kanan atas */
+  right: 10px !important;
   top: 10px !important;
 }
 
@@ -150,82 +134,9 @@ button:hover {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Data contoh untuk node dan sektor: Latitude, Longitude, dan Informasi Sektor
-  const nodeData = [
-    {
-      lat: -6.291,
-      lon: 106.786,
-      node: 'Node 1 - Jawa Barat',
-      status: 'online', // Status online
-      region: 'CRO - West Java Area',
-      sectors: [
-        { sector: 'slosrh180', ip: '172.31.141.2' },
-        { sector: 'slosrh181', ip: '172.31.142.3' },
-        { sector: 'slosrh182', ip: '172.31.143.4' },
-        { sector: 'slosrh183', ip: '172.31.144.5' }
-      ]
-    },
-    {
-      lat: -6.836141,
-      lon: 107.48698,
-      node: 'Node 2 - Jawa Timur',
-      status: 'offline', // Status offline
-      region: 'CRO - East Java Area',
-      sectors: [
-        { sector: 'slosrh190', ip: '172.31.147.2' },
-        { sector: 'slosrh191', ip: '172.31.148.3' }
-      ]
-    },
-    // Node lainnya bisa ditambahkan di sini
-  ];
-
-  let currentPopup = null;  // Variabel untuk menyimpan popup yang sedang terbuka
-
-  // Menambahkan marker untuk setiap node
-  nodeData.forEach(node => {
-    let popupContent = `<div class="node-region"><b>Node:</b> ${node.node}</div>
-                        <div class="node-region"><b>Region:</b> ${node.region}</div>
-                        <b>Lokasi:</b><br>Latitude: ${node.lat}<br>Longitude: ${node.lon}`;
-    
-    // Menampilkan semua sektor yang terkait dengan node
-    node.sectors.forEach(sector => {
-      popupContent += `<br><b>${sector.sector}:</b> IP: ${sector.ip}`;
-    });
-
-    // Menentukan ikon berdasarkan status (hijau untuk online, merah untuk offline)
-    const iconUrl = node.status === 'online' ? 
-      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64%20(1).png?raw=true' : 
-      'https://github.com/widysyaidan777/bwa-wibas/blob/main/icons8-gps-signal-64.png?raw=true';
-
-    // Menambahkan marker untuk node dengan ikon yang sesuai status menggunakan L.icon
-    const nodeMarker = L.marker([node.lat, node.lon], {
-      icon: L.icon({
-        iconUrl: iconUrl,
-        iconSize: [40, 40], // Ukuran ikon
-        iconAnchor: [20, 40], // Titik anchor ikon
-        popupAnchor: [0, -40] // Menentukan posisi popup di atas marker
-      })
-    }).addTo(map).bindPopup(popupContent);
-    
-    // Menambahkan interaksi klik untuk setiap sektor dalam node
-    node.sectors.forEach(sector => {
-      const sectorContent = `<br><b>${sector.sector}:</b> IP: ${sector.ip}`;
-      
-      // Menambahkan marker untuk sektor
-      const sectorMarker = L.marker([node.lat, node.lon], { icon: nodeMarker.options.icon }).addTo(map)
-        .on('click', function () {
-          // Menutup popup yang sebelumnya terbuka
-          if (currentPopup) {
-            currentPopup.remove();
-          }
-          // Menampilkan popup untuk sektor yang baru dipilih
-          currentPopup = L.popup()
-            .setLatLng([node.lat, node.lon])
-            .setContent(popupContent + sectorContent)
-            .openOn(map);
-        });
-    });
-  });
+  // Menambahkan file KML menggunakan Omnivore
+  var kmlLayer = omnivore.kml('https://raw.githubusercontent.com/widysyaidan777/bwa-wibas/refs/heads/main/wirelesswibas.kml').addTo(map); // Ganti dengan URL KML Anda
+  
 </script>
 
 </body>
