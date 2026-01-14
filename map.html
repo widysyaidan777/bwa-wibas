@@ -1,118 +1,50 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Peta Topologi – BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Peta Topologi – BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Leaflet -->  
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+  <!-- Leaflet -->  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
 
-header {
-  background: linear-gradient(90deg,#0f172a,#020617);
-  color: white;
-  padding: 16px;
-  text-align: left;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
+    header {
+      background: linear-gradient(90deg,#0f172a,#020617);
+      color: white;
+      padding: 16px;
+      text-align: left;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
 
-#map {
-  height: calc(100vh - 160px); /* Adjusted for space for the button */
-}
+    #map {
+      height: calc(100vh - 160px); /* Adjusted for space for the button */
+    }
 
-button {
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #333;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px; /* Menambahkan margin agar tombol tidak menempel dengan teks */
-}
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
 
-button:hover {
-  background-color: #555;
-}
-
-.leaflet-div-icon.green {
-  animation: blinkGreen 1s infinite;
-}
-
-.leaflet-div-icon.red {
-  animation: blinkRed 1s infinite;
-}
-
-.leaflet-div-icon img {
-  width: 40px;
-  height: 40px;
-  border: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.leaflet-popup-content {
-  background-color: transparent !important;
-  padding: 10px 15px !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-  border: 1px solid #333 !important;
-}
-
-.leaflet-popup-tip {
-  display: none !important;
-}
-
-.leaflet-popup {
-  border: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-.node-region {
-  border-bottom: 2px solid #003366;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
-}
-
-.node-region b {
-  color: #003366;
-}
-
-.leaflet-popup-close-button {
-  right: 10px !important;
-  top: 10px !important;
-}
-
-#back-button {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: #333;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#back-button:hover {
-  background-color: #555;
-}
-</style>
+    button:hover {
+      background-color: #555;
+    }
+  </style>
 </head>
 
 <body>
@@ -134,9 +66,39 @@ button:hover {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Menambahkan file KML menggunakan Omnivore
-  var kmlLayer = omnivore.kml('https://raw.githubusercontent.com/widysyaidan777/bwa-wibas/refs/heads/main/wirelesswibas.kml').addTo(map); // Ganti dengan URL KML Anda
+  // Menambahkan sektor cakupan sinyal (misalnya sektor 1 - hijau, sektor 2 - oranye, sektor 3 - merah)
   
+  // Sektor 1 - Hijau (cakupan sinyal baik)
+  L.polygon([
+    [-6.291, 106.786], [-6.271, 106.811], [-6.251, 106.786], [-6.271, 106.761]
+  ], {
+    color: 'green',
+    fillColor: 'green',
+    fillOpacity: 0.5
+  }).addTo(map);
+
+  // Sektor 2 - Oranye (cakupan sinyal sedang)
+  L.polygon([
+    [-6.251, 106.786], [-6.231, 106.811], [-6.211, 106.786], [-6.231, 106.761]
+  ], {
+    color: 'orange',
+    fillColor: 'orange',
+    fillOpacity: 0.5
+  }).addTo(map);
+
+  // Sektor 3 - Merah (cakupan sinyal buruk)
+  L.polygon([
+    [-6.211, 106.786], [-6.191, 106.811], [-6.171, 106.786], [-6.191, 106.761]
+  ], {
+    color: 'red',
+    fillColor: 'red',
+    fillOpacity: 0.5
+  }).addTo(map);
+
+  // Menambahkan marker untuk lokasi lainnya atau titik sektor
+  L.marker([-6.291, 106.786]).addTo(map).bindPopup('Sektor 1 - Cakupan Sinyal Baik');
+  L.marker([-6.251, 106.786]).addTo(map).bindPopup('Sektor 2 - Cakupan Sinyal Sedang');
+  L.marker([-6.211, 106.786]).addTo(map).bindPopup('Sektor 3 - Cakupan Sinyal Buruk');
 </script>
 
 </body>
