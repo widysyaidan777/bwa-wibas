@@ -5,10 +5,9 @@
   <title>Peta Topologi – BWA WiBAS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Leaflet -->  
+  <!-- MapTiler Peta -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 
   <style>
     body {
@@ -59,11 +58,12 @@
 <button id="back-button" onclick="window.location.href='index.html';">Kembali ke Menu</button>
 
 <script>
+  // Inisialisasi peta
   const map = L.map('map').setView([-6.291, 106.786], 5);  // Menetapkan posisi peta awal
   
-  // Menambahkan Lapisan Tile OpenStreetMap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+  // Menambahkan TileLayer dari MapTiler
+  L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
+    attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
   // Menambahkan sektor cakupan sinyal (misalnya sektor 1 - hijau, sektor 2 - oranye, sektor 3 - merah)
