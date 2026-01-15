@@ -8,100 +8,101 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
-    body { margin:0; font-family:Arial,sans-serif; }
+    body { margin: 0; font-family: Arial, sans-serif; }
 
     header {
-      height:64px;
-      background:linear-gradient(90deg,#0f172a,#020617);
-      color:#fff;
-      padding:16px;
-      display:flex;
-      align-items:center;
+      height: 64px;
+      background: linear-gradient(90deg, #0f172a, #020617);
+      color: #fff;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     #sidebar {
-      position:fixed;
-      top:64px; left:0;
-      width:220px;
-      height:calc(100vh - 64px);
-      background:#1e293b;
-      color:#fff;
-      padding:10px;
-      box-sizing:border-box;
-      z-index:1000;
-      overflow-y:auto;
-      transition:transform .3s;
+      position: fixed;
+      top: 64px; left: 0;
+      width: 220px;
+      height: calc(100vh - 64px);
+      background: #1e293b;
+      color: #fff;
+      padding: 10px;
+      box-sizing: border-box;
+      z-index: 1000;
+      overflow-y: auto;
+      transition: transform .3s;
     }
 
-    #sidebar.hide { transform:translateX(-100%); }
+    #sidebar.hide { transform: translateX(-100%); }
 
     #toggle-btn {
-      position:absolute;
-      top:10px;
-      right:-50px; /* Geser tombol lebih kanan */
-      width:50px; /* Ukuran lebih besar */
-      height:60px; /* Ukuran lebih besar */
-      background:#1e293b;
-      color:white;
-      border-radius:0 6px 6px 0;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px; /* Ukuran font lebih besar */
+      position: absolute;
+      top: 10px;
+      right: 10px; /* Center the button */
+      width: 50px; /* Bigger size */
+      height: 50px; /* Bigger size */
+      background: #1e293b;
+      color: white;
+      border-radius: 0 6px 6px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px; /* Larger font */
     }
 
     #map {
-      margin-left:220px;
-      height:calc(100vh - 64px);
-      transition:.3s;
+      margin-left: 220px;
+      height: calc(100vh - 64px);
+      transition: .3s;
     }
 
-    #map.full { margin-left:0; }
+    #map.full { margin-left: 0; }
 
     #back-button {
-      position:absolute;
-      bottom:10px;
-      left:10px;
-      z-index:1200;
-      padding:10px 15px;
-      background:#333;
-      color:white;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 1200;
+      padding: 10px 15px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
-    /* Tombol Daftar Node */
-    .node-btn {
-      width:100%;
-      margin-bottom:8px;
-      padding:10px;
-      border:none;
-      border-radius:4px;
-      background:#3b82f6;
-      color:white;
-      cursor:pointer;
-      text-align:left;
-    }
-
-    .node-btn:hover { background:#2563eb; }
-
-    /* Styling untuk Daftar Node di bawah judul */
+    /* Node List Styling */
     header h2 {
-      margin-bottom:20px; /* Menambahkan spasi antara judul dan daftar node */
+      margin-bottom: 20px;
     }
 
     #sidebar h3 {
-      font-size:18px;
-      margin-top:20px;
+      font-size: 18px;
+      margin-top: 20px;
     }
 
-    @keyframes blinkBlue { 50% { opacity:.3; } }
-    @keyframes blinkRed { 50% { opacity:.3; } }
+    .node-btn {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+      text-align: left;
+    }
 
-    .status-up { animation:blinkBlue 1s infinite; }
-    .status-down { animation:blinkRed 1s infinite; }
+    .node-btn:hover { background: #2563eb; }
+
+    /* Remove blinking animation */
+    @keyframes blinkBlue { 50% { opacity: .3; } }
+    @keyframes blinkRed { 50% { opacity: .3; } }
+
+    .status-up { animation: blinkBlue 1s infinite; }
+    .status-down { animation: blinkRed 1s infinite; }
   </style>
 
 </head>
