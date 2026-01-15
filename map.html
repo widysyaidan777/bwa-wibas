@@ -21,19 +21,27 @@
       padding: 16px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-btn {
+      display: none;
+      font-size: 22px;
+      cursor: pointer;
     }
 
     /* ===== SIDEBAR ===== */
     #sidebar {
-      position: absolute;
+      position: fixed;
       top: 64px;
       left: 0;
-      width: 200px;
+      width: 220px;
       height: calc(100vh - 64px);
       background: #1e293b;
       color: white;
       padding: 10px;
       z-index: 1000;
+      transition: transform 0.3s ease;
     }
 
     #sidebar h3 {
@@ -44,7 +52,7 @@
     #sidebar button {
       width: 100%;
       margin-bottom: 8px;
-      padding: 8px;
+      padding: 10px;
       border: none;
       border-radius: 4px;
       background: #3b82f6;
@@ -58,12 +66,13 @@
 
     /* ===== MAP ===== */
     #map {
-      margin-left: 200px;
+      margin-left: 220px;
       height: calc(100vh - 160px);
+      transition: margin-left 0.3s ease;
     }
 
     #back-button {
-      margin-left: 210px;
+      margin-left: 230px;
       margin-top: 10px;
       padding: 10px 15px;
       font-size: 16px;
@@ -74,8 +83,27 @@
       cursor: pointer;
     }
 
-    #back-button:hover {
-      background-color: #555;
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .menu-btn {
+        display: block;
+      }
+
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.active {
+        transform: translateX(0);
+      }
+
+      #map {
+        margin-left: 0;
+      }
+
+      #back-button {
+        margin-left: 10px;
+      }
     }
   </style>
 </head>
@@ -84,6 +112,7 @@
 
 <header>
   <h2>Peta Topologi – BWA WiBAS</h2>
+  <span class="menu-btn" onclick="toggleSidebar()">☰</span>
 </header>
 
 <!-- SIDEBAR -->
@@ -91,6 +120,8 @@
   <h3>Daftar Node</h3>
   <button onclick="showAllNodes()">All</button>
   <button onclick="showNode('node1')">Node 1</button>
+  <button onclick="showNode('node2')">Node 2</button>
+  <button onclick="showNode('node3')">Node 3</button>
 </div>
 
 <div id="map"></div>
@@ -100,6 +131,11 @@
 </button>
 
 <script>
+  /* ===== SIDEBAR TOGGLE ===== */
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+  }
+
   /* ===== MAP INIT ===== */
   const map = L.map('map').setView([-6.291, 106.786], 12);
 
@@ -107,11 +143,7 @@
     attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
-  /* ===== NODE DATA ===== */
-  const nodes = {};
-
-  const latLng1 = [-6.291, 106.786];
-
+  /* ===== HELPER ===== */
   function getSectorCoordinates(center, angle, radius) {
     const rad = angle * (Math.PI / 180);
     return [
@@ -123,63 +155,64 @@
   function drawSector(center, start, end, radius, color) {
     const coords = [center];
     if (start < end) {
-      for (let a = start; a <= end; a++) {
-        coords.push(getSectorCoordinates(center, a, radius));
-      }
+      for (let a = start; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
     } else {
-      for (let a = start; a <= 360; a++) {
-        coords.push(getSectorCoordinates(center, a, radius));
-      }
-      for (let a = 0; a <= end; a++) {
-        coords.push(getSectorCoordinates(center, a, radius));
-      }
+      for (let a = start; a <= 360; a++) coords.push(getSectorCoordinates(center, a, radius));
+      for (let a = 0; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
     }
-
-    return L.polygon(coords, {
-      color,
-      fillColor: color,
-      fillOpacity: 0.5
-    });
+    return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.5 });
   }
 
-  /* ===== NODE 1 ===== */
-  const node1Layers = [];
+  const nodes = {};
 
-  node1Layers.push(
-    drawSector(latLng1, 45, 135, 0.05, 'green'),
-    drawSector(latLng1, 135, 225, 0.05, 'orange'),
-    drawSector(latLng1, 225, 315, 0.05, 'red'),
-    drawSector(latLng1, 315, 45, 0.05, 'yellow'),
-    L.circleMarker(latLng1, {
-      radius: 10,
-      color: 'blue',
-      fillColor: 'blue',
-      fillOpacity: 0.8
-    }).bindPopup('Node 1 - Pusat Sinyal')
-  );
+  function createNode(name, center, zoom, color) {
+    const layers = [];
 
-  nodes.node1 = node1Layers;
+    layers.push(
+      drawSector(center, 45, 135, 0.05, color),
+      drawSector(center, 135, 225, 0.05, color),
+      drawSector(center, 225, 315, 0.05, color),
+      drawSector(center, 315, 45, 0.05, color),
+      L.circleMarker(center, {
+        radius: 10,
+        color,
+        fillColor: color,
+        fillOpacity: 0.9
+      }).bindPopup(name)
+    );
 
-  /* ===== SHOW FUNCTIONS ===== */
+    nodes[name] = { layers, center, zoom };
+  }
+
+  /* ===== CREATE NODES ===== */
+  createNode('node1', [-6.291, 106.786], 14, 'blue');
+  createNode('node2', [-6.260, 106.800], 14, 'green');
+  createNode('node3', [-6.320, 106.760], 14, 'red');
+
+  /* ===== CONTROL ===== */
   function clearMap() {
-    Object.values(nodes).forEach(group => {
-      group.forEach(layer => map.removeLayer(layer));
-    });
+    Object.values(nodes).forEach(n =>
+      n.layers.forEach(l => map.removeLayer(l))
+    );
   }
 
   function showNode(name) {
     clearMap();
-    nodes[name].forEach(layer => layer.addTo(map));
+    nodes[name].layers.forEach(l => l.addTo(map));
+    map.flyTo(nodes[name].center, nodes[name].zoom, { duration: 1 });
+
+    if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('active');
+    }
   }
 
   function showAllNodes() {
     clearMap();
-    Object.values(nodes).forEach(group => {
-      group.forEach(layer => layer.addTo(map));
-    });
+    Object.values(nodes).forEach(n =>
+      n.layers.forEach(l => l.addTo(map))
+    );
   }
 
-  /* tampilkan semua saat load */
   showAllNodes();
 </script>
 
