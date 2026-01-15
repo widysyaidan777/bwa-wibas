@@ -20,9 +20,9 @@
       background: linear-gradient(90deg,#0f172a,#020617);
       color: white;
       padding: 16px;
-      box-sizing: border-box;
       display: flex;
       align-items: center;
+      box-sizing: border-box;
     }
 
     /* ===== SIDEBAR ===== */
@@ -38,6 +38,7 @@
       box-sizing: border-box;
       z-index: 1000;
       transition: transform 0.3s ease;
+      overflow-y: auto;
     }
 
     #sidebar.hide {
@@ -45,8 +46,8 @@
     }
 
     #sidebar h3 {
-      margin-top: 0;
-      font-size: 16px;
+      margin-top: 10px;
+      font-size: 15px;
     }
 
     .node-btn {
@@ -65,7 +66,7 @@
       background: #2563eb;
     }
 
-    /* ===== TOGGLE BUTTON ===== */
+    /* ===== TOGGLE ===== */
     #toggle-btn {
       position: absolute;
       top: 10px;
@@ -79,7 +80,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
     }
 
     /* ===== MAP ===== */
@@ -99,24 +99,20 @@
       left: 10px;
       z-index: 1200;
       padding: 10px 15px;
-      background-color: #333;
+      background: #333;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
 
-    /* ===== BLINK STATUS ===== */
+    /* ===== BLINK ===== */
     @keyframes blinkBlue {
-      0% { opacity: 1; }
       50% { opacity: 0.2; }
-      100% { opacity: 1; }
     }
 
     @keyframes blinkRed {
-      0% { opacity: 1; }
       50% { opacity: 0.2; }
-      100% { opacity: 1; }
     }
 
     .status-up {
@@ -144,103 +140,164 @@
   <button class="node-btn" onclick="showNode('node1')">Node 1</button>
   <button class="node-btn" onclick="showNode('node2')">Node 2</button>
   <button class="node-btn" onclick="showNode('node3')">Node 3</button>
+
+  <hr style="border:1px solid #334155">
+
+  <h3>Ruler Coverage</h3>
+  <button class="node-btn" onclick="enableRuler()">Aktifkan Ruler</button>
+  <button class="node-btn" onclick="resetRuler()" style="background:#ef4444">
+    Reset Ruler
+  </button>
+
+  <div id="ruler-info" style="font-size:13px;color:#e5e7eb">
+    Klik 2 titik di peta
+  </div>
 </div>
 
 <div id="map"></div>
 
-<button id="back-button" onclick="window.location.href='index.html';">
+<button id="back-button" onclick="window.location.href='index.html'">
   Kembali ke Menu
 </button>
 
 <script>
-  /* ===== SIDEBAR ===== */
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const mapDiv = document.getElementById('map');
-    const toggle = document.getElementById('toggle-btn');
+/* ===== SIDEBAR ===== */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const mapDiv = document.getElementById('map');
+  const toggle = document.getElementById('toggle-btn');
 
-    sidebar.classList.toggle('hide');
-    mapDiv.classList.toggle('full');
-    toggle.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
+  sidebar.classList.toggle('hide');
+  mapDiv.classList.toggle('full');
+  toggle.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
+}
+
+/* ===== MAP ===== */
+const map = L.map('map').setView([-6.291, 106.786], 11.8);
+
+L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
+  attribution: '© MapTiler © OpenStreetMap contributors'
+}).addTo(map);
+
+/* ===== SECTOR ===== */
+function getSectorCoordinates(center, angle, radius) {
+  const rad = angle * Math.PI / 180;
+  return [
+    center[0] + radius * Math.cos(rad),
+    center[1] + radius * Math.sin(rad)
+  ];
+}
+
+function drawSector(center, start, end, radius, color) {
+  const coords = [center];
+  if (start < end) {
+    for (let a = start; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
+  } else {
+    for (let a = start; a <= 360; a++) coords.push(getSectorCoordinates(center, a, radius));
+    for (let a = 0; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
   }
+  return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.45 });
+}
 
-  /* ===== MAP INIT ===== */
-  const map = L.map('map').setView([-6.291, 106.786], 11.8);
+/* ===== NODE ===== */
+const nodes = {};
 
-  L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
-    attribution: '© MapTiler © OpenStreetMap contributors'
+function createNode(name, center, status) {
+  const color = status === 'up' ? 'blue' : 'red';
+  const blink = status === 'up' ? 'status-up' : 'status-down';
+
+  const layers = [
+    drawSector(center, 45, 135, 0.05, color),
+    drawSector(center, 135, 225, 0.05, color),
+    drawSector(center, 225, 315, 0.05, color),
+    drawSector(center, 315, 45, 0.05, color),
+    L.circleMarker(center, {
+      radius: 9,
+      color,
+      fillColor: color,
+      fillOpacity: 0.9,
+      className: blink
+    }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
+  ];
+
+  nodes[name] = { layers, center };
+}
+
+createNode('node1', [-6.291, 106.786], 'up');
+createNode('node2', [-6.260, 106.800], 'down');
+createNode('node3', [-6.320, 106.760], 'up');
+
+function clearMap() {
+  Object.values(nodes).forEach(n => n.layers.forEach(l => map.removeLayer(l)));
+}
+
+function showNode(name) {
+  clearMap();
+  nodes[name].layers.forEach(l => l.addTo(map));
+  map.flyTo(nodes[name].center, 12.5);
+}
+
+function showAllNodes() {
+  clearMap();
+  Object.values(nodes).forEach(n => n.layers.forEach(l => l.addTo(map)));
+}
+
+showAllNodes();
+
+/* ===== RULER ===== */
+let rulerActive = false;
+let rulerPoints = [];
+let rulerLine = null;
+let rulerMarkers = [];
+
+function enableRuler() {
+  rulerActive = true;
+  resetRuler();
+  document.getElementById('ruler-info').innerHTML =
+    'Klik titik pusat lalu titik ujung coverage';
+}
+
+function resetRuler() {
+  rulerPoints = [];
+  if (rulerLine) map.removeLayer(rulerLine);
+  rulerMarkers.forEach(m => map.removeLayer(m));
+  rulerMarkers = [];
+  rulerLine = null;
+  document.getElementById('ruler-info').innerHTML =
+    'Klik 2 titik di peta';
+}
+
+map.on('click', function(e) {
+  if (!rulerActive) return;
+
+  rulerPoints.push(e.latlng);
+
+  const m = L.circleMarker(e.latlng, {
+    radius: 6,
+    color: 'yellow',
+    fillColor: 'yellow',
+    fillOpacity: 1
   }).addTo(map);
 
-  /* ===== SECTOR ===== */
-  function getSectorCoordinates(center, angle, radius) {
-    const rad = angle * Math.PI / 180;
-    return [
-      center[0] + radius * Math.cos(rad),
-      center[1] + radius * Math.sin(rad)
-    ];
+  rulerMarkers.push(m);
+
+  if (rulerPoints.length === 2) {
+    rulerActive = false;
+
+    rulerLine = L.polyline(rulerPoints, {
+      color: 'yellow',
+      weight: 3,
+      dashArray: '6,6'
+    }).addTo(map);
+
+    const km = (rulerPoints[0].distanceTo(rulerPoints[1]) / 1000).toFixed(2);
+
+    document.getElementById('ruler-info').innerHTML =
+      `<b>Jarak:</b> ${km} km`;
+
+    rulerLine.bindPopup(`<b>Coverage Radius:</b> ${km} km`).openPopup();
   }
-
-  function drawSector(center, start, end, radius, color) {
-    const coords = [center];
-    if (start < end) {
-      for (let a = start; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
-    } else {
-      for (let a = start; a <= 360; a++) coords.push(getSectorCoordinates(center, a, radius));
-      for (let a = 0; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
-    }
-    return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.45 });
-  }
-
-  /* ===== NODE SYSTEM ===== */
-  const nodes = {};
-
-  function createNode(name, center, status) {
-    const isUp = status === 'up';
-    const color = isUp ? 'blue' : 'red';
-    const blinkClass = isUp ? 'status-up' : 'status-down';
-
-    const layers = [
-      drawSector(center, 45, 135, 0.05, color),
-      drawSector(center, 135, 225, 0.05, color),
-      drawSector(center, 225, 315, 0.05, color),
-      drawSector(center, 315, 45, 0.05, color),
-      L.circleMarker(center, {
-        radius: 9,
-        color,
-        fillColor: color,
-        fillOpacity: 0.9,
-        className: blinkClass
-      }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
-    ];
-
-    nodes[name] = { layers, center };
-  }
-
-  /* ===== CREATE NODES ===== */
-  createNode('node1', [-6.291, 106.786], 'up');
-  createNode('node2', [-6.260, 106.800], 'down');
-  createNode('node3', [-6.320, 106.760], 'up');
-
-  function clearMap() {
-    Object.values(nodes).forEach(n =>
-      n.layers.forEach(l => map.removeLayer(l))
-    );
-  }
-
-  function showNode(name) {
-    clearMap();
-    nodes[name].layers.forEach(l => l.addTo(map));
-    map.flyTo(nodes[name].center, 12.5, { duration: 0.8 });
-  }
-
-  function showAllNodes() {
-    clearMap();
-    Object.values(nodes).forEach(n =>
-      n.layers.forEach(l => l.addTo(map))
-    );
-  }
-
-  showAllNodes();
+});
 </script>
 
 </body>
