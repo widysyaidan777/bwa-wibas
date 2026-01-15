@@ -77,7 +77,7 @@
     ];
   }
 
-  // Fungsi untuk menggambar sektor
+  // Fungsi untuk menggambar sektor dengan pembagian 4 sektor 90 derajat
   function drawSector(center, angleStart, angleEnd, radius, color) {
     const sectorCoords = [];
     for (let angle = angleStart; angle <= angleEnd; angle++) {
@@ -91,10 +91,11 @@
     }).addTo(map);
   }
 
-  // Menambahkan sektor ke peta
-  drawSector(latLng, 0, 45, 0.05, 'green');  // Sektor 1 (45 derajat)
-  drawSector(latLng, 45, 135, 0.05, 'orange');  // Sektor 2 (135 derajat)
-  drawSector(latLng, 135, 225, 0.05, 'red');  // Sektor 3 (225 derajat)
+  // Menambahkan sektor ke peta dengan pembagian sektor 90 derajat
+  drawSector(latLng, 45, 135, 0.05, 'green');  // Sektor 1 (45-135 derajat)
+  drawSector(latLng, 135, 225, 0.05, 'orange');  // Sektor 2 (135-225 derajat)
+  drawSector(latLng, 225, 315, 0.05, 'red');  // Sektor 3 (225-315 derajat)
+  drawSector(latLng, 315, 45, 0.05, 'yellow');  // Sektor 4 (315-45 derajat)
 
   // Menambahkan marker untuk node
   L.circleMarker(latLng, { radius: 10, color: 'blue', fillColor: 'blue', fillOpacity: 0.6 })
