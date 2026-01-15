@@ -19,17 +19,52 @@
       background: linear-gradient(90deg,#0f172a,#020617);
       color: white;
       padding: 16px;
-      text-align: left;
       display: flex;
-      justify-content: flex-start;
       align-items: center;
     }
 
-    #map {
-      height: calc(100vh - 160px); /* Adjusted for space for the button */
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      position: absolute;
+      top: 64px;
+      left: 0;
+      width: 200px;
+      height: calc(100vh - 64px);
+      background: #1e293b;
+      color: white;
+      padding: 10px;
+      z-index: 1000;
     }
 
-    button {
+    #sidebar h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    #sidebar button {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+
+    #sidebar button:hover {
+      background: #2563eb;
+    }
+
+    /* ===== MAP ===== */
+    #map {
+      margin-left: 200px;
+      height: calc(100vh - 160px);
+    }
+
+    #back-button {
+      margin-left: 210px;
+      margin-top: 10px;
       padding: 10px 15px;
       font-size: 16px;
       background-color: #333;
@@ -37,10 +72,9 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      margin-left: 10px;
     }
 
-    button:hover {
+    #back-button:hover {
       background-color: #555;
     }
   </style>
@@ -52,55 +86,101 @@
   <h2>Peta Topologi – BWA WiBAS</h2>
 </header>
 
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <h3>Daftar Node</h3>
+  <button onclick="showAllNodes()">All</button>
+  <button onclick="showNode('node1')">Node 1</button>
+</div>
+
 <div id="map"></div>
 
-<!-- Button placed below the map -->
-<button id="back-button" onclick="window.location.href='index.html';">Kembali ke Menu</button>
+<button id="back-button" onclick="window.location.href='index.html';">
+  Kembali ke Menu
+</button>
 
 <script>
-  // Menetapkan peta dan titik pusat
-  const map = L.map('map').setView([-6.291, 106.786], 12);  // Menetapkan posisi peta awal
-  
-  // Menambahkan TileLayer dari MapTiler
+  /* ===== MAP INIT ===== */
+  const map = L.map('map').setView([-6.291, 106.786], 12);
+
   L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
     attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
-  // Titik koordinat untuk node
-  const latLng = [-6.291, 106.786];  // Ganti dengan koordinat yang diinginkan
+  /* ===== NODE DATA ===== */
+  const nodes = {};
 
-  // Fungsi untuk menghitung koordinat titik sektor berdasarkan sudut dan radius
+  const latLng1 = [-6.291, 106.786];
+
   function getSectorCoordinates(center, angle, radius) {
-    const radian = angle * (Math.PI / 180);
+    const rad = angle * (Math.PI / 180);
     return [
-      [center[0] + (radius * Math.cos(radian)), center[1] + (radius * Math.sin(radian))]
+      center[0] + (radius * Math.cos(rad)),
+      center[1] + (radius * Math.sin(rad))
     ];
   }
 
-  // Fungsi untuk menggambar sektor dengan pembagian 4 sektor 90 derajat
-  function drawSector(center, angleStart, angleEnd, radius, color) {
-    const sectorCoords = [];
-    for (let angle = angleStart; angle <= angleEnd; angle++) {
-      const coords = getSectorCoordinates(center, angle, radius);
-      sectorCoords.push(coords[0]);
+  function drawSector(center, start, end, radius, color) {
+    const coords = [center];
+    if (start < end) {
+      for (let a = start; a <= end; a++) {
+        coords.push(getSectorCoordinates(center, a, radius));
+      }
+    } else {
+      for (let a = start; a <= 360; a++) {
+        coords.push(getSectorCoordinates(center, a, radius));
+      }
+      for (let a = 0; a <= end; a++) {
+        coords.push(getSectorCoordinates(center, a, radius));
+      }
     }
-    return L.polygon([center, ...sectorCoords], {
-      color: color,
+
+    return L.polygon(coords, {
+      color,
       fillColor: color,
       fillOpacity: 0.5
-    }).addTo(map);
+    });
   }
 
-  // Menambahkan sektor ke peta dengan pembagian sektor 90 derajat
-  drawSector(latLng, 45, 135, 0.05, 'green');  // Sektor 1 (45-135 derajat)
-  drawSector(latLng, 135, 225, 0.05, 'orange');  // Sektor 2 (135-225 derajat)
-  drawSector(latLng, 225, 315, 0.05, 'red');  // Sektor 3 (225-315 derajat)
-  drawSector(latLng, 315, 45, 0.05, 'yellow');  // Sektor 4 (315-45 derajat)
+  /* ===== NODE 1 ===== */
+  const node1Layers = [];
 
-  // Menambahkan marker untuk node
-  L.circleMarker(latLng, { radius: 10, color: 'blue', fillColor: 'blue', fillOpacity: 0.6 })
-    .addTo(map)
-    .bindPopup('Node - Pusat Sinyal');
+  node1Layers.push(
+    drawSector(latLng1, 45, 135, 0.05, 'green'),
+    drawSector(latLng1, 135, 225, 0.05, 'orange'),
+    drawSector(latLng1, 225, 315, 0.05, 'red'),
+    drawSector(latLng1, 315, 45, 0.05, 'yellow'),
+    L.circleMarker(latLng1, {
+      radius: 10,
+      color: 'blue',
+      fillColor: 'blue',
+      fillOpacity: 0.8
+    }).bindPopup('Node 1 - Pusat Sinyal')
+  );
+
+  nodes.node1 = node1Layers;
+
+  /* ===== SHOW FUNCTIONS ===== */
+  function clearMap() {
+    Object.values(nodes).forEach(group => {
+      group.forEach(layer => map.removeLayer(layer));
+    });
+  }
+
+  function showNode(name) {
+    clearMap();
+    nodes[name].forEach(layer => layer.addTo(map));
+  }
+
+  function showAllNodes() {
+    clearMap();
+    Object.values(nodes).forEach(group => {
+      group.forEach(layer => layer.addTo(map));
+    });
+  }
+
+  /* tampilkan semua saat load */
+  showAllNodes();
 </script>
 
 </body>
