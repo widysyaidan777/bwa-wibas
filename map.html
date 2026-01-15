@@ -1,283 +1,299 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Peta Topologi – BWA WiBAS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>Peta Topologi – BWA WiBAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; }
 
-<style>
-body { margin:0; font-family:Arial,sans-serif; }
+    header {
+      height:64px;
+      background:linear-gradient(90deg,#0f172a,#020617);
+      color:#fff;
+      padding:16px;
+      display:flex;
+      align-items:center;
+    }
 
-header{
-  height:64px;
-  background:linear-gradient(90deg,#0f172a,#020617);
-  color:#fff;
-  padding:16px;
-  display:flex;
-  align-items:center;
-}
+    #sidebar {
+      position:fixed;
+      top:64px; left:0;
+      width:220px;
+      height:calc(100vh - 64px);
+      background:#1e293b;
+      color:#fff;
+      padding:10px;
+      box-sizing:border-box;
+      z-index:1000;
+      overflow-y:auto;
+      transition:transform .3s;
+    }
 
-#sidebar{
-  position:fixed;
-  top:64px; left:0;
-  width:220px;
-  height:calc(100vh - 64px);
-  background:#1e293b;
-  color:#fff;
-  padding:10px;
-  box-sizing:border-box;
-  z-index:1000;
-  overflow-y:auto;
-  transition:transform .3s;
-}
+    #sidebar.hide { transform:translateX(-100%); }
 
-#sidebar.hide{ transform:translateX(-100%); }
+    #toggle-btn {
+      position:absolute;
+      top:10px;
+      right:-50px; /* Geser tombol lebih kanan */
+      width:50px; /* Ukuran lebih besar */
+      height:60px; /* Ukuran lebih besar */
+      background:#1e293b;
+      color:white;
+      border-radius:0 6px 6px 0;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px; /* Ukuran font lebih besar */
+    }
 
-.node-btn{
-  width:100%;
-  margin-bottom:8px;
-  padding:10px;
-  border:none;
-  border-radius:4px;
-  background:#3b82f6;
-  color:white;
-  cursor:pointer;
-  text-align:left;
-}
+    #map {
+      margin-left:220px;
+      height:calc(100vh - 64px);
+      transition:.3s;
+    }
 
-.node-btn:hover{ background:#2563eb; }
+    #map.full { margin-left:0; }
 
-#toggle-btn{
-  position:absolute;
-  top:10px;
-  right:-30px;
-  width:30px;
-  height:40px;
-  background:#1e293b;
-  color:white;
-  border-radius:0 6px 6px 0;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    #back-button {
+      position:absolute;
+      bottom:10px;
+      left:10px;
+      z-index:1200;
+      padding:10px 15px;
+      background:#333;
+      color:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
 
-#map{
-  margin-left:220px;
-  height:calc(100vh - 64px);
-  transition:.3s;
-}
+    /* Tombol Daftar Node */
+    .node-btn {
+      width:100%;
+      margin-bottom:8px;
+      padding:10px;
+      border:none;
+      border-radius:4px;
+      background:#3b82f6;
+      color:white;
+      cursor:pointer;
+      text-align:left;
+    }
 
-#map.full{ margin-left:0; }
+    .node-btn:hover { background:#2563eb; }
 
-#back-button{
-  position:absolute;
-  bottom:10px;
-  left:10px;
-  z-index:1200;
-  padding:10px 15px;
-  background:#333;
-  color:white;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-}
+    /* Styling untuk Daftar Node di bawah judul */
+    header h2 {
+      margin-bottom:20px; /* Menambahkan spasi antara judul dan daftar node */
+    }
 
-@keyframes blinkBlue{50%{opacity:.3}}
-@keyframes blinkRed{50%{opacity:.3}}
-.status-up{animation:blinkBlue 1s infinite}
-.status-down{animation:blinkRed 1s infinite}
-</style>
+    #sidebar h3 {
+      font-size:18px;
+      margin-top:20px;
+    }
+
+    @keyframes blinkBlue { 50% { opacity:.3; } }
+    @keyframes blinkRed { 50% { opacity:.3; } }
+
+    .status-up { animation:blinkBlue 1s infinite; }
+    .status-down { animation:blinkRed 1s infinite; }
+  </style>
+
 </head>
-
 <body>
 
 <header>
-<h2>Peta Topologi – BWA WiBAS</h2>
+  <h2>Peta Topologi – BWA WiBAS</h2>
 </header>
 
 <div id="sidebar">
-<div id="toggle-btn" onclick="toggleSidebar()">◀</div>
+  <div id="toggle-btn" onclick="toggleSidebar()">◀</div>
 
-<h3>Daftar Node</h3>
-<button class="node-btn" onclick="showAllNodes()">All</button>
-<button class="node-btn" onclick="showNode('node1')">Node 1</button>
-<button class="node-btn" onclick="showNode('node2')">Node 2</button>
-<button class="node-btn" onclick="showNode('node3')">Node 3</button>
+  <h3>Daftar Node</h3>
+  <button class="node-btn" onclick="showAllNodes()">All</button>
+  <button class="node-btn" onclick="showNode('node1')">Node 1</button>
+  <button class="node-btn" onclick="showNode('node2')">Node 2</button>
+  <button class="node-btn" onclick="showNode('node3')">Node 3</button>
 
-<hr style="border:1px solid #334155">
+  <hr style="border:1px solid #334155">
 
-<h3>Ruler Coverage</h3>
-<button class="node-btn" onclick="enableRuler()">Aktifkan Ruler</button>
-<button class="node-btn" onclick="resetRuler()" style="background:#ef4444">Reset Ruler</button>
-<div id="ruler-info" style="font-size:13px">Klik 2 titik</div>
+  <h3>Ruler Coverage</h3>
+  <button class="node-btn" onclick="enableRuler()">Aktifkan Ruler</button>
+  <button class="node-btn" onclick="resetRuler()" style="background:#ef4444">Reset Ruler</button>
+  <div id="ruler-info" style="font-size:13px">Klik 2 titik</div>
 </div>
 
 <div id="map"></div>
 
 <button id="back-button" onclick="window.location.href='index.html'">
-Kembali ke Menu
+  Kembali ke Menu
 </button>
 
 <script>
-/* ===== SIDEBAR ===== */
-const sidebar=document.getElementById('sidebar');
-const mapDiv=document.getElementById('map');
-const toggleBtn=document.getElementById('toggle-btn');
-function toggleSidebar(){
-  sidebar.classList.toggle('hide');
-  mapDiv.classList.toggle('full');
-  toggleBtn.innerHTML=sidebar.classList.contains('hide')?'▶':'◀';
-}
+  /* ===== SIDEBAR ===== */
+  const sidebar = document.getElementById('sidebar');
+  const mapDiv = document.getElementById('map');
+  const toggleBtn = document.getElementById('toggle-btn');
 
-/* ===== MAP ===== */
-const map=L.map('map').setView([-6.291,106.786],11.8);
-L.tileLayer(
-'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
-{attribution:'© MapTiler © OpenStreetMap'}
-).addTo(map);
-
-/* ===== SECTOR METER (AKURAT) ===== */
-function destinationPoint(lat,lng,bearing,dist){
-  const R=6378137;
-  const br=bearing*Math.PI/180;
-  const d=dist;
-  const lat1=lat*Math.PI/180;
-  const lon1=lng*Math.PI/180;
-  const lat2=Math.asin(
-    Math.sin(lat1)*Math.cos(d/R)+
-    Math.cos(lat1)*Math.sin(d/R)*Math.cos(br)
-  );
-  const lon2=lon1+Math.atan2(
-    Math.sin(br)*Math.sin(d/R)*Math.cos(lat1),
-    Math.cos(d/R)-Math.sin(lat1)*Math.sin(lat2)
-  );
-  return [lat2*180/Math.PI,lon2*180/Math.PI];
-}
-
-function drawSector(center,start,end,radius,color){
-  const pts=[center];
-  for(let a=start;a<=end;a+=2){
-    pts.push(destinationPoint(center[0],center[1],a,radius));
+  function toggleSidebar() {
+    sidebar.classList.toggle('hide');
+    mapDiv.classList.toggle('full');
+    toggleBtn.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
   }
-  return L.polygon(pts,{
-    color,
-    fillColor:color,
-    fillOpacity:.35,
-    weight:1
-  });
-}
 
-/* ===== NODE ===== */
-const nodes={};
+  /* ===== MAP ===== */
+  const map = L.map('map').setView([-6.291, 106.786], 11.8);
+  L.tileLayer(
+    'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
+    { attribution: '© MapTiler © OpenStreetMap' }
+  ).addTo(map);
 
-function createNode(name,center,status){
-  const color=status==='up'?'blue':'red';
-  const blink=status==='up'?'status-up':'status-down';
-  const r=5000;
+  /* ===== SECTOR METER (AKURAT) ===== */
+  function destinationPoint(lat, lng, bearing, dist) {
+    const R = 6378137;
+    const br = bearing * Math.PI / 180;
+    const d = dist;
+    const lat1 = lat * Math.PI / 180;
+    const lon1 = lng * Math.PI / 180;
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(d / R) +
+      Math.cos(lat1) * Math.sin(d / R) * Math.cos(br)
+    );
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(br) * Math.sin(d / R) * Math.cos(lat1),
+      Math.cos(d / R) - Math.sin(lat1) * Math.sin(lat2)
+    );
+    return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+  }
 
-  const layers=[
-    drawSector(center,0,90,r,color),
-    drawSector(center,90,180,r,color),
-    drawSector(center,180,270,r,color),
-    drawSector(center,270,360,r,color),
-    L.circleMarker(center,{
-      radius:9,
+  function drawSector(center, start, end, radius, color) {
+    const pts = [center];
+    for (let a = start; a <= end; a += 2) {
+      pts.push(destinationPoint(center[0], center[1], a, radius));
+    }
+    return L.polygon(pts, {
       color,
-      fillColor:color,
-      fillOpacity:1,
-      className:blink
-    }).bindPopup(
-      `<b>${name}</b><br>Status: ${status.toUpperCase()}<br>Coverage: 5 km`
-    )
-  ];
-  nodes[name]={layers,center};
-}
-
-createNode('node1',[-6.291,106.786],'up');
-createNode('node2',[-6.260,106.800],'down');
-createNode('node3',[-6.320,106.760],'up');
-
-function clearMap(){
-  Object.values(nodes).forEach(n=>n.layers.forEach(l=>map.removeLayer(l)));
-}
-function showNode(n){
-  clearMap();
-  nodes[n].layers.forEach(l=>l.addTo(map));
-  map.flyTo(nodes[n].center,12.5);
-}
-function showAllNodes(){
-  clearMap();
-  Object.values(nodes).forEach(n=>n.layers.forEach(l=>l.addTo(map)));
-}
-showAllNodes();
-
-/* ===== RULER BULAT + DRAG ===== */
-let rulerActive=false;
-let rulerMarkers=[];
-let rulerVisuals=[];
-let rulerLine=null;
-const rulerInfo=document.getElementById('ruler-info');
-
-function enableRuler(){
-  resetRuler();
-  rulerActive=true;
-  rulerInfo.innerHTML='Klik titik pusat lalu ujung';
-}
-
-function resetRuler(){
-  rulerActive=false;
-  rulerMarkers.forEach(m=>map.removeLayer(m));
-  rulerVisuals.forEach(v=>map.removeLayer(v));
-  rulerMarkers=[];
-  rulerVisuals=[];
-  if(rulerLine) map.removeLayer(rulerLine);
-  rulerLine=null;
-  rulerInfo.innerHTML='Klik 2 titik';
-}
-
-function updateRuler(){
-  const p1=rulerMarkers[0].getLatLng();
-  const p2=rulerMarkers[1].getLatLng();
-  rulerLine.setLatLngs([p1,p2]);
-  rulerVisuals[0].setLatLng(p1);
-  rulerVisuals[1].setLatLng(p2);
-  const km=(p1.distanceTo(p2)/1000).toFixed(2);
-  rulerInfo.innerHTML=`<b>Jarak:</b> ${km} km`;
-  rulerLine.bindPopup(`Jarak: <b>${km} km</b>`).openPopup();
-}
-
-map.on('click',e=>{
-  if(!rulerActive||rulerMarkers.length>=2)return;
-
-  const hidden=L.marker(e.latlng,{draggable:true}).addTo(map);
-  const visual=L.circleMarker(e.latlng,{
-    radius:7,
-    color:'yellow',
-    fillColor:'yellow',
-    fillOpacity:1
-  }).addTo(map);
-
-  hidden.on('drag',()=>{
-    visual.setLatLng(hidden.getLatLng());
-    updateRuler();
-  });
-
-  rulerMarkers.push(hidden);
-  rulerVisuals.push(visual);
-
-  if(rulerMarkers.length===2){
-    rulerActive=false;
-    rulerLine=L.polyline(
-      rulerMarkers.map(m=>m.getLatLng()),
-      {color:'yellow',dashArray:'6,6',weight:3}
-    ).addTo(map);
-    updateRuler();
+      fillColor: color,
+      fillOpacity: 0.35,
+      weight: 1
+    });
   }
-});
+
+  /* ===== NODE ===== */
+  const nodes = {};
+
+  function createNode(name, center, status) {
+    const color = status === 'up' ? 'blue' : 'red';
+    const blink = status === 'up' ? 'status-up' : 'status-down';
+    const r = 5000;
+
+    const layers = [
+      drawSector(center, 0, 90, r, color),
+      drawSector(center, 90, 180, r, color),
+      drawSector(center, 180, 270, r, color),
+      drawSector(center, 270, 360, r, color),
+      L.circleMarker(center, {
+        radius: 9,
+        color,
+        fillColor: color,
+        fillOpacity: 1,
+        className: blink
+      }).bindPopup(
+        `<b>${name}</b><br>Status: ${status.toUpperCase()}<br>Coverage: 5 km`
+      )
+    ];
+    nodes[name] = { layers, center };
+  }
+
+  createNode('node1', [-6.291, 106.786], 'up');
+  createNode('node2', [-6.260, 106.800], 'down');
+  createNode('node3', [-6.320, 106.760], 'up');
+
+  function clearMap() {
+    Object.values(nodes).forEach(n => n.layers.forEach(l => map.removeLayer(l)));
+  }
+
+  function showNode(n) {
+    clearMap();
+    nodes[n].layers.forEach(l => l.addTo(map));
+    map.flyTo(nodes[n].center, 12.5);
+  }
+
+  function showAllNodes() {
+    clearMap();
+    Object.values(nodes).forEach(n => n.layers.forEach(l => l.addTo(map)));
+  }
+
+  showAllNodes();
+
+  /* ===== RULER BULAT + DRAG ===== */
+  let rulerActive = false;
+  let rulerMarkers = [];
+  let rulerVisuals = [];
+  let rulerLine = null;
+  const rulerInfo = document.getElementById('ruler-info');
+
+  function enableRuler() {
+    resetRuler();
+    rulerActive = true;
+    rulerInfo.innerHTML = 'Klik titik pusat lalu ujung';
+  }
+
+  function resetRuler() {
+    rulerActive = false;
+    rulerMarkers.forEach(m => map.removeLayer(m));
+    rulerVisuals.forEach(v => map.removeLayer(v));
+    rulerMarkers = [];
+    rulerVisuals = [];
+    if (rulerLine) map.removeLayer(rulerLine);
+    rulerLine = null;
+    rulerInfo.innerHTML = 'Klik 2 titik';
+  }
+
+  function updateRuler() {
+    const p1 = rulerMarkers[0].getLatLng();
+    const p2 = rulerMarkers[1].getLatLng();
+    rulerLine.setLatLngs([p1, p2]);
+    rulerVisuals[0].setLatLng(p1);
+    rulerVisuals[1].setLatLng(p2);
+    const km = (p1.distanceTo(p2) / 1000).toFixed(2);
+    rulerInfo.innerHTML = `<b>Jarak:</b> ${km} km`;
+    rulerLine.bindPopup(`Jarak: <b>${km} km</b>`).openPopup();
+  }
+
+  map.on('click', e => {
+    if (!rulerActive || rulerMarkers.length >= 2) return;
+
+    const hidden = L.marker(e.latlng, { draggable: true }).addTo(map);
+    const visual = L.circleMarker(e.latlng, {
+      radius: 7,
+      color: 'yellow',
+      fillColor: 'yellow',
+      fillOpacity: 1
+    }).addTo(map);
+
+    hidden.on('drag', () => {
+      visual.setLatLng(hidden.getLatLng());
+      updateRuler();
+    });
+
+    rulerMarkers.push(hidden);
+    rulerVisuals.push(visual);
+
+    if (rulerMarkers.length === 2) {
+      rulerActive = false;
+      rulerLine = L.polyline(
+        rulerMarkers.map(m => m.getLatLng()),
+        { color: 'yellow', dashArray: '6,6', weight: 3 }
+      ).addTo(map);
+      updateRuler();
+    }
+  });
 </script>
 
 </body>
