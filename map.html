@@ -31,6 +31,9 @@
       z-index: 1000;
       overflow-y: auto;
       transition: transform .3s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
     #sidebar.hide { transform: translateX(-100%); }
@@ -60,26 +63,16 @@
 
     #map.full { margin-left: 0; }
 
-    #back-button {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      z-index: 1200;
-      padding: 10px 15px;
-      background: #333;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    /* Node section under map */
+    /* Node section placed below the map */
     #node-section {
       padding: 10px;
       background-color: #1e293b;
       color: white;
       position: relative;
       top: 10px;
+      margin-left: 220px;
+      height: 100%;
+      overflow-y: auto;
     }
 
     header h2 {
@@ -111,6 +104,25 @@
 
     .status-up { animation: blinkBlue 1s infinite; }
     .status-down { animation: blinkRed 1s infinite; }
+
+    /* Styling for back button */
+    #back-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1200;
+      padding: 10px 15px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    /* Remove long blue line */
+    ::-webkit-scrollbar {
+      display: none;
+    }
   </style>
 
 </head>
