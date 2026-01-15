@@ -10,10 +10,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; }
 
     header {
       height: 64px;
@@ -22,10 +19,8 @@
       padding: 16px;
       display: flex;
       align-items: center;
-      box-sizing: border-box;
     }
 
-    /* ===== SIDEBAR ===== */
     #sidebar {
       position: fixed;
       top: 64px;
@@ -37,18 +32,13 @@
       padding: 10px;
       box-sizing: border-box;
       z-index: 1000;
-      transition: transform 0.3s ease;
       overflow-y: auto;
+      transition: transform 0.3s ease;
     }
 
-    #sidebar.hide {
-      transform: translateX(-100%);
-    }
+    #sidebar.hide { transform: translateX(-100%); }
 
-    #sidebar h3 {
-      margin-top: 10px;
-      font-size: 15px;
-    }
+    #sidebar h3 { font-size: 15px; }
 
     .node-btn {
       width: 100%;
@@ -62,11 +52,8 @@
       text-align: left;
     }
 
-    .node-btn:hover {
-      background: #2563eb;
-    }
+    .node-btn:hover { background: #2563eb; }
 
-    /* ===== TOGGLE ===== */
     #toggle-btn {
       position: absolute;
       top: 10px;
@@ -82,16 +69,13 @@
       justify-content: center;
     }
 
-    /* ===== MAP ===== */
     #map {
       margin-left: 220px;
       height: calc(100vh - 64px);
       transition: margin-left 0.3s ease;
     }
 
-    #map.full {
-      margin-left: 0;
-    }
+    #map.full { margin-left: 0; }
 
     #back-button {
       position: absolute;
@@ -99,29 +83,18 @@
       left: 10px;
       z-index: 1200;
       padding: 10px 15px;
-      background: #333;
+      background-color: #333;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
 
-    /* ===== BLINK ===== */
-    @keyframes blinkBlue {
-      50% { opacity: 0.2; }
-    }
+    @keyframes blinkBlue { 50% { opacity: 0.3; } }
+    @keyframes blinkRed { 50% { opacity: 0.3; } }
 
-    @keyframes blinkRed {
-      50% { opacity: 0.2; }
-    }
-
-    .status-up {
-      animation: blinkBlue 1s infinite;
-    }
-
-    .status-down {
-      animation: blinkRed 1s infinite;
-    }
+    .status-up { animation: blinkBlue 1s infinite; }
+    .status-down { animation: blinkRed 1s infinite; }
   </style>
 </head>
 
@@ -131,7 +104,6 @@
   <h2>Peta Topologi – BWA WiBAS</h2>
 </header>
 
-<!-- SIDEBAR -->
 <div id="sidebar">
   <div id="toggle-btn" onclick="toggleSidebar()">◀</div>
 
@@ -145,13 +117,8 @@
 
   <h3>Ruler Coverage</h3>
   <button class="node-btn" onclick="enableRuler()">Aktifkan Ruler</button>
-  <button class="node-btn" onclick="resetRuler()" style="background:#ef4444">
-    Reset Ruler
-  </button>
-
-  <div id="ruler-info" style="font-size:13px;color:#e5e7eb">
-    Klik 2 titik di peta
-  </div>
+  <button class="node-btn" onclick="resetRuler()" style="background:#ef4444">Reset Ruler</button>
+  <div id="ruler-info" style="font-size:13px">Klik 2 titik</div>
 </div>
 
 <div id="map"></div>
@@ -163,43 +130,32 @@
 <script>
 /* ===== SIDEBAR ===== */
 function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const mapDiv = document.getElementById('map');
-  const toggle = document.getElementById('toggle-btn');
-
   sidebar.classList.toggle('hide');
   mapDiv.classList.toggle('full');
-  toggle.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
+  toggleBtn.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
 }
+const sidebar = document.getElementById('sidebar');
+const mapDiv = document.getElementById('map');
+const toggleBtn = document.getElementById('toggle-btn');
 
 /* ===== MAP ===== */
 const map = L.map('map').setView([-6.291, 106.786], 11.8);
+L.tileLayer(
+  'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
+  { attribution: '© MapTiler © OpenStreetMap contributors' }
+).addTo(map);
 
-L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
-  attribution: '© MapTiler © OpenStreetMap contributors'
-}).addTo(map);
-
-/* ===== SECTOR ===== */
-function getSectorCoordinates(center, angle, radius) {
-  const rad = angle * Math.PI / 180;
-  return [
-    center[0] + radius * Math.cos(rad),
-    center[1] + radius * Math.sin(rad)
-  ];
+/* ===== FIX COVERAGE 5 KM ===== */
+function drawCoverage(center, color) {
+  return L.circle(center, {
+    radius: 5000,            // ✅ FIX 5 KM
+    color: color,
+    fillColor: color,
+    fillOpacity: 0.35
+  });
 }
 
-function drawSector(center, start, end, radius, color) {
-  const coords = [center];
-  if (start < end) {
-    for (let a = start; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
-  } else {
-    for (let a = start; a <= 360; a++) coords.push(getSectorCoordinates(center, a, radius));
-    for (let a = 0; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
-  }
-  return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.45 });
-}
-
-/* ===== NODE ===== */
+/* ===== NODE SYSTEM ===== */
 const nodes = {};
 
 function createNode(name, center, status) {
@@ -207,17 +163,16 @@ function createNode(name, center, status) {
   const blink = status === 'up' ? 'status-up' : 'status-down';
 
   const layers = [
-    drawSector(center, 45, 135, 0.05, color),
-    drawSector(center, 135, 225, 0.05, color),
-    drawSector(center, 225, 315, 0.05, color),
-    drawSector(center, 315, 45, 0.05, color),
+    drawCoverage(center, color), // 🔵 5 KM FIX
     L.circleMarker(center, {
       radius: 9,
       color,
       fillColor: color,
-      fillOpacity: 0.9,
+      fillOpacity: 1,
       className: blink
-    }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
+    }).bindPopup(
+      `<b>${name}</b><br>Status: ${status.toUpperCase()}<br>Coverage: 5 km`
+    )
   ];
 
   nodes[name] = { layers, center };
@@ -228,7 +183,9 @@ createNode('node2', [-6.260, 106.800], 'down');
 createNode('node3', [-6.320, 106.760], 'up');
 
 function clearMap() {
-  Object.values(nodes).forEach(n => n.layers.forEach(l => map.removeLayer(l)));
+  Object.values(nodes).forEach(n =>
+    n.layers.forEach(l => map.removeLayer(l))
+  );
 }
 
 function showNode(name) {
@@ -239,63 +196,65 @@ function showNode(name) {
 
 function showAllNodes() {
   clearMap();
-  Object.values(nodes).forEach(n => n.layers.forEach(l => l.addTo(map)));
+  Object.values(nodes).forEach(n =>
+    n.layers.forEach(l => l.addTo(map))
+  );
 }
 
 showAllNodes();
 
-/* ===== RULER ===== */
+/* ===== RULER (DRAGGABLE) ===== */
 let rulerActive = false;
-let rulerPoints = [];
-let rulerLine = null;
 let rulerMarkers = [];
+let rulerLine = null;
 
 function enableRuler() {
-  rulerActive = true;
   resetRuler();
-  document.getElementById('ruler-info').innerHTML =
-    'Klik titik pusat lalu titik ujung coverage';
+  rulerActive = true;
+  rulerInfo.innerHTML = 'Klik titik pusat lalu titik ujung';
 }
 
 function resetRuler() {
-  rulerPoints = [];
-  if (rulerLine) map.removeLayer(rulerLine);
+  rulerActive = false;
   rulerMarkers.forEach(m => map.removeLayer(m));
   rulerMarkers = [];
+  if (rulerLine) map.removeLayer(rulerLine);
   rulerLine = null;
-  document.getElementById('ruler-info').innerHTML =
-    'Klik 2 titik di peta';
+  rulerInfo.innerHTML = 'Klik Kiri';
 }
 
+function updateRuler() {
+  if (rulerMarkers.length !== 2) return;
+  const p1 = rulerMarkers[0].getLatLng();
+  const p2 = rulerMarkers[1].getLatLng();
+  rulerLine.setLatLngs([p1, p2]);
+  const km = (p1.distanceTo(p2) / 1000).toFixed(2);
+  rulerInfo.innerHTML = `<b>Jarak:</b> ${km} km`;
+  rulerLine.bindPopup(`Jarak: <b>${km} km</b>`).openPopup();
+}
+
+const rulerInfo = document.getElementById('ruler-info');
+
 map.on('click', function(e) {
-  if (!rulerActive) return;
+  if (!rulerActive || rulerMarkers.length >= 2) return;
 
-  rulerPoints.push(e.latlng);
-
-  const m = L.circleMarker(e.latlng, {
-    radius: 6,
-    color: 'yellow',
-    fillColor: 'yellow',
-    fillOpacity: 1
+  const marker = L.marker(e.latlng, {
+    draggable: true,
+    icon: L.divIcon({
+      html: '<div style="width:12px;height:12px;background:yellow;border-radius:50%"></div>'
+    })
   }).addTo(map);
 
-  rulerMarkers.push(m);
+  marker.on('drag', updateRuler);
+  rulerMarkers.push(marker);
 
-  if (rulerPoints.length === 2) {
+  if (rulerMarkers.length === 2) {
     rulerActive = false;
-
-    rulerLine = L.polyline(rulerPoints, {
-      color: 'yellow',
-      weight: 3,
-      dashArray: '6,6'
-    }).addTo(map);
-
-    const km = (rulerPoints[0].distanceTo(rulerPoints[1]) / 1000).toFixed(2);
-
-    document.getElementById('ruler-info').innerHTML =
-      `<b>Jarak:</b> ${km} km`;
-
-    rulerLine.bindPopup(`<b>Coverage Radius:</b> ${km} km`).openPopup();
+    rulerLine = L.polyline(
+      rulerMarkers.map(m => m.getLatLng()),
+      { color: 'yellow', dashArray: '6,6', weight: 3 }
+    ).addTo(map);
+    updateRuler();
   }
 });
 </script>
