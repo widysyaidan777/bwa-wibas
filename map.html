@@ -16,18 +16,13 @@
     }
 
     header {
+      height: 64px;
       background: linear-gradient(90deg,#0f172a,#020617);
       color: white;
       padding: 16px;
+      box-sizing: border-box;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-    }
-
-    .menu-btn {
-      display: none;
-      font-size: 22px;
-      cursor: pointer;
     }
 
     /* ===== SIDEBAR ===== */
@@ -40,8 +35,13 @@
       background: #1e293b;
       color: white;
       padding: 10px;
+      box-sizing: border-box;
       z-index: 1000;
       transition: transform 0.3s ease;
+    }
+
+    #sidebar.hide {
+      transform: translateX(-100%);
     }
 
     #sidebar h3 {
@@ -49,7 +49,7 @@
       font-size: 16px;
     }
 
-    #sidebar button {
+    .node-btn {
       width: 100%;
       margin-bottom: 8px;
       padding: 10px;
@@ -58,24 +58,47 @@
       background: #3b82f6;
       color: white;
       cursor: pointer;
+      text-align: left;
     }
 
-    #sidebar button:hover {
+    .node-btn:hover {
       background: #2563eb;
+    }
+
+    /* ===== TOGGLE BUTTON ===== */
+    #toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: -30px;
+      width: 30px;
+      height: 40px;
+      background: #1e293b;
+      color: white;
+      border-radius: 0 6px 6px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
     }
 
     /* ===== MAP ===== */
     #map {
       margin-left: 220px;
-      height: calc(100vh - 160px);
+      height: calc(100vh - 64px);
       transition: margin-left 0.3s ease;
     }
 
+    #map.full {
+      margin-left: 0;
+    }
+
     #back-button {
-      margin-left: 230px;
-      margin-top: 10px;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 1200;
       padding: 10px 15px;
-      font-size: 16px;
       background-color: #333;
       color: white;
       border: none;
@@ -83,27 +106,25 @@
       cursor: pointer;
     }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 768px) {
-      .menu-btn {
-        display: block;
-      }
+    /* ===== BLINK STATUS ===== */
+    @keyframes blinkBlue {
+      0% { opacity: 1; }
+      50% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
 
-      #sidebar {
-        transform: translateX(-100%);
-      }
+    @keyframes blinkRed {
+      0% { opacity: 1; }
+      50% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
 
-      #sidebar.active {
-        transform: translateX(0);
-      }
+    .status-up {
+      animation: blinkBlue 1s infinite;
+    }
 
-      #map {
-        margin-left: 0;
-      }
-
-      #back-button {
-        margin-left: 10px;
-      }
+    .status-down {
+      animation: blinkRed 1s infinite;
     }
   </style>
 </head>
@@ -112,16 +133,17 @@
 
 <header>
   <h2>Peta Topologi – BWA WiBAS</h2>
-  <span class="menu-btn" onclick="toggleSidebar()">☰</span>
 </header>
 
 <!-- SIDEBAR -->
 <div id="sidebar">
+  <div id="toggle-btn" onclick="toggleSidebar()">◀</div>
+
   <h3>Daftar Node</h3>
-  <button onclick="showAllNodes()">All</button>
-  <button onclick="showNode('node1')">Node 1</button>
-  <button onclick="showNode('node2')">Node 2</button>
-  <button onclick="showNode('node3')">Node 3</button>
+  <button class="node-btn" onclick="showAllNodes()">All</button>
+  <button class="node-btn" onclick="showNode('node1')">Node 1</button>
+  <button class="node-btn" onclick="showNode('node2')">Node 2</button>
+  <button class="node-btn" onclick="showNode('node3')">Node 3</button>
 </div>
 
 <div id="map"></div>
@@ -131,24 +153,30 @@
 </button>
 
 <script>
-  /* ===== SIDEBAR TOGGLE ===== */
+  /* ===== SIDEBAR ===== */
   function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('active');
+    const sidebar = document.getElementById('sidebar');
+    const mapDiv = document.getElementById('map');
+    const toggle = document.getElementById('toggle-btn');
+
+    sidebar.classList.toggle('hide');
+    mapDiv.classList.toggle('full');
+    toggle.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
   }
 
   /* ===== MAP INIT ===== */
-  const map = L.map('map').setView([-6.291, 106.786], 12);
+  const map = L.map('map').setView([-6.291, 106.786], 11.8);
 
   L.tileLayer('https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C', {
     attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
 
-  /* ===== HELPER ===== */
+  /* ===== SECTOR ===== */
   function getSectorCoordinates(center, angle, radius) {
-    const rad = angle * (Math.PI / 180);
+    const rad = angle * Math.PI / 180;
     return [
-      center[0] + (radius * Math.cos(rad)),
-      center[1] + (radius * Math.sin(rad))
+      center[0] + radius * Math.cos(rad),
+      center[1] + radius * Math.sin(rad)
     ];
   }
 
@@ -160,36 +188,39 @@
       for (let a = start; a <= 360; a++) coords.push(getSectorCoordinates(center, a, radius));
       for (let a = 0; a <= end; a++) coords.push(getSectorCoordinates(center, a, radius));
     }
-    return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.5 });
+    return L.polygon(coords, { color, fillColor: color, fillOpacity: 0.45 });
   }
 
+  /* ===== NODE SYSTEM ===== */
   const nodes = {};
 
-  function createNode(name, center, zoom, color) {
-    const layers = [];
+  function createNode(name, center, status) {
+    const isUp = status === 'up';
+    const color = isUp ? 'blue' : 'red';
+    const blinkClass = isUp ? 'status-up' : 'status-down';
 
-    layers.push(
+    const layers = [
       drawSector(center, 45, 135, 0.05, color),
       drawSector(center, 135, 225, 0.05, color),
       drawSector(center, 225, 315, 0.05, color),
       drawSector(center, 315, 45, 0.05, color),
       L.circleMarker(center, {
-        radius: 10,
+        radius: 9,
         color,
         fillColor: color,
-        fillOpacity: 0.9
-      }).bindPopup(name)
-    );
+        fillOpacity: 0.9,
+        className: blinkClass
+      }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
+    ];
 
-    nodes[name] = { layers, center, zoom };
+    nodes[name] = { layers, center };
   }
 
   /* ===== CREATE NODES ===== */
-  createNode('node1', [-6.291, 106.786], 14, 'blue');
-  createNode('node2', [-6.260, 106.800], 14, 'green');
-  createNode('node3', [-6.320, 106.760], 14, 'red');
+  createNode('node1', [-6.291, 106.786], 'up');
+  createNode('node2', [-6.260, 106.800], 'down');
+  createNode('node3', [-6.320, 106.760], 'up');
 
-  /* ===== CONTROL ===== */
   function clearMap() {
     Object.values(nodes).forEach(n =>
       n.layers.forEach(l => map.removeLayer(l))
@@ -199,11 +230,7 @@
   function showNode(name) {
     clearMap();
     nodes[name].layers.forEach(l => l.addTo(map));
-    map.flyTo(nodes[name].center, nodes[name].zoom, { duration: 1 });
-
-    if (window.innerWidth <= 768) {
-      document.getElementById('sidebar').classList.remove('active');
-    }
+    map.flyTo(nodes[name].center, 12.5, { duration: 0.8 });
   }
 
   function showAllNodes() {
