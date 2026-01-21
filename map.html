@@ -6,240 +6,207 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-body { margin:0; font-family:Arial, sans-serif; background:#0f172a; }
-
-header {
-  height:64px;
-  background:linear-gradient(90deg,#0f172a,#020617);
-  color:#fff;
-  padding:16px;
-  display:flex;
-  align-items:center;
-}
-
-/* ===== SIDEBAR ===== */
-#sidebar {
-  position:fixed;
-  top:64px; left:0;
-  width:260px;
-  height:calc(100vh - 64px);
-  background:#1e293b;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background:#020617;
   color:white;
-  padding:12px;
-  box-sizing:border-box;
-  overflow-y:auto;
-  z-index:1000;
 }
 
-#map {
-  margin-left:260px;
-  height:calc(100vh - 64px);
+/* HEADER */
+header {
+  padding: 14px 20px;
+  font-size: 22px;
+  font-weight: bold;
+  background: linear-gradient(90deg,#0f172a,#020617);
 }
 
-/* ===== NODE MENU ===== */
-.menu-title {
-  font-size:18px;
-  margin:10px 0;
+/* SIDEBAR */
+#sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 220px;
+  height: calc(100vh - 60px);
+  background: #020617;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
-.menu-btn {
+.node-btn {
   width:100%;
-  padding:10px;
-  margin-bottom:6px;
-  background:#3b82f6;
+  padding:8px;
+  margin:4px 0;
   border:none;
   border-radius:4px;
+  background:#2563eb;
   color:white;
   cursor:pointer;
+}
+.node-btn.gray {background:#334155;}
+.node-btn.red {background:#dc2626;}
+
+/* MAIN AREA */
+#main {
+  margin-left:220px;
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* MAP */
+#map {
+  flex: 1;
+}
+
+/* TOGGLE ARROW */
+#toggle-arrow {
+  text-align:center;
+  background:#020617;
+  cursor:pointer;
+  padding:6px;
+  border-top:1px solid #334155;
+}
+#toggle-arrow:hover {background:#0f172a;}
+
+/* NODE TABLE */
+#node-section {
+  max-height: 260px;
+  overflow-y: auto;
+  background:#1e293b;
+  padding:10px;
+  transition: max-height 0.3s ease;
+}
+#node-section.hidden {
+  max-height:0;
+  padding:0;
+  overflow:hidden;
+}
+
+/* TABLE */
+table {
+  width:100%;
+  border-collapse: collapse;
+  font-size:13px;
+}
+th,td {
+  border-bottom:1px solid #334155;
+  padding:6px;
   text-align:left;
 }
-.menu-btn:hover { background:#2563eb; }
+th {background:#020617;}
 
-.area-btn {
-  background:#334155;
-  font-weight:bold;
-}
-
-.sub-menu {
-  margin-left:12px;
-  display:none;
-}
-
-.sub-menu button {
-  background:#475569;
-}
-
-.status-up { animation:blinkBlue 1s infinite; }
-.status-down { animation:blinkRed 1s infinite; }
-
-@keyframes blinkBlue { 50%{opacity:.3;} }
-@keyframes blinkRed { 50%{opacity:.3;} }
+.status-up {color:#22c55e;}
+.status-down {color:#ef4444;}
 </style>
 </head>
 
 <body>
 
-<header>
-  <h2>Peta Topologi – BWA WiBAS</h2>
-</header>
+<header>Peta Topologi – BWA WiBAS</header>
 
-<!-- ===== SIDEBAR ===== -->
+<!-- SIDEBAR -->
 <div id="sidebar">
-  <div class="menu-title">Daftar Node</div>
+  <h4>Menu</h4>
+  <button class="node-btn" onclick="showAll()">All</button>
+  <button class="node-btn gray" onclick="filter('CJDA')">CJDA</button>
+  <button class="node-btn gray" onclick="filter('WKA')">WKA</button>
+  <button class="node-btn gray" onclick="filter('BNA')">BNA</button>
 
-  <button class="menu-btn" onclick="showAllNodes()">All</button>
+  <hr style="border:1px solid #334155">
 
-  <!-- CJDA -->
-  <button class="menu-btn area-btn" onclick="toggleArea('CJDA')">
-    CJDA (Central Java & DIY Area)
-  </button>
-  <div class="sub-menu" id="CJDA"></div>
+  <h4>Ruler</h4>
+  <button class="node-btn">Aktifkan Ruler</button>
+  <button class="node-btn red">Reset Ruler</button>
 
-  <!-- WKA -->
-  <button class="menu-btn area-btn" onclick="toggleArea('WKA')">
-    WKA
-  </button>
-  <div class="sub-menu" id="WKA"></div>
+  <hr style="border:1px solid #334155">
 
-  <hr style="border:1px solid #334155;margin:12px 0">
-
-  <div class="menu-title">Ruler Coverage</div>
-  <button class="menu-btn" onclick="enableRuler()">Aktifkan Ruler</button>
-  <button class="menu-btn" style="background:#ef4444" onclick="resetRuler()">
-    Reset Ruler
-  </button>
-  <div id="ruler-info" style="font-size:13px">Klik 2 titik</div>
+  <button class="node-btn gray" onclick="history.back()">⬅ Kembali</button>
 </div>
 
-<!-- ===== MAP ===== -->
-<div id="map"></div>
+<!-- MAIN -->
+<div id="main">
+  <div id="map"></div>
+
+  <!-- TOGGLE -->
+  <div id="toggle-arrow" onclick="toggleTable()">▲ / ▼</div>
+
+  <!-- NODE TABLE -->
+  <div id="node-section">
+    <table>
+      <thead>
+        <tr>
+          <th>Node</th>
+          <th>Region</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="node-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-/* ===== MAP ===== */
-const map = L.map('map').setView([-6.9,110.4],7);
-L.tileLayer(
- 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
- { attribution:'© MapTiler © OpenStreetMap' }
-).addTo(map);
+const map = L.map('map').setView([-7.2,110.3],7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ===== SECTOR ===== */
-function destinationPoint(lat,lng,bearing,dist){
- const R=6378137;
- const br=bearing*Math.PI/180;
- const lat1=lat*Math.PI/180;
- const lon1=lng*Math.PI/180;
- const lat2=Math.asin(
-  Math.sin(lat1)*Math.cos(dist/R)+
-  Math.cos(lat1)*Math.sin(dist/R)*Math.cos(br)
- );
- const lon2=lon1+Math.atan2(
-  Math.sin(br)*Math.sin(dist/R)*Math.cos(lat1),
-  Math.cos(dist/R)-Math.sin(lat1)*Math.sin(lat2)
- );
- return [lat2*180/Math.PI, lon2*180/Math.PI];
+const nodes = [];
+
+/* generate 70 node */
+nodes.push({name:'CJDA',region:'CJDA'});
+nodes.push({name:'WKA',region:'WKA'});
+nodes.push({name:'BNA',region:'BNA'});
+
+for(let i=1;i<=60;i++){
+  nodes.push({name:'BNA-'+i,region:'BNA'});
 }
 
-function drawSector(c,s,e,r,color){
- const pts=[c];
- for(let a=s;a<=e;a+=2) pts.push(destinationPoint(c[0],c[1],a,r));
- return L.polygon(pts,{color,fillColor:color,fillOpacity:.35});
-}
-
-/* ===== NODE DATA ===== */
-const nodes={};
-
-const nodeData = {
-  CJDA: [
-    {name:'Node 1', coord:[-7.005,110.438]},
-    {name:'Node 2', coord:[-7.797,110.370]},
-    {name:'Node 3', coord:[-6.966,110.420]}
-  ],
-  WKA: [
-    {name:'Node 2', coord:[-6.208,106.845]},
-    {name:'Node 3', coord:[-6.300,106.800]},
-    {name:'Node 4', coord:[-6.150,106.500]}
-  ]
-};
-
-function createNode(name,center){
- const status=Math.random()>0.5?'up':'down';
- const color=status==='up'?'blue':'red';
- const blink=status==='up'?'status-up':'status-down';
- const r=5000;
-
- const layers=[
-  drawSector(center,0,360,r,color),
-  L.circleMarker(center,{
-    radius:9,color,fillColor:color,fillOpacity:1,className:blink
-  }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
- ];
- nodes[name]={layers,center};
-}
-
-/* ===== BUILD MENU ===== */
-Object.entries(nodeData).forEach(([area,list])=>{
- const container=document.getElementById(area);
- list.forEach(n=>{
-  createNode(n.name,n.coord);
-  const btn=document.createElement('button');
-  btn.className='menu-btn';
-  btn.innerText=n.name;
-  btn.onclick=()=>showNode(n.name);
-  container.appendChild(btn);
- });
+/* random position & status */
+nodes.forEach(n=>{
+  n.lat = -6.5 + Math.random();
+  n.lng = 106 + Math.random()*4;
+  n.status = Math.random()>0.2?'UP':'DOWN';
+  n.marker = L.circleMarker([n.lat,n.lng],{
+    radius:6,
+    color:n.status==='UP'?'blue':'red'
+  }).addTo(map).bindPopup(n.name);
 });
 
-/* ===== ACTION ===== */
-function clearMap(){
- Object.values(nodes).forEach(n=>n.layers.forEach(l=>map.removeLayer(l)));
+function renderTable(list){
+  const tbody = document.getElementById('node-table');
+  tbody.innerHTML='';
+  list.forEach(n=>{
+    tbody.innerHTML+=`
+      <tr>
+        <td>${n.name}</td>
+        <td>${n.region}</td>
+        <td class="${n.status==='UP'?'status-up':'status-down'}">${n.status}</td>
+      </tr>`;
+  });
 }
 
-function showNode(name){
- clearMap();
- nodes[name].layers.forEach(l=>l.addTo(map));
- map.flyTo(nodes[name].center,12);
+function showAll(){
+  renderTable(nodes);
+  nodes.forEach(n=>n.marker.addTo(map));
 }
 
-function showAllNodes(){
- clearMap();
- Object.values(nodes).forEach(n=>n.layers.forEach(l=>l.addTo(map)));
+function filter(region){
+  renderTable(nodes.filter(n=>n.region===region));
+  nodes.forEach(n=>{
+    if(n.region===region) n.marker.addTo(map);
+    else map.removeLayer(n.marker);
+  });
 }
 
-function toggleArea(id){
- const el=document.getElementById(id);
- el.style.display = el.style.display==='block'?'none':'block';
+function toggleTable(){
+  document.getElementById('node-section').classList.toggle('hidden');
 }
 
-showAllNodes();
-
-/* ===== RULER ===== */
-let rulerActive=false, markers=[], line=null;
-const info=document.getElementById('ruler-info');
-
-function enableRuler(){
- resetRuler(); rulerActive=true; info.innerText='Klik 2 titik';
-}
-
-function resetRuler(){
- rulerActive=false;
- markers.forEach(m=>map.removeLayer(m));
- if(line) map.removeLayer(line);
- markers=[]; line=null; info.innerText='Klik 2 titik';
-}
-
-map.on('click',e=>{
- if(!rulerActive||markers.length>=2) return;
- const m=L.marker(e.latlng,{draggable:true}).addTo(map);
- markers.push(m);
- if(markers.length===2){
-  rulerActive=false;
-  line=L.polyline(markers.map(m=>m.getLatLng()),
-   {color:'yellow',dashArray:'6,6'}).addTo(map);
- }
-});
+showAll();
 </script>
 
 </body>
