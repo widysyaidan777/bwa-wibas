@@ -24,84 +24,59 @@ header {
 #sidebar {
   position:fixed;
   top:64px; left:0;
-  width:220px;
+  width:260px;
   height:calc(100vh - 64px);
   background:#1e293b;
   color:white;
   padding:12px;
   box-sizing:border-box;
+  overflow-y:auto;
   z-index:1000;
-  overflow-y:auto;
-  transition:.3s;
-}
-#sidebar.hide { transform:translateX(-100%); }
-
-#toggle-btn {
-  position:absolute;
-  top:50%;
-  left:-45px;
-  width:45px;
-  height:45px;
-  background:#1e293b;
-  border-radius:50%;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:28px;
 }
 
-/* ===== MAP ===== */
 #map {
-  margin-left:220px;
-  height:calc(100vh - 64px - 260px);
-  transition:.3s;
+  margin-left:260px;
+  height:calc(100vh - 64px);
 }
-#map.full { margin-left:0; }
 
-/* ===== NODE SECTION ===== */
-#node-section {
-  margin-left:220px;
-  background:#1e293b;
-  color:white;
-  padding:12px;
-  max-height:260px;
-  overflow-y:auto;
-  transition:.3s;
+/* ===== NODE MENU ===== */
+.menu-title {
+  font-size:18px;
+  margin:10px 0;
 }
-#map.full + #node-section { margin-left:0; }
 
-.node-btn {
+.menu-btn {
   width:100%;
-  margin-bottom:8px;
   padding:10px;
+  margin-bottom:6px;
+  background:#3b82f6;
   border:none;
   border-radius:4px;
-  background:#3b82f6;
   color:white;
   cursor:pointer;
   text-align:left;
 }
-.node-btn:hover { background:#2563eb; }
+.menu-btn:hover { background:#2563eb; }
+
+.area-btn {
+  background:#334155;
+  font-weight:bold;
+}
+
+.sub-menu {
+  margin-left:12px;
+  display:none;
+}
+
+.sub-menu button {
+  background:#475569;
+}
 
 .status-up { animation:blinkBlue 1s infinite; }
 .status-down { animation:blinkRed 1s infinite; }
 
 @keyframes blinkBlue { 50%{opacity:.3;} }
 @keyframes blinkRed { 50%{opacity:.3;} }
-
-#back-button {
-  position:absolute;
-  top:12px;
-  right:12px;
-  z-index:1200;
-  padding:10px 14px;
-  background:#334155;
-  color:white;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
 </style>
 </head>
 
@@ -113,11 +88,27 @@ header {
 
 <!-- ===== SIDEBAR ===== -->
 <div id="sidebar">
-  <div id="toggle-btn" onclick="toggleSidebar()">◀</div>
+  <div class="menu-title">Daftar Node</div>
 
-  <h3>Ruler Coverage</h3>
-  <button class="node-btn" onclick="enableRuler()">Aktifkan Ruler</button>
-  <button class="node-btn" onclick="resetRuler()" style="background:#ef4444">
+  <button class="menu-btn" onclick="showAllNodes()">All</button>
+
+  <!-- CJDA -->
+  <button class="menu-btn area-btn" onclick="toggleArea('CJDA')">
+    CJDA (Central Java & DIY Area)
+  </button>
+  <div class="sub-menu" id="CJDA"></div>
+
+  <!-- WKA -->
+  <button class="menu-btn area-btn" onclick="toggleArea('WKA')">
+    WKA
+  </button>
+  <div class="sub-menu" id="WKA"></div>
+
+  <hr style="border:1px solid #334155;margin:12px 0">
+
+  <div class="menu-title">Ruler Coverage</div>
+  <button class="menu-btn" onclick="enableRuler()">Aktifkan Ruler</button>
+  <button class="menu-btn" style="background:#ef4444" onclick="resetRuler()">
     Reset Ruler
   </button>
   <div id="ruler-info" style="font-size:13px">Klik 2 titik</div>
@@ -126,162 +117,128 @@ header {
 <!-- ===== MAP ===== -->
 <div id="map"></div>
 
-<!-- ===== NODE LIST (DI BAWAH MAP) ===== -->
-<div id="node-section">
-  <h3>Daftar Node</h3>
-  <button class="node-btn" onclick="showAllNodes()">All</button>
-  <div id="node-buttons"></div>
-</div>
-
-<button id="back-button" onclick="location.href='index.html'">
-  Kembali ke Menu
-</button>
-
 <script>
-/* ===== SIDEBAR ===== */
-const sidebar = document.getElementById('sidebar');
-const mapDiv = document.getElementById('map');
-const toggleBtn = document.getElementById('toggle-btn');
-
-function toggleSidebar(){
-  sidebar.classList.toggle('hide');
-  mapDiv.classList.toggle('full');
-  toggleBtn.innerHTML = sidebar.classList.contains('hide') ? '▶' : '◀';
-}
-
 /* ===== MAP ===== */
-const map = L.map('map').setView([-6.291,106.786],11.5);
+const map = L.map('map').setView([-6.9,110.4],7);
 L.tileLayer(
-  'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
-  { attribution:'© MapTiler © OpenStreetMap' }
+ 'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=fI3LpQe8kMXj5ntFo68C',
+ { attribution:'© MapTiler © OpenStreetMap' }
 ).addTo(map);
 
 /* ===== SECTOR ===== */
 function destinationPoint(lat,lng,bearing,dist){
-  const R=6378137;
-  const br=bearing*Math.PI/180;
-  const d=dist;
-  const lat1=lat*Math.PI/180;
-  const lon1=lng*Math.PI/180;
-  const lat2=Math.asin(
-    Math.sin(lat1)*Math.cos(d/R)+
-    Math.cos(lat1)*Math.sin(d/R)*Math.cos(br)
-  );
-  const lon2=lon1+Math.atan2(
-    Math.sin(br)*Math.sin(d/R)*Math.cos(lat1),
-    Math.cos(d/R)-Math.sin(lat1)*Math.sin(lat2)
-  );
-  return [lat2*180/Math.PI, lon2*180/Math.PI];
+ const R=6378137;
+ const br=bearing*Math.PI/180;
+ const lat1=lat*Math.PI/180;
+ const lon1=lng*Math.PI/180;
+ const lat2=Math.asin(
+  Math.sin(lat1)*Math.cos(dist/R)+
+  Math.cos(lat1)*Math.sin(dist/R)*Math.cos(br)
+ );
+ const lon2=lon1+Math.atan2(
+  Math.sin(br)*Math.sin(dist/R)*Math.cos(lat1),
+  Math.cos(dist/R)-Math.sin(lat1)*Math.sin(lat2)
+ );
+ return [lat2*180/Math.PI, lon2*180/Math.PI];
 }
 
-function drawSector(center,start,end,radius,color){
-  const pts=[center];
-  for(let a=start;a<=end;a+=2){
-    pts.push(destinationPoint(center[0],center[1],a,radius));
-  }
-  return L.polygon(pts,{
-    color, fillColor:color, fillOpacity:.35, weight:1
-  });
+function drawSector(c,s,e,r,color){
+ const pts=[c];
+ for(let a=s;a<=e;a+=2) pts.push(destinationPoint(c[0],c[1],a,r));
+ return L.polygon(pts,{color,fillColor:color,fillOpacity:.35});
 }
 
-/* ===== NODES ===== */
+/* ===== NODE DATA ===== */
 const nodes={};
 
-const coords=[
-  [-6.2088,106.8456],[-6.25,106.85],[-6.3,106.8],
-  [-6.15,106.5],[-6.3,106.9],[-6.25,107.0],
-  [-6.2,107.1],[-6.35,106.8],[-6.1,106.6]
-];
+const nodeData = {
+  CJDA: [
+    {name:'Node 1', coord:[-7.005,110.438]},
+    {name:'Node 2', coord:[-7.797,110.370]},
+    {name:'Node 3', coord:[-6.966,110.420]}
+  ],
+  WKA: [
+    {name:'Node 2', coord:[-6.208,106.845]},
+    {name:'Node 3', coord:[-6.300,106.800]},
+    {name:'Node 4', coord:[-6.150,106.500]}
+  ]
+};
 
-function createNode(name,center,status){
-  const color=status==='up'?'blue':'red';
-  const blink=status==='up'?'status-up':'status-down';
-  const r=5000;
+function createNode(name,center){
+ const status=Math.random()>0.5?'up':'down';
+ const color=status==='up'?'blue':'red';
+ const blink=status==='up'?'status-up':'status-down';
+ const r=5000;
 
-  const layers=[
-    drawSector(center,0,90,r,color),
-    drawSector(center,90,180,r,color),
-    drawSector(center,180,270,r,color),
-    drawSector(center,270,360,r,color),
-    L.circleMarker(center,{
-      radius:9,color,fillColor:color,fillOpacity:1,className:blink
-    }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}<br>Coverage: 5 km`)
-  ];
-  nodes[name]={layers,center};
+ const layers=[
+  drawSector(center,0,360,r,color),
+  L.circleMarker(center,{
+    radius:9,color,fillColor:color,fillOpacity:1,className:blink
+  }).bindPopup(`<b>${name}</b><br>Status: ${status.toUpperCase()}`)
+ ];
+ nodes[name]={layers,center};
 }
 
-coords.forEach((c,i)=>{
-  const status=Math.random()>0.5?'up':'down';
-  const name='Node '+(i+1);
-  createNode(name,c,status);
-
+/* ===== BUILD MENU ===== */
+Object.entries(nodeData).forEach(([area,list])=>{
+ const container=document.getElementById(area);
+ list.forEach(n=>{
+  createNode(n.name,n.coord);
   const btn=document.createElement('button');
-  btn.className='node-btn';
-  btn.innerText=name;
-  btn.onclick=()=>showNode(name);
-  document.getElementById('node-buttons').appendChild(btn);
+  btn.className='menu-btn';
+  btn.innerText=n.name;
+  btn.onclick=()=>showNode(n.name);
+  container.appendChild(btn);
+ });
 });
 
+/* ===== ACTION ===== */
 function clearMap(){
-  Object.values(nodes).forEach(n=>n.layers.forEach(l=>map.removeLayer(l)));
+ Object.values(nodes).forEach(n=>n.layers.forEach(l=>map.removeLayer(l)));
 }
 
-function showNode(n){
-  clearMap();
-  nodes[n].layers.forEach(l=>l.addTo(map));
-  map.flyTo(nodes[n].center,12.5);
+function showNode(name){
+ clearMap();
+ nodes[name].layers.forEach(l=>l.addTo(map));
+ map.flyTo(nodes[name].center,12);
 }
 
 function showAllNodes(){
-  clearMap();
-  Object.values(nodes).forEach(n=>n.layers.forEach(l=>l.addTo(map)));
+ clearMap();
+ Object.values(nodes).forEach(n=>n.layers.forEach(l=>l.addTo(map)));
+}
+
+function toggleArea(id){
+ const el=document.getElementById(id);
+ el.style.display = el.style.display==='block'?'none':'block';
 }
 
 showAllNodes();
 
 /* ===== RULER ===== */
-let rulerActive=false, rulerMarkers=[], rulerVisuals=[], rulerLine=null;
-const rulerInfo=document.getElementById('ruler-info');
+let rulerActive=false, markers=[], line=null;
+const info=document.getElementById('ruler-info');
 
 function enableRuler(){
-  resetRuler();
-  rulerActive=true;
-  rulerInfo.innerHTML='Klik titik pusat lalu ujung';
+ resetRuler(); rulerActive=true; info.innerText='Klik 2 titik';
 }
 
 function resetRuler(){
-  rulerActive=false;
-  rulerMarkers.forEach(m=>map.removeLayer(m));
-  rulerVisuals.forEach(v=>map.removeLayer(v));
-  rulerMarkers=[]; rulerVisuals=[];
-  if(rulerLine) map.removeLayer(rulerLine);
-  rulerLine=null;
-  rulerInfo.innerHTML='Klik 2 titik';
-}
-
-function updateRuler(){
-  const p1=rulerMarkers[0].getLatLng();
-  const p2=rulerMarkers[1].getLatLng();
-  rulerLine.setLatLngs([p1,p2]);
-  const km=(p1.distanceTo(p2)/1000).toFixed(2);
-  rulerInfo.innerHTML=`Jarak: ${km} km`;
+ rulerActive=false;
+ markers.forEach(m=>map.removeLayer(m));
+ if(line) map.removeLayer(line);
+ markers=[]; line=null; info.innerText='Klik 2 titik';
 }
 
 map.on('click',e=>{
-  if(!rulerActive||rulerMarkers.length>=2) return;
-
-  const m=L.marker(e.latlng,{draggable:true}).addTo(map);
-  m.on('drag',updateRuler);
-  rulerMarkers.push(m);
-
-  if(rulerMarkers.length===2){
-    rulerActive=false;
-    rulerLine=L.polyline(
-      rulerMarkers.map(m=>m.getLatLng()),
-      {color:'yellow',dashArray:'6,6',weight:3}
-    ).addTo(map);
-    updateRuler();
-  }
+ if(!rulerActive||markers.length>=2) return;
+ const m=L.marker(e.latlng,{draggable:true}).addTo(map);
+ markers.push(m);
+ if(markers.length===2){
+  rulerActive=false;
+  line=L.polyline(markers.map(m=>m.getLatLng()),
+   {color:'yellow',dashArray:'6,6'}).addTo(map);
+ }
 });
 </script>
 
