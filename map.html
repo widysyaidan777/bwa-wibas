@@ -8,16 +8,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-/* =======================
-   GLOBAL
-   ======================= */
+/* ================= GLOBAL ================= */
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
   background:#020617;
   color:white
 }
-
 header{
   height:60px;
   display:flex;
@@ -28,9 +25,7 @@ header{
   font-weight:bold
 }
 
-/* =======================
-   SIDEBAR
-   ======================= */
+/* ================= SIDEBAR ================= */
 #sidebar{
   position:fixed;
   top:60px;
@@ -41,7 +36,6 @@ header{
   padding:12px;
   box-sizing:border-box
 }
-
 button{
   width:100%;
   margin:6px 0;
@@ -51,23 +45,20 @@ button{
   color:white;
   cursor:pointer
 }
-
 .blue{background:#2563eb}
 .gray{background:#334155}
 .red{background:#dc2626}
 
-/* =======================
-   MAIN AREA
-   ======================= */
+/* ================= MAIN ================= */
 #main{
   margin-left:220px;
   height:calc(100vh - 60px);
   display:flex;
   flex-direction:column
 }
-
 #map{flex:1}
 
+/* ================= TABLE ================= */
 #toggle{
   text-align:center;
   padding:6px;
@@ -75,249 +66,47 @@ button{
   border-top:1px solid #334155;
   cursor:pointer
 }
-
-/* =======================
-   TABLE
-   ======================= */
 #node-section{
   max-height:260px;
   overflow:auto;
   background:#1e293b;
   transition:.3s
 }
-
-#node-section.hidden{
-  max-height:0;
-  overflow:hidden
-}
-
+#node-section.hidden{max-height:0}
 table{
   width:100%;
   border-collapse:collapse;
   font-size:13px
 }
-
 th,td{
   padding:6px;
   border-bottom:1px solid #334155;
   text-align:left
 }
-
 th{background:#020617}
-
 .up{color:#22c55e}
 .down{color:#ef4444}
 
-/* =======================
-   NODE ANIMATION
-   ======================= */
+/* ================= NODE BLINK ================= */
 @keyframes blink{
   0%{opacity:1}
   50%{opacity:.35}
   100%{opacity:1}
 }
-
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
-/* Zoom scale */
-.leaflet-zoom-level-5 .node-blink{transform:scale(.9)}
-.leaflet-zoom-level-7 .node-blink{transform:scale(1)}
-.leaflet-zoom-level-9 .node-blink{transform:scale(1.2)}
-.leaflet-zoom-level-11 .node-blink{transform:scale(1.4)}
+/* ================= RULER LABEL ================= */
+.ruler-label{
+  background:#020617;
+  color:#facc15;
+  border:1px solid #facc15;
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:12px;
+}
 </style>
 </head>
 
 <body>
-
-<header>Peta Topologi – BWA WiBAS</header>
-
-<!-- =======================
-     SIDEBAR
-     ======================= -->
-<div id="sidebar">
-  <h4>Area</h4>
-  <button class="blue" onclick="showAll()">All</button>
-  <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
-  <button class="gray" onclick="filterRegion('WKA')">WKA</button>
-  <button class="gray" onclick="filterRegion('BNA')">BNA</button>
-
-  <hr style="border:1px solid #334155">
-
-  <h4>Ruler</h4>
-  <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
-  <button class="red" onclick="resetRuler()">Reset Ruler</button>
-
-  <hr style="border:1px solid #334155">
-  <button class="gray" onclick="history.back()">⬅ Kembali</button>
-</div>
-
-<!-- =======================
-     MAIN
-     ======================= -->
-<div id="main">
-  <div id="map"></div>
-  <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
-
-  <div id="node-section">
-    <table>
-      <thead>
-        <tr>
-          <th>Node / Kota</th>
-          <th>Area</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="node-table"></tbody>
-    </table>
-  </div>
-</div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script>
-/* =======================
-   MAP INIT
-   ======================= */
-const map = L.map('map').setView([-6.9,110.5],5);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'© OpenStreetMap'
-}).addTo(map);
-
-/* =======================
-   RULER
-   ======================= */
-let rulerActive=false, pts=[], line=null;
-
-function activateRuler(){
-  rulerActive=true;
-  pts=[];
-  if(line) map.removeLayer(line);
-  map.getContainer().style.cursor='crosshair';
-  alert("Klik 2 titik pada peta");
-}
-
-function resetRuler(){
-  rulerActive=false;
-  pts=[];
-  if(line) map.removeLayer(line);
-  map.getContainer().style.cursor='';
-}
-
-map.on('click',e=>{
-  if(!rulerActive) return;
-  pts.push(e.latlng);
-  if(pts.length===2){
-    line=L.polyline(pts,{color:'yellow'}).addTo(map);
-    alert("Jarak: "+(map.distance(pts[0],pts[1])/1000).toFixed(2)+" km");
-    rulerActive=false;
-    map.getContainer().style.cursor='';
-  }
-});
-
-/* =======================
-   ICON SVG
-   ======================= */
-function icon(colors,fast=false){
- return L.divIcon({
-  className:`node-blink ${fast?'fast':''}`,
-  iconSize:[34,34],
-  iconAnchor:[17,17],
-  popupAnchor:[0,-15],
-  html:`
-<svg width="34" height="34" viewBox="0 0 100 100">
- <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
- <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
- <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
- <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
- <circle cx="50" cy="50" r="8" fill="#020617" stroke="white" stroke-width="2"/>
-</svg>`
- });
-}
-
-/* =======================
-   NODE DATA
-   ======================= */
-const nodes = [
- {name:'Yogyakarta', region:'CJDA', lat:-7.7956, lng:110.3695},
- {name:'Solo', region:'CJDA', lat:-7.5666, lng:110.8167},
- {name:'Semarang', region:'CJDA', lat:-6.9667, lng:110.4167},
-
- {name:'Balikpapan', region:'WKA', lat:-1.2654, lng:116.8312},
- {name:'Samarinda', region:'WKA', lat:-0.5022, lng:117.1536},
- {name:'Pontianak', region:'WKA', lat:-0.0263, lng:109.3425},
-
- {name:'Denpasar', region:'BNA', lat:-8.6705, lng:115.2126},
- {name:'Singaraja', region:'BNA', lat:-8.1120, lng:115.0882},
- {name:'Gianyar', region:'BNA', lat:-8.5445, lng:115.3255},
-];
-
-/* =======================
-   CREATE MARKERS
-   ======================= */
-nodes.forEach(n=>{
- n.status=Math.random()>0.25?'UP':'DOWN';
-
- const col = n.status==='UP'
- ? ['#2563eb','#22c55e','#2563eb','#22c55e']
- : ['#dc2626','#f97316','#dc2626','#f97316'];
-
- n.marker=L.marker([n.lat,n.lng],{
-   icon:icon(col,n.status==='DOWN'),
-   interactive:true
- })
- .addTo(map)
- .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
-
- n.marker.on('click',e=>L.DomEvent.stopPropagation(e));
-});
-
-/* =======================
-   TABLE RENDER
-   ======================= */
-function render(list){
- const tb=document.getElementById('node-table');
- tb.innerHTML='';
- list.forEach(n=>{
-  tb.innerHTML+=`
-<tr onclick="focusNode('${n.name}')" style="cursor:pointer">
- <td>${n.name}</td>
- <td>${n.region}</td>
- <td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
-</tr>`;
- });
-}
-
-function focusNode(name){
- const n=nodes.find(x=>x.name===name);
- if(!n) return;
- map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
- n.marker.openPopup();
-}
-
-/* =======================
-   FILTER
-   ======================= */
-function showAll(){
- render(nodes);
- nodes.forEach(n=>n.marker.addTo(map));
-}
-
-function filterRegion(r){
- render(nodes.filter(n=>n.region===r));
- nodes.forEach(n=>{
-   if(n.region===r) n.marker.addTo(map);
-   else map.removeLayer(n.marker);
- });
-}
-
-function toggleTable(){
- document.getElementById('node-section').classList.toggle('hidden');
-}
-
-showAll();
-</script>
-
-</body>
-</html>
+<head
