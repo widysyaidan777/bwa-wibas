@@ -226,22 +226,22 @@ function createSector(center,radius,start,end,opt){
 
 /* ================= NODE DATA ================= */
 const nodes=[
- {name:'Yogyakarta',region:'CJDA',lat:-7.7956,lng:110.3695},
- {name:'Solo',region:'CJDA',lat:-7.5666,lng:110.8167},
- {name:'Semarang',region:'CJDA',lat:-6.9667,lng:110.4167},
- {name:'Balikpapan',region:'WKA',lat:-1.2654,lng:116.8312},
- {name:'Samarinda',region:'WKA',lat:-0.5022,lng:117.1536},
- {name:'Pontianak',region:'WKA',lat:-0.0263,lng:109.3425},
- {name:'Denpasar',region:'BNA',lat:-8.6705,lng:115.2126},
- {name:'Singaraja',region:'BNA',lat:-8.112,lng:115.0882},
- {name:'Gianyar',region:'BNA',lat:-8.5445,lng:115.3255}
+ {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
+ {name:'BLPRAM',region:'KAA',lat:-1.247917,lng:116.838194,status:'DOWN'},
+ {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'},
+ {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,statis:'UP'},
+ {name:'MJKGTO',region:'EJA',lat:-7.484068,lng:112.439306,status:'UP'},
+ {name:'SDJCNG',region:'EJA',lat:-7.407205,lng:112.618979,status:'UP'},
+ {name:'SDJSNY',region:'EJA',lat:-7.348534,lng:112.767766,status:'UP'}
 ];
 
 let coverageVisible=true;
 
 /* ================= CREATE NODE ================= */
 nodes.forEach(n=>{
- n.status=Math.random()>0.25?'UP':'DOWN';
+ n.status = n.status || (Math.random()>0.25 ? 'UP' : 'DOWN');
  const col=n.status==='UP'
  ?['#2563eb','#22c55e','#2563eb','#22c55e']
  :['#dc2626','#f97316','#dc2626','#f97316'];
