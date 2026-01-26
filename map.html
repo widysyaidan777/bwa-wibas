@@ -23,8 +23,6 @@ header{
   font-size:22px;
   font-weight:bold
 }
-
-/* SIDEBAR */
 #sidebar{
   position:fixed;
   top:60px;
@@ -33,7 +31,6 @@ header{
   height:calc(100vh - 60px);
   background:#020617;
   padding:12px;
-  box-sizing:border-box
 }
 button{
   width:100%;
@@ -47,8 +44,6 @@ button{
 .blue{background:#2563eb}
 .gray{background:#334155}
 .red{background:#dc2626}
-
-/* MAIN */
 #main{
   margin-left:220px;
   height:calc(100vh - 60px);
@@ -56,8 +51,6 @@ button{
   flex-direction:column
 }
 #map{flex:1}
-
-/* TABLE */
 #toggle{
   text-align:center;
   padding:6px;
@@ -69,87 +62,54 @@ button{
   max-height:260px;
   overflow:auto;
   background:#1e293b;
-  transition:.3s
 }
-#node-section.hidden{max-height:0}
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px
-}
-th,td{
-  padding:6px;
-  border-bottom:1px solid #334155;
-  text-align:left
-}
-th{background:#020617}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px;border-bottom:1px solid #334155}
 .up{color:#22c55e}
 .down{color:#ef4444}
 
-/* NODE BLINK */
-@keyframes blink{
-  0{opacity:1}
-  50%{opacity:.35}
-  100%{opacity:1}
-}
+@keyframes blink{50%{opacity:.3}}
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
-/* RULER */
 .ruler-label{
   background:#020617;
   color:#facc15;
   border:1px solid #facc15;
-  padding:6px 10px;
+  padding:4px 8px;
   border-radius:6px;
   font-size:12px;
-  white-space:nowrap;
 }
 .leaflet-popup-content-wrapper{
   background:#020617;
   color:white;
   border:1px solid #facc15;
 }
-.leaflet-popup-tip{
-  background:#020617;
-}
+.leaflet-popup-tip{background:#020617}
 </style>
 </head>
 
 <body>
 <header>Peta Topologi – BWA WiBAS</header>
 
-<!-- SIDEBAR -->
 <div id="sidebar">
-  <button class="gray" onclick="goBack()">⬅ Kembali ke Menu</button>
-
-  <hr style="border:1px solid #334155">
-
-  <h4>Area</h4>
+  <button class="gray" onclick="history.back()">⬅ Kembali ke Menu</button>
+  <hr>
   <button class="blue" onclick="showAll()">All</button>
   <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
   <button class="gray" onclick="filterRegion('WJA')">WJA</button>
   <button class="gray" onclick="filterRegion('BNA')">BNA</button>
-
-  <hr style="border:1px solid #334155">
-
-  <h4>Ruler</h4>
+  <hr>
   <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
   <button class="red" onclick="resetRuler()">Reset Ruler</button>
-
-  <hr style="border:1px solid #334155">
-  <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
 </div>
 
-<!-- MAIN -->
 <div id="main">
   <div id="map"></div>
   <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
   <div id="node-section">
     <table>
-      <thead>
-        <tr><th>Node</th><th>Area</th><th>Status</th></tr>
-      </thead>
+      <thead><tr><th>Node</th><th>Area</th><th>Status</th></tr></thead>
       <tbody id="node-table"></tbody>
     </table>
   </div>
@@ -158,43 +118,27 @@ th{background:#020617}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-/* ================= MAP ================= */
-const map = L.map('map').setView([-6.9,110.5],5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:18
-}).addTo(map);
+const map=L.map('map').setView([-6.9,110.5],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ================= BACK BUTTON ================= */
-function goBack(){
-  window.history.back();
-  // atau: window.location.href="menu.html";
-}
-
-/* ================= RULER ================= */
-let rulerActive=false;
-let p1=null,p2=null,m1=null,m2=null,rulerLine=null,rulerLabel=null,rulerPopup=null;
+/* ===== RULER ===== */
+let rulerActive=false,p1=null,p2=null,m1=null,m2=null,rulerLine=null,rulerLabel=null;
 
 function activateRuler(){
-  rulerActive=true;
-  clearRuler();
+  rulerActive=true; clearRuler();
   map.getContainer().style.cursor='crosshair';
 }
 function resetRuler(){
-  rulerActive=false;
-  clearRuler();
+  rulerActive=false; clearRuler();
   map.getContainer().style.cursor='';
 }
 function clearRuler(){
-  [m1,m2,rulerLine,rulerLabel,rulerPopup].forEach(x=>{
-    if(x) map.removeLayer(x);
-  });
-  p1=p2=m1=m2=rulerLine=rulerLabel=rulerPopup=null;
+  [m1,m2,rulerLine,rulerLabel].forEach(x=>x&&map.removeLayer(x));
+  p1=p2=m1=m2=rulerLine=rulerLabel=null;
 }
 
-/* bearing */
 function bearing(lat1,lon1,lat2,lon2){
-  const toRad=x=>x*Math.PI/180;
-  const toDeg=x=>(x*180/Math.PI+360)%360;
+  const toRad=x=>x*Math.PI/180,toDeg=x=>(x*180/Math.PI+360)%360;
   const dLon=toRad(lon2-lon1);
   const y=Math.sin(dLon)*Math.cos(toRad(lat2));
   const x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-
@@ -203,36 +147,22 @@ function bearing(lat1,lon1,lat2,lon2){
 }
 
 function updateRuler(){
-  if(!p1||!p2) return;
-
   const dist=map.distance(p1,p2)/1000;
   const az=bearing(p1.lat,p1.lng,p2.lat,p2.lng);
-  const mid=L.latLng(
-    (p1.lat+p2.lat)/2,
-    (p1.lng+p2.lng)/2
-  );
+  const mid=L.latLng((p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2);
 
   rulerLine.setLatLngs([p1,p2]);
-  rulerLabel.setLatLng(mid).setContent(
-    `<b>${dist.toFixed(2)} km</b><br>${az.toFixed(1)}°`
-  );
+  rulerLabel.setLatLng(mid).setContent(`<b>${dist.toFixed(2)} km</b><br>${az.toFixed(1)}°`);
 
-  if(!rulerPopup){
-    rulerPopup=L.popup({
-      autoClose:false,
-      closeOnClick:false
-    }).setLatLng(mid).openOn(map);
-  }
-  rulerPopup.setContent(
-    `<b>Ruler Info</b><hr>
-     Jarak: <b>${dist.toFixed(2)} km</b><br>
-     Azimuth: <b>${az.toFixed(1)}°</b>`
-  ).setLatLng(mid);
+  rulerLine.bindPopup(`
+    <b>Ruler Info</b><hr>
+    Distance: <b>${dist.toFixed(2)} km</b><br>
+    Azimuth: <b>${az.toFixed(1)}°</b>
+  `).openPopup();
 }
 
 map.on('click',e=>{
   if(!rulerActive) return;
-
   if(!p1){
     p1=e.latlng;
     m1=L.marker(p1,{draggable:true}).addTo(map)
@@ -241,128 +171,48 @@ map.on('click',e=>{
     p2=e.latlng;
     m2=L.marker(p2,{draggable:true}).addTo(map)
       .on('drag',ev=>{p2=ev.target.getLatLng();updateRuler();});
-
     rulerLine=L.polyline([p1,p2],{color:'#facc15',weight:3}).addTo(map);
-    rulerLabel=L.tooltip({
-      permanent:true,
-      direction:'center',
-      className:'ruler-label'
-    }).addTo(map);
-
+    rulerLabel=L.tooltip({permanent:true,className:'ruler-label'}).addTo(map);
     updateRuler();
     rulerActive=false;
     map.getContainer().style.cursor='';
   }
 });
 
-/* ================= NODE ICON ================= */
+/* ===== NODE ===== */
+const nodes=[
+ {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
+ {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'}
+];
+
 function icon(colors,fast=false){
  return L.divIcon({
   className:`node-blink ${fast?'fast':''}`,
   iconSize:[36,36],
-  iconAnchor:[18,18],
-  html:`<svg width="36" height="36" viewBox="0 0 100 100">
- <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
- <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
- <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
- <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
- <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
-</svg>`
+  html:`<svg viewBox="0 0 100 100">
+   <circle cx="50" cy="50" r="45" fill="${colors[0]}"/></svg>`
  });
 }
 
-/* ================= SECTOR ================= */
-function createSector(c,r,s,e,opt){
- const pts=[c];
- for(let a=s;a<=e;a+=5){
-  const rad=a*Math.PI/180;
-  pts.push(L.latLng(
-    c.lat+(r*Math.sin(rad))/111320,
-    c.lng+(r*Math.cos(rad))/(111320*Math.cos(c.lat*Math.PI/180))
-  ));
- }
- pts.push(c);
- return L.polygon(pts,opt);
-}
-
-/* ================= DATA ================= */
-const nodes=[
- {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
- {name:'BDGBBPB',region:'WJA',lat:-6.8361,lng:107.4870,status:'UP'},
- {name:'BDGCLY',region:'WJA',lat:-6.9405,lng:107.7513,status:'DOWN'},
- {name:'DPSIKT',region:'BNA',lat:-8.7358,lng:115.1787,status:'UP'}
-];
-
-let coverageVisible=true;
-
-/* ================= CREATE NODE ================= */
 nodes.forEach(n=>{
- const col=n.status==='UP'
- ?['#2563eb','#22c55e','#2563eb','#22c55e']
- :['#dc2626','#f97316','#dc2626','#f97316'];
-
+ const col=n.status==='UP'?['#22c55e']:['#ef4444'];
  n.marker=L.marker([n.lat,n.lng],{icon:icon(col,n.status==='DOWN')})
- .addTo(map)
- .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
-
- n.sectors=[];
- for(let i=0;i<4;i++){
-  n.sectors.push(
-    createSector(L.latLng(n.lat,n.lng),5000,i*90,(i+1)*90,{
-      color:col[i],fillColor:col[i],fillOpacity:.25,weight:1
-    }).addTo(map)
-  );
- }
+ .addTo(map).bindPopup(`<b>${n.name}</b><br>${n.region}`);
 });
 
-/* ================= TABLE ================= */
+/* ===== TABLE ===== */
 function render(list){
- const tb=document.getElementById('node-table');
- tb.innerHTML='';
- list.forEach(n=>{
-  tb.innerHTML+=`
-<tr onclick="focusNode('${n.name}')">
-<td>${n.name}</td>
-<td>${n.region}</td>
-<td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
-</tr>`;
- });
+ document.getElementById('node-table').innerHTML=list.map(n=>`
+ <tr onclick="map.flyTo([${n.lat},${n.lng}],11)">
+  <td>${n.name}</td><td>${n.region}</td>
+  <td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
+ </tr>`).join('');
 }
-function focusNode(name){
- const n=nodes.find(x=>x.name===name);
- map.flyTo([n.lat,n.lng],11);
- n.marker.openPopup();
-}
-
-/* ================= FILTER ================= */
-function showAll(){
- render(nodes);
- nodes.forEach(n=>{
-  n.marker.addTo(map);
-  n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
- });
-}
-function filterRegion(r){
- render(nodes.filter(n=>n.region===r));
- nodes.forEach(n=>{
-  if(n.region===r){
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
-  }else{
-    map.removeLayer(n.marker);
-    n.sectors.forEach(s=>map.removeLayer(s));
-  }
- });
-}
-function toggleCoverage(){
- coverageVisible=!coverageVisible;
- nodes.forEach(n=>n.sectors.forEach(s=>{
-  coverageVisible?s.addTo(map):map.removeLayer(s);
- }));
-}
-function toggleTable(){
- document.getElementById('node-section').classList.toggle('hidden');
-}
+function showAll(){render(nodes)}
+function filterRegion(r){render(nodes.filter(n=>n.region===r))}
+function toggleTable(){document.getElementById('node-section').classList.toggle('hidden')}
 
 showAll();
 </script>
