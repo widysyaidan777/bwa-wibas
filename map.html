@@ -95,7 +95,7 @@ th{background:#020617}
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
-/* RULER LABEL */
+/* RULER */
 .ruler-label{
   background:#020617;
   color:#facc15;
@@ -105,6 +105,14 @@ th{background:#020617}
   font-size:12px;
   white-space:nowrap;
 }
+.leaflet-popup-content-wrapper{
+  background:#020617;
+  color:white;
+  border:1px solid #facc15;
+}
+.leaflet-popup-tip{
+  background:#020617;
+}
 </style>
 </head>
 
@@ -113,6 +121,10 @@ th{background:#020617}
 
 <!-- SIDEBAR -->
 <div id="sidebar">
+  <button class="gray" onclick="goBack()">⬅ Kembali ke Menu</button>
+
+  <hr style="border:1px solid #334155">
+
   <h4>Area</h4>
   <button class="blue" onclick="showAll()">All</button>
   <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
@@ -152,7 +164,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18
 }).addTo(map);
 
-/* ================= ADVANCED RULER ================= */
+/* ================= BACK BUTTON ================= */
+function goBack(){
+  window.history.back();
+  // atau: window.location.href="menu.html";
+}
+
+/* ================= RULER ================= */
 let rulerActive=false;
 let p1=null,p2=null,m1=null,m2=null,rulerLine=null,rulerLabel=null,rulerPopup=null;
 
@@ -167,15 +185,13 @@ function resetRuler(){
   map.getContainer().style.cursor='';
 }
 function clearRuler(){
-  if(m1) map.removeLayer(m1);
-  if(m2) map.removeLayer(m2);
-  if(rulerLine) map.removeLayer(rulerLine);
-  if(rulerLabel) map.removeLayer(rulerLabel);
-  if(rulerPopup) map.removeLayer(rulerPopup);
+  [m1,m2,rulerLine,rulerLabel,rulerPopup].forEach(x=>{
+    if(x) map.removeLayer(x);
+  });
   p1=p2=m1=m2=rulerLine=rulerLabel=rulerPopup=null;
 }
 
-/* Bearing */
+/* bearing */
 function bearing(lat1,lon1,lat2,lon2){
   const toRad=x=>x*Math.PI/180;
   const toDeg=x=>(x*180/Math.PI+360)%360;
@@ -186,63 +202,45 @@ function bearing(lat1,lon1,lat2,lon2){
   return toDeg(Math.atan2(y,x));
 }
 
-/* Update ruler */
 function updateRuler(){
   if(!p1||!p2) return;
 
-  const dist = map.distance(p1,p2)/1000;
-  const az   = bearing(p1.lat,p1.lng,p2.lat,p2.lng);
-
-  const mid = [
+  const dist=map.distance(p1,p2)/1000;
+  const az=bearing(p1.lat,p1.lng,p2.lat,p2.lng);
+  const mid=L.latLng(
     (p1.lat+p2.lat)/2,
     (p1.lng+p2.lng)/2
-  ];
+  );
 
   rulerLine.setLatLngs([p1,p2]);
-
-  rulerLabel
-    .setLatLng(mid)
-    .setContent(`<b>${dist.toFixed(2)} km</b><br>Azimuth: ${az.toFixed(1)}°`);
+  rulerLabel.setLatLng(mid).setContent(
+    `<b>${dist.toFixed(2)} km</b><br>${az.toFixed(1)}°`
+  );
 
   if(!rulerPopup){
-    rulerPopup = L.popup({
+    rulerPopup=L.popup({
       autoClose:false,
       closeOnClick:false
-    })
-    .setLatLng(mid)
-    .setContent(`
-      <b>Ruler Info</b><br>
-      Jarak: <b>${dist.toFixed(2)} km</b><br>
-      Azimuth: <b>${az.toFixed(1)}°</b>
-    `)
-    .openOn(map);
-  }else{
-    rulerPopup
-      .setLatLng(mid)
-      .setContent(`
-        <b>Ruler Info</b><br>
-        Jarak: <b>${dist.toFixed(2)} km</b><br>
-        Azimuth: <b>${az.toFixed(1)}°</b>
-      `);
+    }).setLatLng(mid).openOn(map);
   }
+  rulerPopup.setContent(
+    `<b>Ruler Info</b><hr>
+     Jarak: <b>${dist.toFixed(2)} km</b><br>
+     Azimuth: <b>${az.toFixed(1)}°</b>`
+  ).setLatLng(mid);
 }
 
-/* Click map */
 map.on('click',e=>{
   if(!rulerActive) return;
 
   if(!p1){
     p1=e.latlng;
-    m1=L.marker(p1,{draggable:true})
-      .addTo(map).on('drag',ev=>{
-        p1=ev.target.getLatLng(); updateRuler();
-      });
+    m1=L.marker(p1,{draggable:true}).addTo(map)
+      .on('drag',ev=>{p1=ev.target.getLatLng();updateRuler();});
   }else if(!p2){
     p2=e.latlng;
-    m2=L.marker(p2,{draggable:true})
-      .addTo(map).on('drag',ev=>{
-        p2=ev.target.getLatLng(); updateRuler();
-      });
+    m2=L.marker(p2,{draggable:true}).addTo(map)
+      .on('drag',ev=>{p2=ev.target.getLatLng();updateRuler();});
 
     rulerLine=L.polyline([p1,p2],{color:'#facc15',weight:3}).addTo(map);
     rulerLabel=L.tooltip({
@@ -263,8 +261,7 @@ function icon(colors,fast=false){
   className:`node-blink ${fast?'fast':''}`,
   iconSize:[36,36],
   iconAnchor:[18,18],
-  html:`
-<svg width="36" height="36" viewBox="0 0 100 100">
+  html:`<svg width="36" height="36" viewBox="0 0 100 100">
  <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
  <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
  <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
@@ -288,12 +285,12 @@ function createSector(c,r,s,e,opt){
  return L.polygon(pts,opt);
 }
 
-/* ================= NODE DATA ================= */
+/* ================= DATA ================= */
 const nodes=[
  {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
- {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
- {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
- {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'}
+ {name:'BDGBBPB',region:'WJA',lat:-6.8361,lng:107.4870,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.9405,lng:107.7513,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.7358,lng:115.1787,status:'UP'}
 ];
 
 let coverageVisible=true;
@@ -311,11 +308,9 @@ nodes.forEach(n=>{
  n.sectors=[];
  for(let i=0;i<4;i++){
   n.sectors.push(
-    createSector(
-      L.latLng(n.lat,n.lng),5000,
-      i*90,(i+1)*90,
-      {color:col[i],fillColor:col[i],fillOpacity:.25,weight:1}
-    ).addTo(map)
+    createSector(L.latLng(n.lat,n.lng),5000,i*90,(i+1)*90,{
+      color:col[i],fillColor:col[i],fillOpacity:.25,weight:1
+    }).addTo(map)
   );
  }
 });
@@ -326,7 +321,7 @@ function render(list){
  tb.innerHTML='';
  list.forEach(n=>{
   tb.innerHTML+=`
-<tr onclick="focusNode('${n.name}')" style="cursor:pointer">
+<tr onclick="focusNode('${n.name}')">
 <td>${n.name}</td>
 <td>${n.region}</td>
 <td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
@@ -335,7 +330,7 @@ function render(list){
 }
 function focusNode(name){
  const n=nodes.find(x=>x.name===name);
- map.flyTo([n.lat,n.lng],11,{animate:true});
+ map.flyTo([n.lat,n.lng],11);
  n.marker.openPopup();
 }
 
