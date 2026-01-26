@@ -2,128 +2,223 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Map + Ruler Distance & Azimuth</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Topologi BWA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-  body { margin:0; font-family: Arial, sans-serif; }
-  #map { height: 100vh; }
+body{
+ margin:0;
+ font-family:Arial,Helvetica,sans-serif;
+ background:#020617;
+ color:white
+}
 
-  .map-btn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
-    background: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.3);
-    cursor: pointer;
-    font-weight: bold;
-  }
+#map{
+ height:100vh;
+ width:calc(100% - 300px);
+ float:right
+}
 
-  .map-btn.active {
-    background: #2563eb;
-    color: white;
-  }
+#sidebar{
+ width:300px;
+ height:100vh;
+ overflow:auto;
+ background:#020617;
+ border-right:1px solid #1e293b;
+ padding:10px
+}
+
+h3{margin:6px 0;color:#38bdf8}
+
+.area,.city,.node{
+ cursor:pointer;
+ padding:6px;
+ border-radius:4px;
+ margin:3px 0
+}
+
+.area{background:#0f172a;font-weight:bold}
+.city{margin-left:10px;color:#94a3b8}
+.node{margin-left:25px;background:#020617;font-size:13px}
+
+.node:hover{background:#1e293b}
+
+/* STATUS COLOR */
+.up{color:#22c55e}
+.down{color:#ef4444}
+
+/* MARKER BLINK */
+.blink-up{
+ animation:blinkUp 1.5s infinite
+}
+.blink-down{
+ animation:blinkDown 0.6s infinite
+}
+
+@keyframes blinkUp{
+ 0%{opacity:1}
+ 50%{opacity:.5}
+ 100%{opacity:1}
+}
+@keyframes blinkDown{
+ 0%{opacity:1}
+ 50%{opacity:.1}
+ 100%{opacity:1}
+}
+
+button{
+ width:100%;
+ margin:4px 0;
+ padding:6px;
+ background:#020617;
+ color:white;
+ border:1px solid #334155;
+ border-radius:4px;
+ cursor:pointer
+}
+button:hover{background:#1e293b}
+
+.ruler-label{
+ background:#020617;
+ border:1px solid #fde047;
+ padding:4px 8px;
+ border-radius:4px;
+ color:#fde047;
+ font-size:12px
+}
 </style>
 </head>
 
 <body>
 
-<div class="map-btn" id="rulerBtn">📏 Ruler</div>
+<div id="sidebar">
+<h3>📡 Daftar Node</h3>
+<button onclick="activateRuler()">Aktifkan Ruler</button>
+<button onclick="resetRuler()">Reset Ruler</button>
+
+<div class="area">CJDA – Jawa</div>
+<div class="city">Solo</div>
+<div id="cjda-solo"></div>
+<div class="city">Yogyakarta</div>
+<div id="cjda-yogya"></div>
+
+<div class="area">WKA – Kalimantan</div>
+<div class="city">Balikpapan</div>
+<div id="wka-bpp"></div>
+<div class="city">Samarinda</div>
+<div id="wka-smd"></div>
+
+<div class="area">BNA – Sumatera</div>
+<div class="city">Medan</div>
+<div id="bna-mdn"></div>
+</div>
+
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 /* ================= MAP ================= */
-const map = L.map('map').setView([-6.2, 106.8], 9);
+const map=L.map('map').setView([-2.5,117],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
-}).addTo(map);
+/* ================= NODE DATA (FIX STATUS) ================= */
+const nodes=[
+/* CJDA SOLO */
+{name:"CJDA-Solo-1",lat:-7.5665,lng:110.8167,status:"UP",group:"cjda-solo"},
+{name:"CJDA-Solo-2",lat:-7.5708,lng:110.8241,status:"DOWN",group:"cjda-solo"},
+{name:"CJDA-Solo-3",lat:-7.5581,lng:110.8322,status:"UP",group:"cjda-solo"},
+{name:"CJDA-Solo-4",lat:-7.5512,lng:110.8129,status:"UP",group:"cjda-solo"},
+
+/* CJDA YOGYA */
+{name:"CJDA-Yogya-1",lat:-7.8014,lng:110.3644,status:"UP",group:"cjda-yogya"},
+{name:"CJDA-Yogya-2",lat:-7.7929,lng:110.3728,status:"DOWN",group:"cjda-yogya"},
+{name:"CJDA-Yogya-3",lat:-7.8102,lng:110.3573,status:"UP",group:"cjda-yogya"},
+{name:"CJDA-Yogya-4",lat:-7.8056,lng:110.3811,status:"DOWN",group:"cjda-yogya"},
+
+/* WKA BALIKPAPAN */
+{name:"WKA-BPP-1",lat:-1.2379,lng:116.8529,status:"UP",group:"wka-bpp"},
+{name:"WKA-BPP-2",lat:-1.2491,lng:116.8614,status:"UP",group:"wka-bpp"},
+{name:"WKA-BPP-3",lat:-1.2302,lng:116.8447,status:"DOWN",group:"wka-bpp"},
+{name:"WKA-BPP-4",lat:-1.2558,lng:116.8389,status:"UP",group:"wka-bpp"},
+
+/* WKA SAMARINDA */
+{name:"WKA-SMD-1",lat:-0.5022,lng:117.1537,status:"UP",group:"wka-smd"},
+{name:"WKA-SMD-2",lat:-0.4975,lng:117.1659,status:"DOWN",group:"wka-smd"},
+{name:"WKA-SMD-3",lat:-0.5154,lng:117.1471,status:"UP",group:"wka-smd"},
+{name:"WKA-SMD-4",lat:-0.5088,lng:117.1726,status:"UP",group:"wka-smd"},
+
+/* BNA MEDAN */
+{name:"BNA-MDN-1",lat:3.5952,lng:98.6722,status:"UP",group:"bna-mdn"},
+{name:"BNA-MDN-2",lat:3.5894,lng:98.6821,status:"DOWN",group:"bna-mdn"},
+{name:"BNA-MDN-3",lat:3.6028,lng:98.6643,status:"UP",group:"bna-mdn"},
+{name:"BNA-MDN-4",lat:3.5856,lng:98.6769,status:"DOWN",group:"bna-mdn"}
+];
+
+/* ================= RENDER NODE ================= */
+nodes.forEach(n=>{
+ const isUp=n.status==="UP";
+
+ const marker=L.circleMarker([n.lat,n.lng],{
+  radius:9,
+  color:isUp?"#22c55e":"#ef4444",
+  fillColor:isUp?"#22c55e":"#ef4444",
+  fillOpacity:0.9,
+  className:isUp?"blink-up":"blink-down"
+ }).addTo(map);
+
+ marker.bindPopup(`
+ <b>${n.name}</b><br>
+ Status: <b style="color:${isUp?'#22c55e':'#ef4444'}">${n.status}</b><br>
+ ${n.lat}, ${n.lng}
+ `);
+
+ const div=document.createElement('div');
+ div.className='node '+(isUp?'up':'down');
+ div.innerHTML=`${n.name} • ${n.status}`;
+ div.onclick=()=>{
+  map.setView([n.lat,n.lng],14);
+  marker.openPopup();
+ };
+ document.getElementById(n.group).appendChild(div);
+});
 
 /* ================= RULER ================= */
-let rulerActive = false;
-let startPoint = null;
-let tempLine = null;
+let rulerMode=false,rulerMarkers=[],rulerLine=null,rulerLabel=null;
 
-const rulerBtn = document.getElementById('rulerBtn');
-
-rulerBtn.onclick = () => {
-  rulerActive = !rulerActive;
-  startPoint = null;
-
-  if (tempLine) {
-    map.removeLayer(tempLine);
-    tempLine = null;
-  }
-
-  rulerBtn.classList.toggle('active', rulerActive);
-};
-
-/* ================= HELPER ================= */
-function calculateAzimuth(lat1, lon1, lat2, lon2) {
-  const toRad = deg => deg * Math.PI / 180;
-  const toDeg = rad => rad * 180 / Math.PI;
-
-  const dLon = toRad(lon2 - lon1);
-  lat1 = toRad(lat1);
-  lat2 = toRad(lat2);
-
-  const y = Math.sin(dLon) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) -
-            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-
-  let brng = toDeg(Math.atan2(y, x));
-  return (brng + 360) % 360;
+function activateRuler(){
+ rulerMode=true;
+ alert("Klik 2 titik, lalu drag untuk pindah");
+}
+function resetRuler(){
+ rulerMode=false;
+ rulerMarkers.forEach(m=>map.removeLayer(m));
+ rulerMarkers=[];
+ if(rulerLine)map.removeLayer(rulerLine);
+ if(rulerLabel)map.removeLayer(rulerLabel);
+ rulerLine=null;rulerLabel=null;
 }
 
-/* ================= CLICK EVENT ================= */
-map.on('click', e => {
-  if (!rulerActive) return;
-
-  if (!startPoint) {
-    startPoint = e.latlng;
-    L.marker(startPoint).addTo(map)
-      .bindPopup("Titik Awal")
-      .openPopup();
-  } else {
-    const endPoint = e.latlng;
-
-    if (tempLine) map.removeLayer(tempLine);
-
-    tempLine = L.polyline([startPoint, endPoint], {
-      color: 'red',
-      weight: 3
-    }).addTo(map);
-
-    const distance = startPoint.distanceTo(endPoint); // meter
-    const azimuth = calculateAzimuth(
-      startPoint.lat, startPoint.lng,
-      endPoint.lat, endPoint.lng
-    );
-
-    const popupText = `
-      <b>Ruler Measurement</b><br>
-      📏 Distance : ${(distance/1000).toFixed(2)} km<br>
-      🧭 Azimuth : ${azimuth.toFixed(2)}°
-    `;
-
-    L.marker(endPoint).addTo(map)
-      .bindPopup(popupText)
-      .openPopup();
-
-    // reset agar bisa ukur ulang
-    startPoint = null;
-    rulerActive = false;
-    rulerBtn.classList.remove('active');
-  }
+map.on('click',e=>{
+ if(!rulerMode||rulerMarkers.length>=2)return;
+ const m=L.marker(e.latlng,{draggable:true}).addTo(map);
+ rulerMarkers.push(m);
+ m.on('drag',updateRuler);
+ if(rulerMarkers.length===2){rulerMode=false;updateRuler();}
 });
+
+function updateRuler(){
+ const p1=rulerMarkers[0].getLatLng();
+ const p2=rulerMarkers[1].getLatLng();
+ if(rulerLine)map.removeLayer(rulerLine);
+ rulerLine=L.polyline([p1,p2],{color:'yellow'}).addTo(map);
+ const d=(map.distance(p1,p2)/1000).toFixed(2);
+ if(rulerLabel)map.removeLayer(rulerLabel);
+ rulerLabel=L.marker([(p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2],
+ {icon:L.divIcon({className:'ruler-label',html:d+' km'})}).addTo(map);
+}
 </script>
 
 </body>
