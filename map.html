@@ -23,6 +23,8 @@ header{
   font-size:22px;
   font-weight:bold
 }
+
+/* SIDEBAR */
 #sidebar{
   position:fixed;
   top:60px;
@@ -43,12 +45,57 @@ button{
   cursor:pointer
 }
 .blue{background:#2563eb}
+.gray{background:#334155}
 .red{background:#dc2626}
+
+/* MAIN */
 #main{
   margin-left:220px;
-  height:calc(100vh - 60px)
+  height:calc(100vh - 60px);
+  display:flex;
+  flex-direction:column
 }
-#map{height:100%}
+#map{flex:1}
+
+/* TABLE */
+#toggle{
+  text-align:center;
+  padding:6px;
+  background:#020617;
+  border-top:1px solid #334155;
+  cursor:pointer
+}
+#node-section{
+  max-height:260px;
+  overflow:auto;
+  background:#1e293b;
+  transition:.3s
+}
+#node-section.hidden{max-height:0}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px
+}
+th,td{
+  padding:6px;
+  border-bottom:1px solid #334155;
+  text-align:left
+}
+th{background:#020617}
+.up{color:#22c55e}
+.down{color:#ef4444}
+
+/* NODE BLINK */
+@keyframes blink{
+  0{opacity:1}
+  50%{opacity:.35}
+  100%{opacity:1}
+}
+.node-blink{animation:blink 1s infinite}
+.node-blink.fast{animation:blink .4s infinite}
+
+/* RULER LABEL */
 .ruler-label{
   background:#020617;
   color:#facc15;
@@ -56,6 +103,7 @@ button{
   padding:6px 10px;
   border-radius:6px;
   font-size:12px;
+  white-space:nowrap;
 }
 </style>
 </head>
@@ -63,31 +111,50 @@ button{
 <body>
 <header>Peta Topologi – BWA WiBAS</header>
 
+<!-- SIDEBAR -->
 <div id="sidebar">
+  <h4>Area</h4>
+  <button class="blue" onclick="showAll()">All</button>
+  <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
+  <button class="gray" onclick="filterRegion('WJA')">WJA</button>
+  <button class="gray" onclick="filterRegion('BNA')">BNA</button>
+
+  <hr style="border:1px solid #334155">
+
   <h4>Ruler</h4>
   <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
   <button class="red" onclick="resetRuler()">Reset Ruler</button>
+
+  <hr style="border:1px solid #334155">
+  <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="map"></div>
+  <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
+  <div id="node-section">
+    <table>
+      <thead>
+        <tr><th>Node</th><th>Area</th><th>Status</th></tr>
+      </thead>
+      <tbody id="node-table"></tbody>
+    </table>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 /* ================= MAP ================= */
-const map = L.map('map').setView([-2.5,118],5);
+const map = L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18
 }).addTo(map);
 
-/* ================= LAYERS ================= */
-const nodeLayer = L.layerGroup().addTo(map);
-const coverageLayer = L.layerGroup().addTo(map);
-
-/* ================= RULER ================= */
-let rulerActive=false, p1=null, p2=null, m1=null, m2=null, rulerLine=null, rulerLabel=null;
+/* ================= ADVANCED RULER ================= */
+let rulerActive=false;
+let p1=null,p2=null,m1=null,m2=null,rulerLine=null,rulerLabel=null,rulerPopup=null;
 
 function activateRuler(){
   rulerActive=true;
@@ -104,13 +171,14 @@ function clearRuler(){
   if(m2) map.removeLayer(m2);
   if(rulerLine) map.removeLayer(rulerLine);
   if(rulerLabel) map.removeLayer(rulerLabel);
-  p1=p2=m1=m2=rulerLine=rulerLabel=null;
+  if(rulerPopup) map.removeLayer(rulerPopup);
+  p1=p2=m1=m2=rulerLine=rulerLabel=rulerPopup=null;
 }
 
-/* ================= BEARING ================= */
-function bearing(lat1, lon1, lat2, lon2){
-  const toRad=d=>d*Math.PI/180;
-  const toDeg=r=>(r*180/Math.PI+360)%360;
+/* Bearing */
+function bearing(lat1,lon1,lat2,lon2){
+  const toRad=x=>x*Math.PI/180;
+  const toDeg=x=>(x*180/Math.PI+360)%360;
   const dLon=toRad(lon2-lon1);
   const y=Math.sin(dLon)*Math.cos(toRad(lat2));
   const x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-
@@ -118,85 +186,190 @@ function bearing(lat1, lon1, lat2, lon2){
   return toDeg(Math.atan2(y,x));
 }
 
+/* Update ruler */
 function updateRuler(){
-  if(!p1||!p2||!rulerLine||!rulerLabel) return;
-  const distKm=map.distance(p1,p2)/1000;
-  const az=bearing(p1.lat,p1.lng,p2.lat,p2.lng);
+  if(!p1||!p2) return;
+
+  const dist = map.distance(p1,p2)/1000;
+  const az   = bearing(p1.lat,p1.lng,p2.lat,p2.lng);
+
+  const mid = [
+    (p1.lat+p2.lat)/2,
+    (p1.lng+p2.lng)/2
+  ];
+
   rulerLine.setLatLngs([p1,p2]);
+
   rulerLabel
-    .setLatLng([(p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2])
-    .setContent(`<b>${distKm.toFixed(2)} km</b><br>Azimuth: ${az.toFixed(1)}°`);
+    .setLatLng(mid)
+    .setContent(`<b>${dist.toFixed(2)} km</b><br>Azimuth: ${az.toFixed(1)}°`);
+
+  if(!rulerPopup){
+    rulerPopup = L.popup({
+      autoClose:false,
+      closeOnClick:false
+    })
+    .setLatLng(mid)
+    .setContent(`
+      <b>Ruler Info</b><br>
+      Jarak: <b>${dist.toFixed(2)} km</b><br>
+      Azimuth: <b>${az.toFixed(1)}°</b>
+    `)
+    .openOn(map);
+  }else{
+    rulerPopup
+      .setLatLng(mid)
+      .setContent(`
+        <b>Ruler Info</b><br>
+        Jarak: <b>${dist.toFixed(2)} km</b><br>
+        Azimuth: <b>${az.toFixed(1)}°</b>
+      `);
+  }
 }
 
+/* Click map */
 map.on('click',e=>{
   if(!rulerActive) return;
+
   if(!p1){
     p1=e.latlng;
-    m1=L.marker(p1,{draggable:true}).addTo(map)
-      .on('drag',ev=>{p1=ev.target.getLatLng();updateRuler();});
+    m1=L.marker(p1,{draggable:true})
+      .addTo(map).on('drag',ev=>{
+        p1=ev.target.getLatLng(); updateRuler();
+      });
   }else if(!p2){
     p2=e.latlng;
-    m2=L.marker(p2,{draggable:true}).addTo(map)
-      .on('drag',ev=>{p2=ev.target.getLatLng();updateRuler();});
+    m2=L.marker(p2,{draggable:true})
+      .addTo(map).on('drag',ev=>{
+        p2=ev.target.getLatLng(); updateRuler();
+      });
+
     rulerLine=L.polyline([p1,p2],{color:'#facc15',weight:3}).addTo(map);
-    rulerLabel=L.tooltip({permanent:true,className:'ruler-label'})
-      .setLatLng(p2).addTo(map);
+    rulerLabel=L.tooltip({
+      permanent:true,
+      direction:'center',
+      className:'ruler-label'
+    }).addTo(map);
+
     updateRuler();
     rulerActive=false;
     map.getContainer().style.cursor='';
   }
 });
 
-/* ================= SECTOR FUNCTION ================= */
-function createSector(lat,lng,az,bw,radiusKm,opt={}){
-  const pts=[],steps=30,R=6371;
-  const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
-  const start=az-bw/2,end=az+bw/2;
-  pts.push([lat,lng]);
-  for(let i=0;i<=steps;i++){
-    const ang=start+(i/steps)*(end-start);
-    const brng=toRad(ang),d=radiusKm/R;
-    const lat1=toRad(lat),lon1=toRad(lng);
-    const lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+
-      Math.cos(lat1)*Math.sin(d)*Math.cos(brng));
-    const lon2=lon1+Math.atan2(
-      Math.sin(brng)*Math.sin(d)*Math.cos(lat1),
-      Math.cos(d)-Math.sin(lat1)*Math.sin(lat2)
-    );
-    pts.push([toDeg(lat2),toDeg(lon2)]);
-  }
-  return L.polygon(pts,{
-    color:opt.color||'lime',
-    fillColor:opt.fillColor||'lime',
-    fillOpacity:0.25,
-    weight:1
-  });
+/* ================= NODE ICON ================= */
+function icon(colors,fast=false){
+ return L.divIcon({
+  className:`node-blink ${fast?'fast':''}`,
+  iconSize:[36,36],
+  iconAnchor:[18,18],
+  html:`
+<svg width="36" height="36" viewBox="0 0 100 100">
+ <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
+ <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
+ <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
+ <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
+ <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
+</svg>`
+ });
 }
 
-/* ================= BTS DATA ================= */
-const btsData=[
-{
-  name:'BTS Jakarta',
-  lat:-6.1754,lng:106.8272,
-  sectors:[{az:30,bw:60},{az:150,bw:60},{az:270,bw:60}]
-},
-{
-  name:'BTS Bandung',
-  lat:-6.9147,lng:107.6098,
-  sectors:[{az:90,bw:90},{az:210,bw:90}]
+/* ================= SECTOR ================= */
+function createSector(c,r,s,e,opt){
+ const pts=[c];
+ for(let a=s;a<=e;a+=5){
+  const rad=a*Math.PI/180;
+  pts.push(L.latLng(
+    c.lat+(r*Math.sin(rad))/111320,
+    c.lng+(r*Math.cos(rad))/(111320*Math.cos(c.lat*Math.PI/180))
+  ));
+ }
+ pts.push(c);
+ return L.polygon(pts,opt);
 }
+
+/* ================= NODE DATA ================= */
+const nodes=[
+ {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
+ {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'}
 ];
 
-/* ================= RENDER BTS ================= */
-btsData.forEach(bts=>{
-  L.marker([bts.lat,bts.lng])
-    .bindPopup(`<b>${bts.name}</b>`)
-    .addTo(nodeLayer);
-  bts.sectors.forEach(sec=>{
-    createSector(bts.lat,bts.lng,sec.az,sec.bw,15)
-      .addTo(coverageLayer);
-  });
+let coverageVisible=true;
+
+/* ================= CREATE NODE ================= */
+nodes.forEach(n=>{
+ const col=n.status==='UP'
+ ?['#2563eb','#22c55e','#2563eb','#22c55e']
+ :['#dc2626','#f97316','#dc2626','#f97316'];
+
+ n.marker=L.marker([n.lat,n.lng],{icon:icon(col,n.status==='DOWN')})
+ .addTo(map)
+ .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
+
+ n.sectors=[];
+ for(let i=0;i<4;i++){
+  n.sectors.push(
+    createSector(
+      L.latLng(n.lat,n.lng),5000,
+      i*90,(i+1)*90,
+      {color:col[i],fillColor:col[i],fillOpacity:.25,weight:1}
+    ).addTo(map)
+  );
+ }
 });
+
+/* ================= TABLE ================= */
+function render(list){
+ const tb=document.getElementById('node-table');
+ tb.innerHTML='';
+ list.forEach(n=>{
+  tb.innerHTML+=`
+<tr onclick="focusNode('${n.name}')" style="cursor:pointer">
+<td>${n.name}</td>
+<td>${n.region}</td>
+<td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
+</tr>`;
+ });
+}
+function focusNode(name){
+ const n=nodes.find(x=>x.name===name);
+ map.flyTo([n.lat,n.lng],11,{animate:true});
+ n.marker.openPopup();
+}
+
+/* ================= FILTER ================= */
+function showAll(){
+ render(nodes);
+ nodes.forEach(n=>{
+  n.marker.addTo(map);
+  n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+ });
+}
+function filterRegion(r){
+ render(nodes.filter(n=>n.region===r));
+ nodes.forEach(n=>{
+  if(n.region===r){
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+  }else{
+    map.removeLayer(n.marker);
+    n.sectors.forEach(s=>map.removeLayer(s));
+  }
+ });
+}
+function toggleCoverage(){
+ coverageVisible=!coverageVisible;
+ nodes.forEach(n=>n.sectors.forEach(s=>{
+  coverageVisible?s.addTo(map):map.removeLayer(s);
+ }));
+}
+function toggleTable(){
+ document.getElementById('node-section').classList.toggle('hidden');
+}
+
+showAll();
 </script>
 </body>
 </html>
