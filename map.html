@@ -4,187 +4,186 @@
 <meta charset="UTF-8">
 <title>Peta Topologi – BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
 body{margin:0;font-family:Arial;background:#020617;color:white}
-header{
-  height:60px;display:flex;align-items:center;
-  padding:0 20px;font-size:22px;font-weight:bold;
-  background:linear-gradient(90deg,#0f172a,#020617)
-}
+header{height:60px;display:flex;align-items:center;padding:0 20px;
+background:linear-gradient(90deg,#0f172a,#020617);font-size:22px;font-weight:bold}
+
 #sidebar{
-  position:fixed;top:60px;left:0;width:220px;
-  height:calc(100vh - 60px);background:#020617;padding:12px
+position:fixed;top:60px;left:0;width:220px;height:calc(100vh - 60px);
+background:#020617;padding:12px;box-sizing:border-box
 }
-button{
-  width:100%;margin:6px 0;padding:8px;border:none;
-  border-radius:4px;color:white;cursor:pointer
-}
+
+button{width:100%;margin:5px 0;padding:8px;border:none;border-radius:4px;color:white;cursor:pointer}
 .blue{background:#2563eb}
+.gray{background:#334155}
 .red{background:#dc2626}
+
 #main{margin-left:220px;height:calc(100vh - 60px);display:flex;flex-direction:column}
 #map{flex:1}
 
-/* BLINK NODE */
-@keyframes blinkGreen{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
-@keyframes blinkRed{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+#toggle{text-align:center;padding:6px;background:#020617;border-top:1px solid #334155;cursor:pointer}
 
-.node-up{animation:blinkGreen 1s infinite}
-.node-down{animation:blinkRed .7s infinite}
+#node-section{max-height:260px;overflow:auto;background:#1e293b;transition:.3s}
+#node-section.hidden{max-height:0;overflow:hidden}
 
-/* RULER LABEL */
-.ruler-label{
-  background:#020617;color:#facc15;
-  border:1px solid #facc15;padding:4px 8px;
-  border-radius:4px;font-size:12px
-}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px;border-bottom:1px solid #334155}
+th{background:#020617}
+
+.up{color:#22c55e}
+.down{color:#ef4444}
+
+/* blink */
+@keyframes blink{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+.node-blink{animation:blink 1s infinite}
+.node-blink.fast{animation:blink .4s infinite}
 </style>
 </head>
 
 <body>
+
 <header>Peta Topologi – BWA WiBAS</header>
 
+<!-- SIDEBAR -->
 <div id="sidebar">
+  <h4>Area</h4>
+  <button class="blue" onclick="showAll()">All</button>
+  <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
+  <button class="gray" onclick="filterRegion('WKA')">WKA</button>
+  <button class="gray" onclick="filterRegion('BNA')">BNA</button>
+
+  <hr style="border:1px solid #334155">
+
   <h4>Ruler</h4>
   <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
   <button class="red" onclick="resetRuler()">Reset Ruler</button>
+
+  <hr style="border:1px solid #334155">
+  <button class="gray" onclick="history.back()">⬅ Kembali</button>
 </div>
 
 <div id="main">
   <div id="map"></div>
+  <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
+
+  <div id="node-section">
+    <table>
+      <thead>
+        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
+      </thead>
+      <tbody id="node-table"></tbody>
+    </table>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
 /* MAP */
-const map=L.map('map').setView([-7.5,112],6);
+const map=L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ================= RULER DRAGGABLE ================= */
-let rulerActive=false;
-let p1=null,p2=null,line=null,label=null;
+/* RULER */
+let rulerActive=false, pts=[], line=null;
+function activateRuler(){rulerActive=true;pts=[];if(line)map.removeLayer(line);alert("Klik 2 titik")}
+function resetRuler(){rulerActive=false;pts=[];if(line)map.removeLayer(line)}
+map.on('click',e=>{
+ if(!rulerActive)return;
+ pts.push(e.latlng);
+ if(pts.length===2){
+  line=L.polyline(pts,{color:'yellow'}).addTo(map);
+  alert("Jarak: "+(map.distance(pts[0],pts[1])/1000).toFixed(2)+" km");
+  rulerActive=false;
+ }
+});
 
-function activateRuler(){
-  rulerActive=true;
-  resetRuler();
-  map.once('click',e=>{
-    p1=createPoint(e.latlng);
-    map.once('click',e2=>{
-      p2=createPoint(e2.latlng);
-      drawLine();
-    });
-  });
+/* SVG ICON */
+function icon(colors,fast=false){
+ return L.divIcon({
+  className:`node-blink ${fast?'fast':''}`,
+  html:`
+<svg width="30" height="30" viewBox="0 0 100 100">
+<path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
+<path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
+<path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
+<path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
+</svg>`
+ });
 }
 
-function createPoint(latlng){
-  return L.marker(latlng,{draggable:true})
-    .addTo(map)
-    .on('drag',drawLine);
-}
+/* =========================
+   NODE DATA (AREA → KOTA)
+   ========================= */
+const nodes = [
+ /* CJDA */
+ {name:'Yogyakarta', region:'CJDA', lat:-7.7956, lng:110.3695},
+ {name:'Solo', region:'CJDA', lat:-7.5666, lng:110.8167},
+ {name:'Semarang', region:'CJDA', lat:-6.9667, lng:110.4167},
 
-function drawLine(){
-  if(!p1||!p2) return;
-  const pts=[p1.getLatLng(),p2.getLatLng()];
-  if(line) map.removeLayer(line);
-  line=L.polyline(pts,{color:'#facc15',weight:3}).addTo(map);
+ /* WKA (Kalimantan) */
+ {name:'Balikpapan', region:'WKA', lat:-1.2654, lng:116.8312},
+ {name:'Samarinda', region:'WKA', lat:-0.5022, lng:117.1536},
+ {name:'Pontianak', region:'WKA', lat:-0.0263, lng:109.3425},
 
-  const d=(map.distance(pts[0],pts[1])/1000).toFixed(2);
-  const mid=L.latLng(
-    (pts[0].lat+pts[1].lat)/2,
-    (pts[0].lng+pts[1].lng)/2
-  );
-  if(label) map.removeLayer(label);
-  label=L.tooltip({permanent:true,className:'ruler-label'})
-    .setLatLng(mid)
-    .setContent(`<b>${d} km</b>`)
-    .addTo(map);
-}
-
-function resetRuler(){
-  [p1,p2,line,label].forEach(x=>x&&map.removeLayer(x));
-  p1=p2=line=label=null;
-}
-
-/* ================= ICON ================= */
-function nodeIcon(status,scale=1){
-  const color=status==='UP'?'#14532d':'#7f1d1d';
-  const cls=status==='UP'?'node-up':'node-down';
-  const size=32*scale;
-  return L.divIcon({
-    className:cls,
-    iconSize:[size,size],
-    iconAnchor:[size/2,size/2],
-    html:`<svg width="100%" height="100%" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" fill="${color}" stroke="white" stroke-width="4"/>
-    </svg>`
-  });
-}
-
-/* ================= COVERAGE ================= */
-function createSector(c,r,s,e,col){
-  const pts=[c];
-  for(let a=s;a<=e;a+=5){
-    const rad=a*Math.PI/180;
-    pts.push(L.latLng(
-      c.lat+(r*Math.sin(rad))/111320,
-      c.lng+(r*Math.cos(rad))/(111320*Math.cos(c.lat*Math.PI/180))
-    ));
-  }
-  pts.push(c);
-  return L.polygon(pts,{color:col,fillColor:col,fillOpacity:.3,weight:1});
-}
-
-/* ================= DATA (20 CONTOH NODE) ================= */
-const nodes=[
- {name:'N01',lat:-6.9,lng:107.6,status:'UP'},
- {name:'N02',lat:-7.0,lng:107.7,status:'DOWN'},
- {name:'N03',lat:-7.1,lng:107.8,status:'UP'},
- {name:'N04',lat:-7.2,lng:107.9,status:'DOWN'},
- {name:'N05',lat:-7.3,lng:108.0,status:'UP'},
- {name:'N06',lat:-7.4,lng:108.1,status:'DOWN'},
- {name:'N07',lat:-7.5,lng:108.2,status:'UP'},
- {name:'N08',lat:-7.6,lng:108.3,status:'DOWN'},
- {name:'N09',lat:-7.7,lng:108.4,status:'UP'},
- {name:'N10',lat:-7.8,lng:108.5,status:'DOWN'},
- {name:'N11',lat:-8.0,lng:110.3,status:'UP'},
- {name:'N12',lat:-8.1,lng:110.4,status:'DOWN'},
- {name:'N13',lat:-8.2,lng:110.5,status:'UP'},
- {name:'N14',lat:-8.3,lng:110.6,status:'DOWN'},
- {name:'N15',lat:-8.4,lng:110.7,status:'UP'},
- {name:'N16',lat:-8.5,lng:110.8,status:'DOWN'},
- {name:'N17',lat:-8.6,lng:110.9,status:'UP'},
- {name:'N18',lat:-8.7,lng:111.0,status:'DOWN'},
- {name:'N19',lat:-8.8,lng:111.1,status:'UP'},
- {name:'N20',lat:-8.9,lng:111.2,status:'DOWN'}
+ /* BNA (Bali) */
+ {name:'Denpasar', region:'BNA', lat:-8.6705, lng:115.2126},
+ {name:'Singaraja', region:'BNA', lat:-8.1120, lng:115.0882},
+ {name:'Gianyar', region:'BNA', lat:-8.5445, lng:115.3255},
 ];
 
-const sectorColors=['#dc2626','#facc15','#22c55e','#2563eb'];
-
-/* ================= CREATE NODE ================= */
+/* CREATE MARKER */
 nodes.forEach(n=>{
-  n.marker=L.marker([n.lat,n.lng],{icon:nodeIcon(n.status)})
-    .addTo(map)
-    .bindPopup(`<b>${n.name}</b><br>Status: ${n.status}`);
+ n.status=Math.random()>0.25?'UP':'DOWN';
+ const col=n.status==='UP'
+ ? ['#2563eb','#22c55e','#2563eb','#22c55e']
+ : ['#dc2626','#f97316','#dc2626','#f97316'];
 
-  for(let i=0;i<4;i++){
-    createSector(
-      L.latLng(n.lat,n.lng),
-      5000,
-      i*90,(i+1)*90,
-      sectorColors[i]
-    ).addTo(map);
-  }
+ n.marker=L.marker([n.lat,n.lng],{icon:icon(col,n.status==='DOWN')})
+ .addTo(map)
+ .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
 });
 
-/* ================= ZOOM ICON SCALE ================= */
-map.on('zoomend',()=>{
-  const z=map.getZoom();
-  const scale=Math.max(1,z/7);
-  nodes.forEach(n=>{
-    n.marker.setIcon(nodeIcon(n.status,scale));
-  });
-});
+/* TABLE */
+function render(list){
+ const tb=document.getElementById('node-table');
+ tb.innerHTML='';
+ list.forEach(n=>{
+  tb.innerHTML+=`
+<tr onclick="focus('${n.name}')" style="cursor:pointer">
+<td>${n.name}</td>
+<td>${n.region}</td>
+<td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
+</tr>`;
+ });
+}
+
+function focus(name){
+ const n=nodes.find(x=>x.name===name);
+ if(!n)return;
+ map.setView([n.lat,n.lng],10,{animate:true});
+ n.marker.openPopup();
+}
+
+/* FILTER */
+function showAll(){render(nodes);nodes.forEach(n=>n.marker.addTo(map))}
+function filterRegion(r){
+ render(nodes.filter(n=>n.region===r));
+ nodes.forEach(n=>{
+  if(n.region===r) n.marker.addTo(map);
+  else map.removeLayer(n.marker);
+ });
+}
+
+function toggleTable(){
+ document.getElementById('node-section').classList.toggle('hidden');
+}
+
+showAll();
 </script>
+
 </body>
 </html>
