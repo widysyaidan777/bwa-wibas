@@ -1,205 +1,192 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Profil BWA & WiBAS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>BWA & WiBAS – Historical Journey</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#020617;
+  color:white;
+  overflow-x:hidden;
+}
 
-    header {
-      background: linear-gradient(90deg, #0f172a, #020617);
-      color: white;
-      padding: 12px 24px;
-      font-size: 24px;
-      font-weight: bold;
-    }
+/* ===== HEADER ===== */
+header{
+  padding:40px 24px;
+  text-align:center;
+  background:linear-gradient(135deg,#0f172a,#020617);
+}
+header h1{
+  font-size:36px;
+  margin-bottom:10px;
+}
+header p{
+  color:#94a3b8;
+  font-size:18px;
+}
 
-    nav {
-      background: #1e293b;
-      padding: 6px 24px;
-    }
+/* ===== TIMELINE ===== */
+.timeline{
+  display:flex;
+  align-items:center;
+  overflow-x:auto;
+  padding:60px 40px;
+  scroll-behavior:smooth;
+}
 
-    nav a {
-      color: white;
-      margin-right: 20px;
-      text-decoration: none;
-      font-weight: bold;
-    }
+.timeline::-webkit-scrollbar{
+  height:6px;
+}
+.timeline::-webkit-scrollbar-thumb{
+  background:#334155;
+  border-radius:10px;
+}
 
-    /* ===== SLIDER ===== */
-    .slider-container {
-      position: relative;
-      width: 100%;
-      height: 56.25vw; /* 16:9 aspect ratio */
-      overflow: hidden;
-    }
+.event{
+  min-width:320px;
+  margin-right:80px;
+  background:#1e293b;
+  border-radius:14px;
+  padding:24px;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+  opacity:0;
+  transform:translateY(40px);
+  transition:.8s;
+}
 
-    .slider-images {
-      display: flex;
-      width: 300%; /* 3 images */
-      height: 100%;
-      transition: transform 0.5s ease-in-out;
-    }
+.event.active{
+  opacity:1;
+  transform:translateY(0);
+}
 
-    .slider-images img {
-      width: 100%;
-      height: 100%;
-      flex-shrink: 0;
-      object-fit: cover; /* Ensures the image covers the container fully */
-    }
+.year{
+  font-size:26px;
+  color:#38bdf8;
+  font-weight:bold;
+  margin-bottom:12px;
+}
 
-    .text-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 28px;
-      font-weight: bold;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-      text-align: center;
-      z-index: 5;
-    }
+.event ul{
+  padding-left:18px;
+  line-height:1.6;
+  font-size:14px;
+}
 
-    .slider-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,0.5);
-      color: white;
-      border: none;
-      font-size: 30px;
-      padding: 10px 16px;
-      cursor: pointer;
-      z-index: 10;
-    }
+/* ===== LINE ===== */
+.line{
+  height:4px;
+  background:#334155;
+  position:relative;
+  margin:-30px 40px 40px;
+}
 
-    .prev-btn {
-      left: 10px;
-    }
+.dot{
+  position:absolute;
+  top:-6px;
+  width:14px;
+  height:14px;
+  background:#38bdf8;
+  border-radius:50%;
+}
 
-    .next-btn {
-      right: 10px;
-    }
-
-    /* ===== LOGO ===== */
-    .logos {
-      display: flex;
-      justify-content: center;
-      gap: 40px; /* More space between logos */
-      margin: 30px 0;
-    }
-
-    .logos img {
-      width: 150px; /* Adjust logo size */
-      height: auto;
-      object-fit: contain; /* Keep logos proportional */
-    }
-
-    footer {
-      background: #020617;
-      color: white;
-      text-align: center;
-      padding: 16px;
-    }
-  </style>
-
-  <script>
-    let currentSlide = 0;
-    let autoSlideInterval;
-
-    const slides = [
-      { text: "Penjelasan Gambar 1" },
-      { text: "Penjelasan Gambar 2" },
-      { text: "Penjelasan Gambar 3" }
-    ];
-
-    function showSlide(index) {
-      const sliderImages = document.querySelector('.slider-images');
-      const overlayText = document.querySelector('.text-overlay');
-
-      if (index >= slides.length) index = 0;
-      if (index < 0) index = slides.length - 1;
-
-      currentSlide = index;
-      sliderImages.style.transform = `translateX(-${currentSlide * 100}%)`;
-      overlayText.textContent = slides[currentSlide].text;
-    }
-
-    function nextSlide() {
-      showSlide(currentSlide + 1);
-      resetAutoSlide();
-    }
-
-    function prevSlide() {
-      showSlide(currentSlide - 1);
-      resetAutoSlide();
-    }
-
-    function startAutoSlide() {
-      autoSlideInterval = setInterval(() => {
-        showSlide(currentSlide + 1);
-      }, 5000); // 5 seconds interval
-    }
-
-    function resetAutoSlide() {
-      clearInterval(autoSlideInterval);
-      startAutoSlide();
-    }
-
-    window.onload = function () {
-      showSlide(0);
-      startAutoSlide();
-    };
-  </script>
+/* ===== FOOTER ===== */
+footer{
+  text-align:center;
+  padding:20px;
+  background:#020617;
+  color:#94a3b8;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-  BWA & WiBAS | Informasi Sistem Broadband Wireless Access
+  <h1>Wireless PtMP – Historical Journey</h1>
+  <p>Evolusi BWA & WiBAS di Lintasarta</p>
 </header>
 
 <nav>
-  <a href="index.html">Profil</a>
-  <a href="data.html">Data WiBAS</a>
-  <a href="cambium.html">Data Cambium</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="biumca.html">Cambium</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
+<a href="index.html">Profil</a>
+<a href="data.html">Data WiBAS</a>
+<a href="cambium.html">Data Cambium</a>
+<a href="wibas.html">WiBAS</a>
+<a href="biumca.html">Cambium</a>
+<a href="map.html">Map</a>
+<a href="incident.html">Incident</a> 
 </nav>
+  
+<div class="line">
+  <div class="dot" style="left:5%"></div>
+  <div class="dot" style="left:35%"></div>
+  <div class="dot" style="left:65%"></div>
+</div>
 
-<!-- SLIDER -->
-<div class="slider-container">
-  <div class="slider-images">
-    <img src="https://github.com/widysyaidan777/bwa-wibas/blob/main/bgsatu.jpg?raw=true" alt="Slide 1">
-    <img src="https://github.com/widysyaidan777/bwa-wibas/blob/main/bgdua.jpg?raw=true" alt="Slide 2">
-    <img src="https://github.com/widysyaidan777/bwa-wibas/blob/main/bgtiga.jpg?raw=true" alt="Slide 3">
+<section class="timeline" id="timeline">
+
+  <div class="event">
+    <div class="year">2000 – WLL</div>
+    <ul>
+      <li><b>Brand:</b> Airspan</li>
+      <li><b>Type:</b> AS 4000</li>
+      <li><b>Technology:</b> Wireless Local Loop</li>
+      <li><b>Band:</b> 3.5 GHz (Licensed)</li>
+      <li><b>Capacity:</b> 8 Mbps</li>
+      <li><b>Coverage:</b> 15 km</li>
+    </ul>
   </div>
 
-  <div class="text-overlay">Penjelasan Gambar 1</div>
+  <div class="event">
+    <div class="year">2003 – BWA 1</div>
+    <ul>
+      <li><b>Brand:</b> Netro</li>
+      <li><b>Type:</b> AirStar</li>
+      <li><b>Technology:</b> Broadband Wireless Access</li>
+      <li><b>Band:</b> 10.5 GHz</li>
+      <li><b>Capacity:</b> 32 Mbps</li>
+      <li><b>Coverage:</b> 7 km</li>
+    </ul>
+  </div>
 
-  <button class="slider-btn prev-btn" onclick="prevSlide()">&#10094;</button>
-  <button class="slider-btn next-btn" onclick="nextSlide()">&#10095;</button>
-</div>
+  <div class="event">
+    <div class="year">2005 – BWA 2</div>
+    <ul>
+      <li><b>Brand:</b> Alvarion</li>
+      <li><b>Type:</b> WALKair 1000</li>
+      <li><b>Technology:</b> Broadband Wireless Access</li>
+      <li><b>Band:</b> 3.5 & 10.5 GHz</li>
+      <li><b>Capacity:</b> 4 Mbps</li>
+      <li><b>Coverage:</b> 5–7 km</li>
+    </ul>
+  </div>
 
-<!-- LOGO -->
-<div class="logos">
-  <img src="wibas.png" alt="Intracom">
-  <img src="cambium.png" alt="Cambium">
-  <img src="radwin.png" alt="Radwin">
-</div>
+</section>
 
 <footer>
-  © 2026 Profil BWA – Lintasarta
+  © 2026 BWA & WiBAS – Lintasarta
 </footer>
+
+<script>
+/* ===== ANIMATION ON SCROLL / AUTO ===== */
+const events = document.querySelectorAll('.event');
+let index = 0;
+
+function activateEvent(i){
+  if(events[i]){
+    events[i].classList.add('active');
+    events[i].scrollIntoView({behavior:'smooth',inline:'center'});
+  }
+}
+
+setInterval(()=>{
+  activateEvent(index);
+  index = (index + 1) % events.length;
+},4000);
+</script>
 
 </body>
 </html>
