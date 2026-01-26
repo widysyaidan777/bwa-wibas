@@ -2,224 +2,319 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Peta Topologi BWA</title>
+<title>Peta Topologi – BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
+/* ================= GLOBAL ================= */
 body{
- margin:0;
- font-family:Arial,Helvetica,sans-serif;
- background:#020617;
- color:white
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#020617;
+  color:white
+}
+header{
+  height:60px;
+  display:flex;
+  align-items:center;
+  padding:0 20px;
+  background:linear-gradient(90deg,#0f172a,#020617);
+  font-size:22px;
+  font-weight:bold
 }
 
-#map{
- height:100vh;
- width:calc(100% - 300px);
- float:right
-}
-
+/* ================= SIDEBAR ================= */
 #sidebar{
- width:300px;
- height:100vh;
- overflow:auto;
- background:#020617;
- border-right:1px solid #1e293b;
- padding:10px
+  position:fixed;
+  top:60px;
+  left:0;
+  width:220px;
+  height:calc(100vh - 60px);
+  background:#020617;
+  padding:12px;
+  box-sizing:border-box
 }
-
-h3{margin:6px 0;color:#38bdf8}
-
-.area,.city,.node{
- cursor:pointer;
- padding:6px;
- border-radius:4px;
- margin:3px 0
+button{
+  width:100%;
+  margin:6px 0;
+  padding:8px;
+  border:none;
+  border-radius:4px;
+  color:white;
+  cursor:pointer
 }
+.blue{background:#2563eb}
+.gray{background:#334155}
+.red{background:#dc2626}
 
-.area{background:#0f172a;font-weight:bold}
-.city{margin-left:10px;color:#94a3b8}
-.node{margin-left:25px;background:#020617;font-size:13px}
+/* ================= MAIN ================= */
+#main{
+  margin-left:220px;
+  height:calc(100vh - 60px);
+  display:flex;
+  flex-direction:column
+}
+#map{flex:1}
 
-.node:hover{background:#1e293b}
-
-/* STATUS COLOR */
+/* ================= TABLE ================= */
+#toggle{
+  text-align:center;
+  padding:6px;
+  background:#020617;
+  border-top:1px solid #334155;
+  cursor:pointer
+}
+#node-section{
+  max-height:260px;
+  overflow:auto;
+  background:#1e293b;
+  transition:.3s
+}
+#node-section.hidden{max-height:0}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px
+}
+th,td{
+  padding:6px;
+  border-bottom:1px solid #334155;
+  text-align:left
+}
+th{background:#020617}
 .up{color:#22c55e}
 .down{color:#ef4444}
 
-/* MARKER BLINK */
-.blink-up{
- animation:blinkUp 1.5s infinite
+/* ================= NODE BLINK ================= */
+@keyframes blink{
+  0%{opacity:1}
+  50%{opacity:.35}
+  100%{opacity:1}
 }
-.blink-down{
- animation:blinkDown 0.6s infinite
-}
+.node-blink{animation:blink 1s infinite}
+.node-blink.fast{animation:blink .4s infinite}
 
-@keyframes blinkUp{
- 0%{opacity:1}
- 50%{opacity:.5}
- 100%{opacity:1}
-}
-@keyframes blinkDown{
- 0%{opacity:1}
- 50%{opacity:.1}
- 100%{opacity:1}
-}
-
-button{
- width:100%;
- margin:4px 0;
- padding:6px;
- background:#020617;
- color:white;
- border:1px solid #334155;
- border-radius:4px;
- cursor:pointer
-}
-button:hover{background:#1e293b}
-
+/* ================= RULER LABEL ================= */
 .ruler-label{
- background:#020617;
- border:1px solid #fde047;
- padding:4px 8px;
- border-radius:4px;
- color:#fde047;
- font-size:12px
+  background:#020617;
+  color:#facc15;
+  border:1px solid #facc15;
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
+<header>Peta Topologi – BWA WiBAS</header>
 
+<!-- SIDEBAR -->
 <div id="sidebar">
-<h3>📡 Daftar Node</h3>
-<button onclick="activateRuler()">Aktifkan Ruler</button>
-<button onclick="resetRuler()">Reset Ruler</button>
+  <h4>Area</h4>
+  <button class="blue" onclick="showAll()">All</button>
+  <button class="gray" onclick="filterRegion('CJDA')">CJDA</button>
+  <button class="gray" onclick="filterRegion('WKA')">WKA</button>
+  <button class="gray" onclick="filterRegion('BNA')">BNA</button>
 
-<div class="area">CJDA – Jawa</div>
-<div class="city">Solo</div>
-<div id="cjda-solo"></div>
-<div class="city">Yogyakarta</div>
-<div id="cjda-yogya"></div>
+  <hr style="border:1px solid #334155">
 
-<div class="area">WKA – Kalimantan</div>
-<div class="city">Balikpapan</div>
-<div id="wka-bpp"></div>
-<div class="city">Samarinda</div>
-<div id="wka-smd"></div>
+  <h4>Ruler</h4>
+  <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
+  <button class="red" onclick="resetRuler()">Reset Ruler</button>
 
-<div class="area">BNA – Sumatera</div>
-<div class="city">Medan</div>
-<div id="bna-mdn"></div>
+  <hr style="border:1px solid #334155">
+  <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
 </div>
 
-<div id="map"></div>
+<!-- MAIN -->
+<div id="main">
+  <div id="map"></div>
+  <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
+  <div id="node-section">
+    <table>
+      <thead>
+        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
+      </thead>
+      <tbody id="node-table"></tbody>
+    </table>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 /* ================= MAP ================= */
-const map=L.map('map').setView([-2.5,117],5);
+const map = L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ================= NODE DATA (FIX STATUS) ================= */
-const nodes=[
-/* CJDA SOLO */
-{name:"CJDA-Solo-1",lat:-7.5665,lng:110.8167,status:"UP",group:"cjda-solo"},
-{name:"CJDA-Solo-2",lat:-7.5708,lng:110.8241,status:"DOWN",group:"cjda-solo"},
-{name:"CJDA-Solo-3",lat:-7.5581,lng:110.8322,status:"UP",group:"cjda-solo"},
-{name:"CJDA-Solo-4",lat:-7.5512,lng:110.8129,status:"UP",group:"cjda-solo"},
-
-/* CJDA YOGYA */
-{name:"CJDA-Yogya-1",lat:-7.8014,lng:110.3644,status:"UP",group:"cjda-yogya"},
-{name:"CJDA-Yogya-2",lat:-7.7929,lng:110.3728,status:"DOWN",group:"cjda-yogya"},
-{name:"CJDA-Yogya-3",lat:-7.8102,lng:110.3573,status:"UP",group:"cjda-yogya"},
-{name:"CJDA-Yogya-4",lat:-7.8056,lng:110.3811,status:"DOWN",group:"cjda-yogya"},
-
-/* WKA BALIKPAPAN */
-{name:"WKA-BPP-1",lat:-1.2379,lng:116.8529,status:"UP",group:"wka-bpp"},
-{name:"WKA-BPP-2",lat:-1.2491,lng:116.8614,status:"UP",group:"wka-bpp"},
-{name:"WKA-BPP-3",lat:-1.2302,lng:116.8447,status:"DOWN",group:"wka-bpp"},
-{name:"WKA-BPP-4",lat:-1.2558,lng:116.8389,status:"UP",group:"wka-bpp"},
-
-/* WKA SAMARINDA */
-{name:"WKA-SMD-1",lat:-0.5022,lng:117.1537,status:"UP",group:"wka-smd"},
-{name:"WKA-SMD-2",lat:-0.4975,lng:117.1659,status:"DOWN",group:"wka-smd"},
-{name:"WKA-SMD-3",lat:-0.5154,lng:117.1471,status:"UP",group:"wka-smd"},
-{name:"WKA-SMD-4",lat:-0.5088,lng:117.1726,status:"UP",group:"wka-smd"},
-
-/* BNA MEDAN */
-{name:"BNA-MDN-1",lat:3.5952,lng:98.6722,status:"UP",group:"bna-mdn"},
-{name:"BNA-MDN-2",lat:3.5894,lng:98.6821,status:"DOWN",group:"bna-mdn"},
-{name:"BNA-MDN-3",lat:3.6028,lng:98.6643,status:"UP",group:"bna-mdn"},
-{name:"BNA-MDN-4",lat:3.5856,lng:98.6769,status:"DOWN",group:"bna-mdn"}
-];
-
-/* ================= RENDER NODE ================= */
-nodes.forEach(n=>{
- const isUp=n.status==="UP";
-
- const marker=L.circleMarker([n.lat,n.lng],{
-  radius:9,
-  color:isUp?"#22c55e":"#ef4444",
-  fillColor:isUp?"#22c55e":"#ef4444",
-  fillOpacity:0.9,
-  className:isUp?"blink-up":"blink-down"
- }).addTo(map);
-
- marker.bindPopup(`
- <b>${n.name}</b><br>
- Status: <b style="color:${isUp?'#22c55e':'#ef4444'}">${n.status}</b><br>
- ${n.lat}, ${n.lng}
- `);
-
- const div=document.createElement('div');
- div.className='node '+(isUp?'up':'down');
- div.innerHTML=`${n.name} • ${n.status}`;
- div.onclick=()=>{
-  map.setView([n.lat,n.lng],14);
-  marker.openPopup();
- };
- document.getElementById(n.group).appendChild(div);
-});
-
 /* ================= RULER ================= */
-let rulerMode=false,rulerMarkers=[],rulerLine=null,rulerLabel=null;
+let rulerActive=false, rulerPoints=[], rulerLine=null, rulerMarkers=[], rulerLabel=null;
 
 function activateRuler(){
- rulerMode=true;
- alert("Klik 2 titik, lalu drag untuk pindah");
+  rulerActive=true;
+  clearRuler();
+  map.getContainer().style.cursor='crosshair';
 }
 function resetRuler(){
- rulerMode=false;
- rulerMarkers.forEach(m=>map.removeLayer(m));
- rulerMarkers=[];
- if(rulerLine)map.removeLayer(rulerLine);
- if(rulerLabel)map.removeLayer(rulerLabel);
- rulerLine=null;rulerLabel=null;
+  rulerActive=false;
+  clearRuler();
+  map.getContainer().style.cursor='';
+}
+function clearRuler(){
+  rulerPoints=[];
+  if(rulerLine) map.removeLayer(rulerLine);
+  rulerMarkers.forEach(m=>map.removeLayer(m));
+  rulerMarkers=[];
+  if(rulerLabel) map.removeLayer(rulerLabel);
+}
+function addRulerPoint(latlng){
+  if(rulerPoints.length>=2) return;
+  rulerPoints.push(latlng);
+  rulerMarkers.push(
+    L.circleMarker(latlng,{
+      radius:6,color:'#facc15',fillColor:'#facc15',fillOpacity:1
+    }).addTo(map)
+  );
+  if(rulerPoints.length===2){
+    rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
+    const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
+    const mid=[
+      (rulerPoints[0].lat+rulerPoints[1].lat)/2,
+      (rulerPoints[0].lng+rulerPoints[1].lng)/2
+    ];
+    rulerLabel=L.tooltip({permanent:true,direction:'center',className:'ruler-label'})
+      .setLatLng(mid).setContent(`<b>${d.toFixed(2)} km</b>`).addTo(map);
+    rulerActive=false;
+    map.getContainer().style.cursor='';
+  }
+}
+map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
+
+/* ================= NODE ICON ================= */
+function icon(colors,fast=false){
+ return L.divIcon({
+  className:`node-blink ${fast?'fast':''}`,
+  iconSize:[36,36],
+  iconAnchor:[18,18],
+  html:`
+<svg width="36" height="36" viewBox="0 0 100 100">
+ <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
+ <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
+ <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
+ <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
+ <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
+</svg>`
+ });
 }
 
-map.on('click',e=>{
- if(!rulerMode||rulerMarkers.length>=2)return;
- const m=L.marker(e.latlng,{draggable:true}).addTo(map);
- rulerMarkers.push(m);
- m.on('drag',updateRuler);
- if(rulerMarkers.length===2){rulerMode=false;updateRuler();}
+/* ================= SECTOR COVERAGE ================= */
+function createSector(center,radius,start,end,opt){
+ const pts=[center];
+ for(let a=start;a<=end;a+=5){
+  const rad=a*Math.PI/180;
+  pts.push(L.latLng(
+    center.lat + (radius*Math.sin(rad))/111320,
+    center.lng + (radius*Math.cos(rad))/(111320*Math.cos(center.lat*Math.PI/180))
+  ));
+ }
+ pts.push(center);
+ return L.polygon(pts,opt);
+}
+
+/* ================= NODE DATA ================= */
+const nodes=[
+ {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
+ {name:'BLPRAM',region:'KAA',lat:-1.247917,lng:116.838194,status:'DOWN'},
+ {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'},
+ {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,statis:'UP'},
+ {name:'MJKGTO',region:'EJA',lat:-7.484068,lng:112.439306,status:'UP'},
+ {name:'SDJCNG',region:'EJA',lat:-7.407205,lng:112.618979,status:'UP'},
+ {name:'SDJSNY',region:'EJA',lat:-7.348534,lng:112.767766,status:'UP'}
+];
+
+let coverageVisible=true;
+
+/* ================= CREATE NODE ================= */
+nodes.forEach(n=>{
+ n.status = n.status || (Math.random()>0.25 ? 'UP' : 'DOWN');
+ const col=n.status==='UP'
+ ?['#2563eb','#22c55e','#2563eb','#22c55e']
+ :['#dc2626','#f97316','#dc2626','#f97316'];
+
+ n.marker=L.marker([n.lat,n.lng],{icon:icon(col,n.status==='DOWN')})
+ .addTo(map)
+ .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
+
+ n.marker.on('click',e=>{
+  if(rulerActive){addRulerPoint(e.latlng);L.DomEvent.stopPropagation(e);}
+ });
+
+ n.sectors=[];
+ for(let i=0;i<4;i++){
+  const s=createSector(
+   L.latLng(n.lat,n.lng),
+   5000,
+   i*90,(i+1)*90,
+   {color:col[i],fillColor:col[i],fillOpacity:.25,weight:1,interactive:false}
+  ).addTo(map);
+  n.sectors.push(s);
+ }
 });
 
-function updateRuler(){
- const p1=rulerMarkers[0].getLatLng();
- const p2=rulerMarkers[1].getLatLng();
- if(rulerLine)map.removeLayer(rulerLine);
- rulerLine=L.polyline([p1,p2],{color:'yellow'}).addTo(map);
- const d=(map.distance(p1,p2)/1000).toFixed(2);
- if(rulerLabel)map.removeLayer(rulerLabel);
- rulerLabel=L.marker([(p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2],
- {icon:L.divIcon({className:'ruler-label',html:d+' km'})}).addTo(map);
+/* ================= TABLE ================= */
+function render(list){
+ const tb=document.getElementById('node-table');
+ tb.innerHTML='';
+ list.forEach(n=>{
+  tb.innerHTML+=`
+<tr onclick="focusNode('${n.name}')" style="cursor:pointer">
+<td>${n.name}</td><td>${n.region}</td>
+<td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
+</tr>`;
+ });
 }
-</script>
+function focusNode(name){
+ const n=nodes.find(x=>x.name===name);
+ map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+ n.marker.openPopup();
+}
 
+/* ================= FILTER ================= */
+function showAll(){
+ render(nodes);
+ nodes.forEach(n=>{
+  n.marker.addTo(map);
+  n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+ });
+}
+function filterRegion(r){
+ render(nodes.filter(n=>n.region===r));
+ nodes.forEach(n=>{
+  if(n.region===r){
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+  }else{
+    map.removeLayer(n.marker);
+    n.sectors.forEach(s=>map.removeLayer(s));
+  }
+ });
+}
+function toggleCoverage(){
+ coverageVisible=!coverageVisible;
+ nodes.forEach(n=>n.sectors.forEach(s=>{
+  coverageVisible?s.addTo(map):map.removeLayer(s);
+ }));
+}
+function toggleTable(){
+ document.getElementById('node-section').classList.toggle('hidden');
+}
+
+showAll();
+</script>
 </body>
 </html>
