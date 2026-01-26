@@ -8,58 +8,100 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
+/* ================= GLOBAL ================= */
 body{
-  margin:0;font-family:Arial;background:#020617;color:white
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#020617;
+  color:white
 }
 header{
-  height:60px;display:flex;align-items:center;
+  height:60px;
+  display:flex;
+  align-items:center;
   padding:0 20px;
   background:linear-gradient(90deg,#0f172a,#020617);
-  font-size:22px;font-weight:bold
+  font-size:22px;
+  font-weight:bold
 }
+
+/* ================= SIDEBAR ================= */
 #sidebar{
-  position:fixed;top:60px;left:0;width:220px;
+  position:fixed;
+  top:60px;
+  left:0;
+  width:220px;
   height:calc(100vh - 60px);
-  background:#020617;padding:12px
+  background:#020617;
+  padding:12px;
+  box-sizing:border-box
 }
 button{
-  width:100%;margin:6px 0;padding:8px;
-  border:none;border-radius:4px;color:white;cursor:pointer
+  width:100%;
+  margin:6px 0;
+  padding:8px;
+  border:none;
+  border-radius:4px;
+  color:white;
+  cursor:pointer
 }
 .blue{background:#2563eb}
 .gray{background:#334155}
 .red{background:#dc2626}
 
+/* ================= MAIN ================= */
 #main{
   margin-left:220px;
   height:calc(100vh - 60px);
-  display:flex;flex-direction:column
+  display:flex;
+  flex-direction:column
 }
 #map{flex:1}
 
+/* ================= TABLE ================= */
 #toggle{
-  text-align:center;padding:6px;
-  background:#020617;border-top:1px solid #334155;cursor:pointer
+  text-align:center;
+  padding:6px;
+  background:#020617;
+  border-top:1px solid #334155;
+  cursor:pointer
 }
 #node-section{
-  max-height:260px;overflow:auto;background:#1e293b;transition:.3s
+  max-height:260px;
+  overflow:auto;
+  background:#1e293b;
+  transition:.3s
 }
 #node-section.hidden{max-height:0}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:6px;border-bottom:1px solid #334155}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px
+}
+th,td{
+  padding:6px;
+  border-bottom:1px solid #334155;
+  text-align:left
+}
 th{background:#020617}
 .up{color:#22c55e}
 .down{color:#ef4444}
 
-@keyframes blink{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+/* ================= NODE BLINK ================= */
+@keyframes blink{
+  0%{opacity:1}
+  50%{opacity:.35}
+  100%{opacity:1}
+}
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
+/* ================= RULER LABEL ================= */
 .ruler-label{
   background:#020617;
   color:#facc15;
   border:1px solid #facc15;
-  padding:6px 10px;
+  padding:4px 8px;
   border-radius:4px;
   font-size:12px;
 }
@@ -69,6 +111,7 @@ th{background:#020617}
 <body>
 <header>Peta Topologi – BWA WiBAS</header>
 
+<!-- SIDEBAR -->
 <div id="sidebar">
   <h4>Area</h4>
   <button class="blue" onclick="showAll()">All</button>
@@ -86,12 +129,15 @@ th{background:#020617}
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="map"></div>
   <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
   <div id="node-section">
     <table>
-      <thead><tr><th>Node</th><th>Area</th><th>Status</th></tr></thead>
+      <thead>
+        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
+      </thead>
       <tbody id="node-table"></tbody>
     </table>
   </div>
@@ -100,88 +146,102 @@ th{background:#020617}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-const map=L.map('map').setView([-6.9,110.5],5);
+/* ================= MAP ================= */
+const map = L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ================= RULER DRAG + AZIMUTH ================= */
-let rulerActive=false;
-let rA=null,rB=null,rLine=null,rLabel=null;
-
-function toRad(d){return d*Math.PI/180}
-function toDeg(r){return (r*180/Math.PI+360)%360}
-
-function bearing(a,b){
- const φ1=toRad(a.lat), φ2=toRad(b.lat);
- const Δλ=toRad(b.lng-a.lng);
- return toDeg(Math.atan2(
-  Math.sin(Δλ)*Math.cos(φ2),
-  Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ)
- ));
-}
-
-function updateRuler(){
- if(!rA||!rB) return;
- const p1=rA.getLatLng(), p2=rB.getLatLng();
- if(rLine) map.removeLayer(rLine);
- rLine=L.polyline([p1,p2],{color:'#facc15',weight:3}).addTo(map);
- const d=(map.distance(p1,p2)/1000).toFixed(2);
- const az=bearing(p1,p2).toFixed(1);
- if(rLabel) map.removeLayer(rLabel);
- rLabel=L.tooltip({permanent:true,className:'ruler-label'})
-  .setLatLng(L.latLng((p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2))
-  .setContent(`<b>${d} km</b><br>Azimuth: ${az}°`)
-  .addTo(map);
-}
+/* ================= RULER ================= */
+let rulerActive=false, rulerPoints=[], rulerLine=null, rulerMarkers=[], rulerLabel=null;
 
 function activateRuler(){
- resetRuler(); rulerActive=true;
- map.getContainer().style.cursor='crosshair';
+  rulerActive=true;
+  clearRuler();
+  map.getContainer().style.cursor='crosshair';
 }
 function resetRuler(){
- rulerActive=false;
- [rA,rB,rLine,rLabel].forEach(x=>x&&map.removeLayer(x));
- rA=rB=rLine=rLabel=null;
- map.getContainer().style.cursor='';
+  rulerActive=false;
+  clearRuler();
+  map.getContainer().style.cursor='';
 }
-
-map.on('click',e=>{
- if(!rulerActive) return;
- if(!rA){
-  rA=L.marker(e.latlng,{draggable:true}).addTo(map).on('drag',updateRuler);
- }else if(!rB){
-  rB=L.marker(e.latlng,{draggable:true}).addTo(map).on('drag',updateRuler);
-  updateRuler(); rulerActive=false;
- }
-});
+function clearRuler(){
+  rulerPoints=[];
+  if(rulerLine) map.removeLayer(rulerLine);
+  rulerMarkers.forEach(m=>map.removeLayer(m));
+  rulerMarkers=[];
+  if(rulerLabel) map.removeLayer(rulerLabel);
+}
+function addRulerPoint(latlng){
+  if(rulerPoints.length>=2) return;
+  rulerPoints.push(latlng);
+  rulerMarkers.push(
+    L.circleMarker(latlng,{
+      radius:6,color:'#facc15',fillColor:'#facc15',fillOpacity:1
+    }).addTo(map)
+  );
+  if(rulerPoints.length===2){
+    rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
+    const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
+    const mid=[
+      (rulerPoints[0].lat+rulerPoints[1].lat)/2,
+      (rulerPoints[0].lng+rulerPoints[1].lng)/2
+    ];
+    rulerLabel=L.tooltip({permanent:true,direction:'center',className:'ruler-label'})
+      .setLatLng(mid).setContent(`<b>${d.toFixed(2)} km</b>`).addTo(map);
+    rulerActive=false;
+    map.getContainer().style.cursor='';
+  }
+}
+map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
 
 /* ================= NODE ICON ================= */
-function icon(colors,fast){
+function icon(colors,fast=false){
  return L.divIcon({
   className:`node-blink ${fast?'fast':''}`,
-  iconSize:[36,36],iconAnchor:[18,18],
-  html:`<svg viewBox="0 0 100 100">
-<path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
-<path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
-<path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
-<path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
-<circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
+  iconSize:[36,36],
+  iconAnchor:[18,18],
+  html:`
+<svg width="36" height="36" viewBox="0 0 100 100">
+ <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
+ <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
+ <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
+ <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
+ <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
 </svg>`
  });
 }
 
-/* ================= NODE DATA (CONTOH) ================= */
+/* ================= SECTOR COVERAGE ================= */
+function createSector(center,radius,start,end,opt){
+ const pts=[center];
+ for(let a=start;a<=end;a+=5){
+  const rad=a*Math.PI/180;
+  pts.push(L.latLng(
+    center.lat + (radius*Math.sin(rad))/111320,
+    center.lng + (radius*Math.cos(rad))/(111320*Math.cos(center.lat*Math.PI/180))
+  ));
+ }
+ pts.push(center);
+ return L.polygon(pts,opt);
+}
+
+/* ================= NODE DATA ================= */
 const nodes=[
- {name:'SOLO',region:'CJDA',lat:-7.5666,lng:110.8166,status:'UP'},
- {name:'YOGYA',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
- {name:'BALIKPAPAN',region:'WKA',lat:-1.2479,lng:116.8382,status:'DOWN'},
- {name:'SAMARINDA',region:'WKA',lat:-0.5021,lng:117.1537,status:'UP'},
- {name:'DENPASAR',region:'BNA',lat:-8.65,lng:115.2167,status:'UP'}
+ {name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
+ {name:'BLPRAM',region:'KAA',lat:-1.247917,lng:116.838194,status:'DOWN'},
+ {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
+ {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
+ {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'},
+ {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,statis:'UP'},
+ {name:'MJKGTO',region:'EJA',lat:-7.484068,lng:112.439306,status:'UP'},
+ {name:'SDJCNG',region:'EJA',lat:-7.407205,lng:112.618979,status:'UP'},
+ {name:'SDJSNY',region:'EJA',lat:-7.348534,lng:112.767766,status:'UP'}
 ];
 
 let coverageVisible=true;
 
 /* ================= CREATE NODE ================= */
 nodes.forEach(n=>{
+ n.status = n.status || (Math.random()>0.25 ? 'UP' : 'DOWN');
  const col=n.status==='UP'
  ?['#2563eb','#22c55e','#2563eb','#22c55e']
  :['#dc2626','#f97316','#dc2626','#f97316'];
@@ -191,45 +251,64 @@ nodes.forEach(n=>{
  .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
 
  n.marker.on('click',e=>{
-  if(rulerActive){map.fire('click',{latlng:e.latlng});L.DomEvent.stop(e);}
+  if(rulerActive){addRulerPoint(e.latlng);L.DomEvent.stopPropagation(e);}
  });
 
  n.sectors=[];
  for(let i=0;i<4;i++){
-  n.sectors.push(
-   L.circle([n.lat,n.lng],{radius:5000,color:col[i],fillOpacity:.2})
-   .addTo(map)
-  );
+  const s=createSector(
+   L.latLng(n.lat,n.lng),
+   5000,
+   i*90,(i+1)*90,
+   {color:col[i],fillColor:col[i],fillOpacity:.25,weight:1,interactive:false}
+  ).addTo(map);
+  n.sectors.push(s);
  }
 });
 
-/* ================= TABLE + FILTER ================= */
+/* ================= TABLE ================= */
 function render(list){
- const tb=document.getElementById('node-table');tb.innerHTML='';
+ const tb=document.getElementById('node-table');
+ tb.innerHTML='';
  list.forEach(n=>{
   tb.innerHTML+=`
-<tr onclick="focusNode('${n.name}')">
+<tr onclick="focusNode('${n.name}')" style="cursor:pointer">
 <td>${n.name}</td><td>${n.region}</td>
-<td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`;
+<td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
+</tr>`;
  });
 }
 function focusNode(name){
  const n=nodes.find(x=>x.name===name);
- map.flyTo([n.lat,n.lng],10);n.marker.openPopup();
+ map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+ n.marker.openPopup();
 }
+
+/* ================= FILTER ================= */
 function showAll(){
  render(nodes);
- nodes.forEach(n=>{n.marker.addTo(map);n.sectors.forEach(s=>coverageVisible&&s.addTo(map))});
+ nodes.forEach(n=>{
+  n.marker.addTo(map);
+  n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+ });
 }
 function filterRegion(r){
  render(nodes.filter(n=>n.region===r));
  nodes.forEach(n=>{
-  n.region===r?n.marker.addTo(map):map.removeLayer(n.marker);
+  if(n.region===r){
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
+  }else{
+    map.removeLayer(n.marker);
+    n.sectors.forEach(s=>map.removeLayer(s));
+  }
  });
 }
 function toggleCoverage(){
  coverageVisible=!coverageVisible;
- nodes.forEach(n=>n.sectors.forEach(s=>coverageVisible?s.addTo(map):map.removeLayer(s)));
+ nodes.forEach(n=>n.sectors.forEach(s=>{
+  coverageVisible?s.addTo(map):map.removeLayer(s);
+ }));
 }
 function toggleTable(){
  document.getElementById('node-section').classList.toggle('hidden');
