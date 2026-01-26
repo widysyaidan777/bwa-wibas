@@ -23,8 +23,6 @@ header{
   font-size:22px;
   font-weight:bold
 }
-
-/* SIDEBAR */
 #sidebar{
   position:fixed;
   top:60px;
@@ -45,19 +43,12 @@ button{
   cursor:pointer
 }
 .blue{background:#2563eb}
-.gray{background:#334155}
 .red{background:#dc2626}
-
-/* MAIN */
 #main{
   margin-left:220px;
-  height:calc(100vh - 60px);
-  display:flex;
-  flex-direction:column
+  height:calc(100vh - 60px)
 }
-#map{flex:1}
-
-/* RULER LABEL */
+#map{height:100%}
 .ruler-label{
   background:#020617;
   color:#facc15;
@@ -65,7 +56,6 @@ button{
   padding:6px 10px;
   border-radius:6px;
   font-size:12px;
-  white-space:nowrap;
 }
 </style>
 </head>
@@ -87,115 +77,125 @@ button{
 
 <script>
 /* ================= MAP ================= */
-const map = L.map('map').setView([-6.9,110.5],5);
+const map = L.map('map').setView([-2.5,118],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:18
 }).addTo(map);
 
+/* ================= LAYERS ================= */
+const nodeLayer = L.layerGroup().addTo(map);
+const coverageLayer = L.layerGroup().addTo(map);
+
 /* ================= RULER ================= */
-let rulerActive = false;
-let p1 = null, p2 = null;
-let m1 = null, m2 = null;
-let rulerLine = null;
-let rulerLabel = null;
+let rulerActive=false, p1=null, p2=null, m1=null, m2=null, rulerLine=null, rulerLabel=null;
 
 function activateRuler(){
-  rulerActive = true;
+  rulerActive=true;
   clearRuler();
-  map.getContainer().style.cursor = 'crosshair';
+  map.getContainer().style.cursor='crosshair';
 }
-
 function resetRuler(){
-  rulerActive = false;
+  rulerActive=false;
   clearRuler();
-  map.getContainer().style.cursor = '';
+  map.getContainer().style.cursor='';
 }
-
 function clearRuler(){
   if(m1) map.removeLayer(m1);
   if(m2) map.removeLayer(m2);
   if(rulerLine) map.removeLayer(rulerLine);
   if(rulerLabel) map.removeLayer(rulerLabel);
-  p1 = p2 = m1 = m2 = rulerLine = rulerLabel = null;
+  p1=p2=m1=m2=rulerLine=rulerLabel=null;
 }
 
 /* ================= BEARING ================= */
 function bearing(lat1, lon1, lat2, lon2){
-  const toRad = x => x * Math.PI / 180;
-  const toDeg = x => (x * 180 / Math.PI + 360) % 360;
-
-  const dLon = toRad(lon2 - lon1);
-  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
-  const x =
-    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
-
-  return toDeg(Math.atan2(y, x));
+  const toRad=d=>d*Math.PI/180;
+  const toDeg=r=>(r*180/Math.PI+360)%360;
+  const dLon=toRad(lon2-lon1);
+  const y=Math.sin(dLon)*Math.cos(toRad(lat2));
+  const x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-
+          Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(dLon);
+  return toDeg(Math.atan2(y,x));
 }
 
-/* ================= UPDATE RULER ================= */
 function updateRuler(){
-  if(!p1 || !p2 || !rulerLine || !rulerLabel) return;
-
-  const distKm = map.distance(p1, p2) / 1000;
-  const az = bearing(p1.lat, p1.lng, p2.lat, p2.lng);
-
-  rulerLine.setLatLngs([p1, p2]);
-
-  const mid = L.latLng(
-    (p1.lat + p2.lat) / 2,
-    (p1.lng + p2.lng) / 2
-  );
-
+  if(!p1||!p2||!rulerLine||!rulerLabel) return;
+  const distKm=map.distance(p1,p2)/1000;
+  const az=bearing(p1.lat,p1.lng,p2.lat,p2.lng);
+  rulerLine.setLatLngs([p1,p2]);
   rulerLabel
-    .setLatLng(mid)
-    .setContent(`
-      <b>${distKm.toFixed(2)} km</b><br>
-      Azimuth: ${az.toFixed(1)}°
-    `);
+    .setLatLng([(p1.lat+p2.lat)/2,(p1.lng+p2.lng)/2])
+    .setContent(`<b>${distKm.toFixed(2)} km</b><br>Azimuth: ${az.toFixed(1)}°`);
 }
 
-/* ================= MAP CLICK ================= */
-map.on('click', e => {
+map.on('click',e=>{
   if(!rulerActive) return;
-
   if(!p1){
-    p1 = e.latlng;
-    m1 = L.marker(p1,{draggable:true})
-      .addTo(map)
-      .on('drag', ev => {
-        p1 = ev.target.getLatLng();
-        updateRuler();
-      });
-
-  } else if(!p2){
-    p2 = e.latlng;
-    m2 = L.marker(p2,{draggable:true})
-      .addTo(map)
-      .on('drag', ev => {
-        p2 = ev.target.getLatLng();
-        updateRuler();
-      });
-
-    rulerLine = L.polyline([p1,p2],{
-      color:'#facc15',
-      weight:3
-    }).addTo(map);
-
-    /* 🔴 PENTING: tooltip langsung dikasih posisi */
-    rulerLabel = L.tooltip({
-      permanent:true,
-      direction:'center',
-      className:'ruler-label'
-    })
-    .setLatLng(p2)
-    .setContent('...')
-    .addTo(map);
-
+    p1=e.latlng;
+    m1=L.marker(p1,{draggable:true}).addTo(map)
+      .on('drag',ev=>{p1=ev.target.getLatLng();updateRuler();});
+  }else if(!p2){
+    p2=e.latlng;
+    m2=L.marker(p2,{draggable:true}).addTo(map)
+      .on('drag',ev=>{p2=ev.target.getLatLng();updateRuler();});
+    rulerLine=L.polyline([p1,p2],{color:'#facc15',weight:3}).addTo(map);
+    rulerLabel=L.tooltip({permanent:true,className:'ruler-label'})
+      .setLatLng(p2).addTo(map);
     updateRuler();
-    rulerActive = false;
-    map.getContainer().style.cursor = '';
+    rulerActive=false;
+    map.getContainer().style.cursor='';
   }
+});
+
+/* ================= SECTOR FUNCTION ================= */
+function createSector(lat,lng,az,bw,radiusKm,opt={}){
+  const pts=[],steps=30,R=6371;
+  const toRad=d=>d*Math.PI/180,toDeg=r=>r*180/Math.PI;
+  const start=az-bw/2,end=az+bw/2;
+  pts.push([lat,lng]);
+  for(let i=0;i<=steps;i++){
+    const ang=start+(i/steps)*(end-start);
+    const brng=toRad(ang),d=radiusKm/R;
+    const lat1=toRad(lat),lon1=toRad(lng);
+    const lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+
+      Math.cos(lat1)*Math.sin(d)*Math.cos(brng));
+    const lon2=lon1+Math.atan2(
+      Math.sin(brng)*Math.sin(d)*Math.cos(lat1),
+      Math.cos(d)-Math.sin(lat1)*Math.sin(lat2)
+    );
+    pts.push([toDeg(lat2),toDeg(lon2)]);
+  }
+  return L.polygon(pts,{
+    color:opt.color||'lime',
+    fillColor:opt.fillColor||'lime',
+    fillOpacity:0.25,
+    weight:1
+  });
+}
+
+/* ================= BTS DATA ================= */
+const btsData=[
+{
+  name:'BTS Jakarta',
+  lat:-6.1754,lng:106.8272,
+  sectors:[{az:30,bw:60},{az:150,bw:60},{az:270,bw:60}]
+},
+{
+  name:'BTS Bandung',
+  lat:-6.9147,lng:107.6098,
+  sectors:[{az:90,bw:90},{az:210,bw:90}]
+}
+];
+
+/* ================= RENDER BTS ================= */
+btsData.forEach(bts=>{
+  L.marker([bts.lat,bts.lng])
+    .bindPopup(`<b>${bts.name}</b>`)
+    .addTo(nodeLayer);
+  bts.sectors.forEach(sec=>{
+    createSector(bts.lat,bts.lng,sec.az,sec.bw,15)
+      .addTo(coverageLayer);
+  });
 });
 </script>
 </body>
