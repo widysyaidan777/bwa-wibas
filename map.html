@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-/* ================= GLOBAL ================= */
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
@@ -24,8 +23,6 @@ header{
   font-size:22px;
   font-weight:bold
 }
-
-/* ================= SIDEBAR ================= */
 #sidebar{
   position:fixed;
   top:60px;
@@ -49,7 +46,6 @@ button{
 .gray{background:#334155}
 .red{background:#dc2626}
 
-/* ================= MAIN ================= */
 #main{
   margin-left:220px;
   height:calc(100vh - 60px);
@@ -58,7 +54,6 @@ button{
 }
 #map{flex:1}
 
-/* ================= TABLE ================= */
 #toggle{
   text-align:center;
   padding:6px;
@@ -87,7 +82,6 @@ th{background:#020617}
 .up{color:#22c55e}
 .down{color:#ef4444}
 
-/* ================= NODE BLINK ================= */
 @keyframes blink{
   0%{opacity:1}
   50%{opacity:.35}
@@ -96,7 +90,6 @@ th{background:#020617}
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
-/* ================= RULER LABEL ================= */
 .ruler-label{
   background:#020617;
   color:#facc15;
@@ -111,7 +104,6 @@ th{background:#020617}
 <body>
 <header>Peta Topologi – BWA WiBAS</header>
 
-<!-- SIDEBAR -->
 <div id="sidebar">
   <h4>Area</h4>
   <button class="blue" onclick="showAll()">All</button>
@@ -126,11 +118,11 @@ th{background:#020617}
   <button class="red" onclick="resetRuler()">Reset Ruler</button>
 
   <hr style="border:1px solid #334155">
+
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-  <button class="blue" onclick="backToMenu()">Kembali ke Menu Simpan</button>
+  <button class="blue" onclick="backToMenu()">Back to Menu</button>
 </div>
 
-<!-- MAIN -->
 <div id="main">
   <div id="map"></div>
   <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
@@ -171,6 +163,19 @@ function clearRuler(){
   rulerMarkers=[];
   if(rulerLabel) map.removeLayer(rulerLabel);
 }
+
+/* === AZIMUTH (TAMBAHAN) === */
+function calculateAzimuth(p1,p2){
+  const lat1=p1.lat*Math.PI/180;
+  const lat2=p2.lat*Math.PI/180;
+  const dLon=(p2.lng-p1.lng)*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=Math.cos(lat1)*Math.sin(lat2)-
+          Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  let brng=Math.atan2(y,x)*180/Math.PI;
+  return (brng+360)%360;
+}
+
 function addRulerPoint(latlng){
   if(rulerPoints.length>=2) return;
   rulerPoints.push(latlng);
@@ -182,18 +187,25 @@ function addRulerPoint(latlng){
   if(rulerPoints.length===2){
     rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
     const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
-    const az = calculateAzimuth(rulerPoints[0], rulerPoints[1]);
+    const az=calculateAzimuth(rulerPoints[0],rulerPoints[1]);
     const mid=[
       (rulerPoints[0].lat+rulerPoints[1].lat)/2,
       (rulerPoints[0].lng+rulerPoints[1].lng)/2
     ];
     rulerLabel=L.tooltip({permanent:true,direction:'center',className:'ruler-label'})
-      .setLatLng(mid)..setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`).addTo(map);
+      .setLatLng(mid)
+      .setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`)
+      .addTo(map);
     rulerActive=false;
     map.getContainer().style.cursor='';
   }
 }
 map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
+
+/* ================= BACK TO MENU ================= */
+function backToMenu(){
+  window.location.href="index.html"; // sesuaikan path
+}
 
 /* ================= NODE ICON ================= */
 function icon(colors,fast=false){
@@ -211,29 +223,15 @@ function icon(colors,fast=false){
 </svg>`
  });
 }
-/*===================Azimuth================*/
-function calculateAzimuth(p1, p2){
-const lat1 = p1.lat * Math.PI / 180;
-const lat2 = p2.lat * Math.PI / 180;
-const dLon = (p2.lng - p1.lng) * Math.PI / 180;
 
-const y = Math.sin(dLon) * Math.cos(lat2);
-const x =
-  Math.cos(lat1) * Math.sin(lat2) -
-  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-
-let brng = Math.atan2(y, x) * 180 / Math.PI;
-return (brng + 360) % 360;
-}
-  
-/* ================= SECTOR COVERAGE ================= */
+/* ================= SECTOR ================= */
 function createSector(center,radius,start,end,opt){
  const pts=[center];
  for(let a=start;a<=end;a+=5){
   const rad=a*Math.PI/180;
   pts.push(L.latLng(
-    center.lat + (radius*Math.sin(rad))/111320,
-    center.lng + (radius*Math.cos(rad))/(111320*Math.cos(center.lat*Math.PI/180))
+    center.lat+(radius*Math.sin(rad))/111320,
+    center.lng+(radius*Math.cos(rad))/(111320*Math.cos(center.lat*Math.PI/180))
   ));
  }
  pts.push(center);
@@ -247,7 +245,7 @@ const nodes=[
  {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
  {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
  {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'},
- {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,statis:'UP'},
+ {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,status:'UP'},
  {name:'MJKGTO',region:'EJA',lat:-7.484068,lng:112.439306,status:'UP'},
  {name:'SDJCNG',region:'EJA',lat:-7.407205,lng:112.618979,status:'UP'},
  {name:'SDJSNY',region:'EJA',lat:-7.348534,lng:112.767766,status:'UP'}
@@ -257,7 +255,6 @@ let coverageVisible=true;
 
 /* ================= CREATE NODE ================= */
 nodes.forEach(n=>{
- n.status = n.status || (Math.random()>0.25 ? 'UP' : 'DOWN');
  const col=n.status==='UP'
  ?['#2563eb','#22c55e','#2563eb','#22c55e']
  :['#dc2626','#f97316','#dc2626','#f97316'];
@@ -273,8 +270,7 @@ nodes.forEach(n=>{
  n.sectors=[];
  for(let i=0;i<4;i++){
   const s=createSector(
-   L.latLng(n.lat,n.lng),
-   5000,
+   L.latLng(n.lat,n.lng),5000,
    i*90,(i+1)*90,
    {color:col[i],fillColor:col[i],fillOpacity:.25,weight:1,interactive:false}
   ).addTo(map);
@@ -328,10 +324,6 @@ function toggleCoverage(){
 }
 function toggleTable(){
  document.getElementById('node-section').classList.toggle('hidden');
-}
-function backToMenu(){
-window.location.href = "index.html"; 
-  // ganti jika nama menu simpan berbeda
 }
 
 showAll();
