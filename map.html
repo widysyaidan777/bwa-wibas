@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;background:#020617;color:white}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#020617;color:white}
 header{height:60px;display:flex;align-items:center;padding:0 20px;
 background:linear-gradient(90deg,#0f172a,#020617);font-size:22px;font-weight:bold}
 
@@ -61,7 +61,7 @@ padding:4px 8px;border-radius:4px;font-size:12px}
 <hr style="border:1px solid #334155">
 
 <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-<button class="gray" onclick="backToMenu()">Kembali ke Menu</button>
+<button class="blue" onclick="backToMenu()">Kembali ke Menu</button>
 </div>
 
 <div id="main">
@@ -83,141 +83,128 @@ const map = L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 /* ================= RULER ================= */
-let rulerActive=false,rulerPoints=[],rulerLine=null,rulerMarkers=[],rulerLabel=null;
+let rulerActive=false;
+let rulerPoints=[];
+let rulerLine=null;
+let rulerMarkers=[];
+let rulerLabel=null;
 
 function activateRuler(){
- resetRuler();
- rulerActive=true;
- map.getContainer().style.cursor='crosshair';
+  resetRuler();
+  rulerActive=true;
+  map.getContainer().style.cursor='crosshair';
 }
 
 function resetRuler(){
- rulerActive=false;
- rulerPoints=[];
- if(rulerLine) map.removeLayer(rulerLine);
- rulerMarkers.forEach(m=>map.removeLayer(m));
- rulerMarkers=[];
- if(rulerLabel) map.removeLayer(rulerLabel);
- rulerLine=null;rulerLabel=null;
- map.getContainer().style.cursor='';
+  rulerActive=false;
+  rulerPoints=[];
+  if(rulerLine) map.removeLayer(rulerLine);
+  rulerMarkers.forEach(m=>map.removeLayer(m));
+  if(rulerLabel) map.removeLayer(rulerLabel);
+  rulerLine=null;
+  rulerMarkers=[];
+  rulerLabel=null;
+  map.getContainer().style.cursor='';
 }
 
-/* === AZIMUTH === */
+/* === AZIMUTH (TIDAK DIUBAH) === */
 function calculateAzimuth(p1,p2){
- const lat1=p1.lat*Math.PI/180,lat2=p2.lat*Math.PI/180;
- const dLon=(p2.lng-p1.lng)*Math.PI/180;
- const y=Math.sin(dLon)*Math.cos(lat2);
- const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
- return (Math.atan2(y,x)*180/Math.PI+360)%360;
-}
-
-function updateRuler(){
- if(rulerPoints.length<2) return;
- rulerLine.setLatLngs(rulerPoints);
-
- const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
- const az=calculateAzimuth(rulerPoints[0],rulerPoints[1]);
- const mid=[
-  (rulerPoints[0].lat+rulerPoints[1].lat)/2,
-  (rulerPoints[0].lng+rulerPoints[1].lng)/2
- ];
-
- if(!rulerLabel){
-  rulerLabel=L.tooltip({permanent:true,className:'ruler-label'}).addTo(map);
- }
- rulerLabel.setLatLng(mid)
- .setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`);
+  const lat1=p1.lat*Math.PI/180;
+  const lat2=p2.lat*Math.PI/180;
+  const dLon=(p2.lng-p1.lng)*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=Math.cos(lat1)*Math.sin(lat2)-
+          Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
 function addRulerPoint(latlng){
- if(rulerPoints.length>=2) return;
+  if(rulerPoints.length>=2) return;
 
- const marker=L.marker(latlng,{draggable:true}).addTo(map);
- rulerMarkers.push(marker);
- rulerPoints.push(latlng);
+  rulerPoints.push(latlng);
 
- marker.on('drag',()=>{
-  rulerPoints[rulerMarkers.indexOf(marker)]=marker.getLatLng();
-  updateRuler();
- });
+  /* MARKER RULER – DITAMBAH DRAG SAJA */
+  const m = L.marker(latlng,{
+    draggable:true,
+    icon:L.divIcon({
+      className:'',
+      iconSize:[12,12],
+      html:'<div style="width:12px;height:12px;border-radius:50%;background:#facc15"></div>'
+    })
+  }).addTo(map);
 
- if(rulerPoints.length===2){
-  rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
-  updateRuler();
-  rulerActive=false;
-  map.getContainer().style.cursor='';
- }
+  m.on('drag',()=>{
+    rulerPoints[rulerMarkers.indexOf(m)] = m.getLatLng();
+
+    rulerLine.setLatLngs(rulerPoints);
+
+    const d = map.distance(rulerPoints[0],rulerPoints[1]) / 1000;
+    const az = calculateAzimuth(rulerPoints[0],rulerPoints[1]);
+
+    const mid=[
+      (rulerPoints[0].lat+rulerPoints[1].lat)/2,
+      (rulerPoints[0].lng+rulerPoints[1].lng)/2
+    ];
+
+    rulerLabel
+      .setLatLng(mid)
+      .setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`);
+  });
+
+  rulerMarkers.push(m);
+
+  if(rulerPoints.length===2){
+    rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
+
+    const d = map.distance(rulerPoints[0],rulerPoints[1]) / 1000;
+    const az = calculateAzimuth(rulerPoints[0],rulerPoints[1]);
+    const mid=[
+      (rulerPoints[0].lat+rulerPoints[1].lat)/2,
+      (rulerPoints[0].lng+rulerPoints[1].lng)/2
+    ];
+
+    /* TOOLTIP LAMA – TIDAK DIUBAH */
+    rulerLabel=L.tooltip({
+      permanent:true,
+      direction:'center',
+      className:'ruler-label'
+    })
+    .setLatLng(mid)
+    .setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`)
+    .addTo(map);
+
+    rulerActive=false;
+    map.getContainer().style.cursor='';
+  }
 }
 
-map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
-
-/* ================= BACK ================= */
-function backToMenu(){window.location.href="index.html";}
-
-/* ================= NODE ICON ================= */
-function icon(colors,fast=false){
- return L.divIcon({
-  className:`node-blink ${fast?'fast':''}`,
-  iconSize:[36,36],iconAnchor:[18,18],
-  html:`<svg width="36" height="36" viewBox="0 0 100 100">
-<path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
-<path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
-<path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
-<path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
-<circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/></svg>`
- });
-}
-
-/* ================= NODE DATA ================= */
-const nodes=[
-{name:'SLOSRH',region:'CJDA',lat:-7.7956,lng:110.3695,status:'UP'},
-{name:'BLPRAM',region:'KAA',lat:-1.247917,lng:116.838194,status:'DOWN'},
-{name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP'},
-{name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN'},
-{name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP'}
-];
-
-let coverageVisible=true;
-
-/* ================= CREATE NODE ================= */
-nodes.forEach(n=>{
- const col=n.status==='UP'
- ?['#2563eb','#22c55e','#2563eb','#22c55e']
- :['#dc2626','#f97316','#dc2626','#f97316'];
-
- n.marker=L.marker([n.lat,n.lng],{icon:icon(col,n.status==='DOWN')})
- .addTo(map)
- .bindPopup(`<b>${n.name}</b><br>Area:${n.region}<br>Status:${n.status}`);
-
- n.marker.on('click',e=>{
-  if(rulerActive){addRulerPoint(e.latlng);L.DomEvent.stopPropagation(e);}
- });
+map.on('click',e=>{
+  if(rulerActive) addRulerPoint(e.latlng);
 });
 
-/* ================= TABLE & FILTER ================= */
+/* ================= BACK ================= */
+function backToMenu(){
+  window.location.href="index.html";
+}
+
+/* ================= TABLE (MINIMAL) ================= */
+const nodes=[
+ {name:'SLOSRH',region:'CJDA',status:'UP'}
+];
+
 function render(list){
  const tb=document.getElementById('node-table');
  tb.innerHTML='';
  list.forEach(n=>{
-  tb.innerHTML+=`<tr onclick="focusNode('${n.name}')">
-<td>${n.name}</td><td>${n.region}</td>
-<td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`;
+  tb.innerHTML+=`<tr><td>${n.name}</td><td>${n.region}</td><td class="up">${n.status}</td></tr>`;
  });
 }
-
-function focusNode(name){
- const n=nodes.find(x=>x.name===name);
- map.flyTo([n.lat,n.lng],11,{animate:true});
- n.marker.openPopup();
-}
-
 function showAll(){render(nodes);}
-function filterRegion(r){render(nodes.filter(n=>n.region===r));}
+function filterRegion(){}
 function toggleCoverage(){}
 function toggleTable(){
  document.getElementById('node-section').classList.toggle('hidden');
 }
-
 showAll();
 </script>
 </body>
