@@ -127,6 +127,7 @@ th{background:#020617}
 
   <hr style="border:1px solid #334155">
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
+  <button class="blue" onclick="backToMenu()">Kembali ke Menu Simpan</button>
 </div>
 
 <!-- MAIN -->
@@ -181,12 +182,13 @@ function addRulerPoint(latlng){
   if(rulerPoints.length===2){
     rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
     const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
+    const az = calculateAzimuth(rulerPoints[0], rulerPoints[1]);
     const mid=[
       (rulerPoints[0].lat+rulerPoints[1].lat)/2,
       (rulerPoints[0].lng+rulerPoints[1].lng)/2
     ];
     rulerLabel=L.tooltip({permanent:true,direction:'center',className:'ruler-label'})
-      .setLatLng(mid).setContent(`<b>${d.toFixed(2)} km</b>`).addTo(map);
+      .setLatLng(mid)..setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`).addTo(map);
     rulerActive=false;
     map.getContainer().style.cursor='';
   }
@@ -209,7 +211,21 @@ function icon(colors,fast=false){
 </svg>`
  });
 }
+/*===================Azimuth================*/
+function calculateAzimuth(p1, p2){
+const lat1 = p1.lat * Math.PI / 180;
+const lat2 = p2.lat * Math.PI / 180;
+const dLon = (p2.lng - p1.lng) * Math.PI / 180;
 
+const y = Math.sin(dLon) * Math.cos(lat2);
+const x =
+  Math.cos(lat1) * Math.sin(lat2) -
+  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+let brng = Math.atan2(y, x) * 180 / Math.PI;
+return (brng + 360) % 360;
+}
+  
 /* ================= SECTOR COVERAGE ================= */
 function createSector(center,radius,start,end,opt){
  const pts=[center];
@@ -312,6 +328,10 @@ function toggleCoverage(){
 }
 function toggleTable(){
  document.getElementById('node-section').classList.toggle('hidden');
+}
+function backToMenu(){
+window.location.href = "index.html"; 
+  // ganti jika nama menu simpan berbeda
 }
 
 showAll();
