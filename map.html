@@ -226,21 +226,24 @@ map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
 function icon(colors,fast=false){ return L.divIcon({className:`node-blink ${fast?'fast':''}`,iconSize:[36,36],iconAnchor:[18,18],html:`<svg width="36" height="36" viewBox="0 0 100 100"><path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/><path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/><path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/><path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/><circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/></svg>`});}
 
 /* ================= SECTOR ================= */
-function createSector(center, radius, start, end, opt){
+function createSector(center, radius, startAz, endAz, opt){
   const pts = [center];
 
-  for(let a=start; a<=end; a+=3){
-    const az = (a - 90) * Math.PI / 180; // ROTASI AZIMUTH
-    const lat = center.lat + (radius * Math.cos(az)) / 111320;
-    const lng = center.lng + (radius * Math.sin(az)) /
+  for(let az = startAz; az <= endAz; az += 2){
+    const rad = az * Math.PI / 180;
+
+    // azimuth: 0 = north
+    const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+    const lng = center.lng + (radius * Math.sin(rad)) /
       (111320 * Math.cos(center.lat * Math.PI / 180));
 
-    pts.push(L.latLng(lat, lng));
+    pts.push([lat, lng]);
   }
 
   pts.push(center);
   return L.polygon(pts, opt);
 }
+
 
 /* ================= NODE DATA ================= */
 const nodes=[
