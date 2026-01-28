@@ -23,6 +23,8 @@ header{
   font-size:22px;
   font-weight:bold
 }
+
+/* SIDEBAR */
 #sidebar{
   position:fixed;
   top:60px;
@@ -47,6 +49,7 @@ button{
 .gray{background:#334155}
 .red{background:#dc2626}
 
+/* Submenu */
 .submenu{
   display:none;
   margin-left:12px;
@@ -56,6 +59,7 @@ button{
   background:#1e293b;
 }
 
+/* MAIN */
 #main{
   margin-left:220px;
   height:calc(100vh - 60px);
@@ -64,6 +68,7 @@ button{
 }
 #map{flex:1}
 
+/* TABLE */
 #toggle{
   text-align:center;
   padding:6px;
@@ -78,7 +83,6 @@ button{
   transition:.3s
 }
 #node-section.hidden{max-height:0}
-
 table{
   width:100%;
   border-collapse:collapse;
@@ -93,6 +97,7 @@ th{background:#020617}
 .up{color:#22c55e}
 .down{color:#ef4444}
 
+/* NODE BLINK */
 @keyframes blink{
   0%{opacity:1}
   50%{opacity:.35}
@@ -101,6 +106,7 @@ th{background:#020617}
 .node-blink{animation:blink 1s infinite}
 .node-blink.fast{animation:blink .4s infinite}
 
+/* RULER LABEL */
 .ruler-label{
   background:#020617;
   color:#facc15;
@@ -109,20 +115,19 @@ th{background:#020617}
   border-radius:4px;
   font-size:12px;
 }
-.popup-sector label{
-  display:block;
-  font-size:12px;
-}
 </style>
 </head>
 
 <body>
 <header>Peta Topologi – BWA WiBAS</header>
 
+<!-- SIDEBAR -->
 <div id="sidebar">
   <h4>Area</h4>
+  <!-- all area buttons -->
   <button class="blue" onclick="showAll()">All</button>
 
+  <!-- Region buttons -->
   <button class="gray" onclick="toggleSubmenu('CRO')">CRO ▼</button>
   <div class="submenu" id="submenu-CRO">
     <button onclick="filterRegion('CJDA')">CJDA</button>
@@ -130,25 +135,51 @@ th{background:#020617}
     <button onclick="filterRegion('WJA')">WJA</button>
   </div>
 
-  <hr style="border:1px solid #334155">
+  <button class="gray" onclick="toggleSubmenu('ERO')">ERO ▼</button>
+  <div class="submenu" id="submenu-ERO">
+    <button onclick="filterRegion('BNA')">BNA</button>
+    <button onclick="filterRegion('EJA')">EJA</button>
+    <button onclick="filterRegion('MAPUA')">MAPUA</button>
+  </div>
 
-  <h4>Coverage</h4>
-  <button class="gray" onclick="toggleCoverage()">Toggle Coverage ALL</button>
+  <button class="gray" onclick="toggleSubmenu('GJO')">GJO ▼</button>
+  <div class="submenu" id="submenu-GJO">
+    <button onclick="filterRegion('BWA')">BWA</button>
+    <button onclick="filterRegion('BDA')">BDA</button>
+    <button onclick="filterRegion('CDA')">CDA</button>
+    <button onclick="filterRegion('NEA')">NEA</button>
+    <button onclick="filterRegion('SAST')">SAST</button>
+    <button onclick="filterRegion('SEOA')">SEOA</button>
+  </div>
 
+  <button class="gray" onclick="toggleSubmenu('WRO')">WRO ▼</button>
+  <div class="submenu" id="submenu-WRO">
+    <button onclick="filterRegion('CSA')">CSA</button>
+    <button onclick="filterRegion('NSA')">NSA</button>
+    <button onclick="filterRegion('SSA')">SSA</button>
+  </div>
+
+  
   <hr style="border:1px solid #334155">
 
   <h4>Ruler</h4>
   <button class="blue" onclick="activateRuler()">Aktifkan Ruler</button>
   <button class="red" onclick="resetRuler()">Reset Ruler</button>
+
+  <hr style="border:1px solid #334155">
+
+  <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
+  <button class="blue" onclick="backToMenu()">Kembali ke Menu</button>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="map"></div>
   <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
   <div id="node-section">
     <table>
       <thead>
-        <tr><th>Node</th><th>Area</th><th>Status</th></tr>
+        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
       </thead>
       <tbody id="node-table"></tbody>
     </table>
@@ -157,38 +188,62 @@ th{background:#020617}
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+/* ================= SUBMENU ================= */
+function toggleSubmenu(region){
+  const el=document.getElementById('submenu-'+region);
+  el.style.display = el.style.display==='block' ? 'none':'block';
+}
+
 /* ================= MAP ================= */
 const map = L.map('map').setView([-6.9,110.5],5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-/* ================= ICON ================= */
-function icon(colors,fast=false){
-  return L.divIcon({
-    className:`node-blink ${fast?'fast':''}`,
-    iconSize:[36,36],
-    iconAnchor:[18,18],
-    html:`<svg width="36" height="36" viewBox="0 0 100 100">
-      <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
-      <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
-      <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
-      <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
-      <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
-    </svg>`
-  });
+/* ================= RULER (FINAL BENAR) ================= */
+let rulerActive=false;
+let rulerPoints=[]; let rulerLine=null; let rulerMarkers=[]; let rulerLabel=null;
+
+function activateRuler(){ resetRuler(); rulerActive=true; map.getContainer().style.cursor='crosshair'; }
+function resetRuler(){ rulerActive=false; rulerPoints=[]; if(rulerLine) map.removeLayer(rulerLine); rulerMarkers.forEach(m=>map.removeLayer(m)); if(rulerLabel) map.removeLayer(rulerLabel); rulerLine=null; rulerMarkers=[]; rulerLabel=null; map.getContainer().style.cursor=''; }
+function calculateAzimuth(p1,p2){ const lat1=p1.lat*Math.PI/180; const lat2=p2.lat*Math.PI/180; const dLon=(p2.lng-p1.lng)*Math.PI/180; const y=Math.sin(dLon)*Math.cos(lat2); const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon); return (Math.atan2(y,x)*180/Math.PI+360)%360; }
+function addRulerPoint(latlng){
+  if(rulerPoints.length>=2) return;
+  rulerPoints.push(latlng);
+  const m=L.marker(latlng,{draggable:true,icon:L.divIcon({className:'',iconSize:[12,12],html:'<div style="width:12px;height:12px;border-radius:50%;background:#facc15"></div>'})}).addTo(map);
+  m.on('drag',()=>{ rulerPoints[rulerMarkers.indexOf(m)]=m.getLatLng(); rulerLine.setLatLngs(rulerPoints); const d=map.distance(rulerPoints[0],rulerPoints[1])/1000; const az=calculateAzimuth(rulerPoints[0],rulerPoints[1]); const mid=[(rulerPoints[0].lat+rulerPoints[1].lat)/2,(rulerPoints[0].lng+rulerPoints[1].lng)/2]; rulerLabel.setLatLng(mid).setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`); });
+  rulerMarkers.push(m);
+  if(rulerPoints.length===2){
+    rulerLine=L.polyline(rulerPoints,{color:'#facc15',weight:3}).addTo(map);
+    const d=map.distance(rulerPoints[0],rulerPoints[1])/1000;
+    const az=calculateAzimuth(rulerPoints[0],rulerPoints[1]);
+    const mid=[(rulerPoints[0].lat+rulerPoints[1].lat)/2,(rulerPoints[0].lng+rulerPoints[1].lng)/2];
+    rulerLabel=L.tooltip({permanent:true,direction:'center',className:'ruler-label'}).setLatLng(mid).setContent(`<b>${d.toFixed(2)} km<br>Azimuth: ${az.toFixed(1)}°</b>`).addTo(map);
+    rulerActive=false; map.getContainer().style.cursor='';
+  }
 }
+map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
+
+/* ================= NODE ICON ================= */
+function icon(colors,fast=false){ return L.divIcon({className:`node-blink ${fast?'fast':''}`,iconSize:[36,36],iconAnchor:[18,18],html:`<svg width="36" height="36" viewBox="0 0 100 100"><path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/><path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/><path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/><path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/><circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/></svg>`});}
 
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
-  const pts=[center];
-  for(let az=startAz; az<=endAz; az+=2){
-    const rad=az*Math.PI/180;
-    const lat=center.lat+(radius*Math.cos(rad))/111320;
-    const lng=center.lng+(radius*Math.sin(rad))/(111320*Math.cos(center.lat*Math.PI/180));
-    pts.push([lat,lng]);
+  const pts = [center];
+
+  for(let az = startAz; az <= endAz; az += 2){
+    const rad = az * Math.PI / 180;
+
+    // azimuth: 0 = north
+    const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+    const lng = center.lng + (radius * Math.sin(rad)) /
+      (111320 * Math.cos(center.lat * Math.PI / 180));
+
+    pts.push([lat, lng]);
   }
+
   pts.push(center);
-  return L.polygon(pts,opt);
+  return L.polygon(pts, opt);
 }
+
 
 /* ================= NODE DATA ================= */
 const nodes=[
@@ -257,91 +312,82 @@ const nodes=[
  {name:'PKPRKI',region:'SSA',lat:-2.15641,lng:106.13115,status:'UP'},
  {name:'PLBBSG',region:'SSA',lat:-2.9982961,lng:104.7240517,status:'UP'},
  {name:'PLBKBN',region:'SSA',lat:-2.9200622,lng:104.7226304,status:'UP'},
+
 ];
 
-/* ================= CREATE NODE + SECTOR ================= */
 let coverageVisible=true;
 
+/* ================= CREATE NODE ================= */
 nodes.forEach(n=>{
   const col = n.status==='UP'
     ? ['#2563eb','#22c55e','#2563eb','#22c55e']
     : ['#dc2626','#f97316','#dc2626','#f97316'];
 
-  n.marker=L.marker([n.lat,n.lng],{
+  n.marker = L.marker([n.lat,n.lng],{
     icon:icon(col,n.status==='DOWN')
-  }).addTo(map);
+  }).addTo(map)
+   .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
 
-  n.sectors=[];
-  n.sectorDefs.forEach((sec,i)=>{
-    const s=createSector(
-      L.latLng(n.lat,n.lng),
-      5000,
-      sec.start,
-      sec.end,
-      {color:col[i%4],fillColor:col[i%4],fillOpacity:.25,weight:1}
-    ).addTo(map);
-    s.visible=true;
-    n.sectors.push(s);
+  n.marker.on('click',e=>{
+    if(rulerActive){
+      addRulerPoint(e.latlng);
+      L.DomEvent.stopPropagation(e);
+    }
   });
 
-  /* ===== POPUP SECTOR CONTROL ===== */
-  let html=`<b>${n.name}</b><br><div class="popup-sector">`;
-  n.sectors.forEach((s,i)=>{
-    html+=`
-      <label>
-        <input type="checkbox" checked
-          onchange="toggleSector('${n.name}',${i},this.checked)">
-        Sector ${i+1}
-      </label>`;
-  });
-  html+=`</div>`;
-  n.marker.bindPopup(html);
+  n.sectors = [];
+
+  /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
+  if(n.sectorDefs){
+    n.sectorDefs.forEach((sec,idx)=>{
+      const c = col[idx % col.length];
+      const s = createSector(
+        L.latLng(n.lat,n.lng),
+        5000,
+        sec.start,
+        sec.end,
+        {
+          color:c,
+          fillColor:c,
+          fillOpacity:.25,
+          weight:1,
+          interactive:false
+        }
+      ).addTo(map);
+      n.sectors.push(s);
+    });
+
+  /* ===== JIKA TIDAK ADA → DEFAULT 4 SEKTOR ===== */
+  }else{
+    for(let i=0;i<4;i++){
+      const s = createSector(
+        L.latLng(n.lat,n.lng),
+        5000,
+        i*90,
+        (i+1)*90,
+        {
+          color:col[i],
+          fillColor:col[i],
+          fillOpacity:.25,
+          weight:1,
+          interactive:false
+        }
+      ).addTo(map);
+      n.sectors.push(s);
+    }
+  }
 });
 
-/* ================= TOGGLE FUNCTIONS ================= */
-function toggleCoverage(){
-  coverageVisible=!coverageVisible;
-  nodes.forEach(n=>{
-    n.sectors.forEach(s=>{
-      coverageVisible ? s.addTo(map) : map.removeLayer(s);
-    });
-  });
-}
 
-function toggleSector(nodeName,idx,state){
-  const n=nodes.find(x=>x.name===nodeName);
-  const s=n.sectors[idx];
-  state ? s.addTo(map) : map.removeLayer(s);
-}
+/* ================= TABLE & FILTER ================= */
+function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
+function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
+function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
+function backToMenu(){ window.location.href="index.html"; }
 
-/* ================= TABLE ================= */
-function render(list){
-  const tb=document.getElementById('node-table');
-  tb.innerHTML='';
-  list.forEach(n=>{
-    tb.innerHTML+=`
-      <tr onclick="focusNode('${n.name}')" style="cursor:pointer">
-        <td>${n.name}</td>
-        <td>${n.region}</td>
-        <td class="${n.status==='UP'?'up':'down'}">${n.status}</td>
-      </tr>`;
-  });
-}
-function focusNode(name){
-  const n=nodes.find(x=>x.name===name);
-  map.flyTo([n.lat,n.lng],11,{animate:true});
-  n.marker.openPopup();
-}
-function showAll(){
-  render(nodes);
-  nodes.forEach(n=>{
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible&&s.addTo(map));
-  });
-}
-function toggleTable(){
-  document.getElementById('node-section').classList.toggle('hidden');
-}
 showAll();
 </script>
 </body>
