@@ -340,10 +340,22 @@ window.importCSV = function() {
   link.download = "data_wibas_export.csv";
   link.click();
 };
+  // ===== AUTO REFRESH TIAP 10 DETIK =====
+setInterval(() => {
+  const modal = document.getElementById("modal");
+
+  // Jangan refresh kalau modal sedang terbuka
+  if (!modal || modal.style.display !== "block") {
+    loadData();
+    console.log("Auto refresh jalan...");
+  }
+
+}, 10000); // 10 detik
 </script>
 
 </body>
 </html>
+
 
 
 
