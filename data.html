@@ -84,14 +84,19 @@ table {
 <input id="search" placeholder="Search...">
 <button class="add-btn" onclick="openModal()">Tambah Data</button>
 
-<input type="file" id="csvFile" accept=".csv">
-<button onclick="importCSV()">Import CSV</button>
-<button onclick="exportCSV()">Export CSV</button>
-</div>
-  <button onclick="manualRefresh()" 
-        style="padding:6px 12px;background:#1976d2;color:white;border:none;border-radius:4px;cursor:pointer;margin-bottom:10px;">
-        🔄 Refresh Data
+<div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+
+    <button onclick="exportCSV()">Export</button>
+
+    <input type="file" id="importFile" accept=".csv">
+
+    <!-- Refresh Icon -->
+    <button onclick="manualRefresh()" 
+            style="background:none;border:none;cursor:pointer;font-size:18px;">
+        🔄
     </button>
+
+</div>
 <div class="table-wrapper">
   <table>
     <thead><tr id="thead"></tr></thead>
@@ -147,7 +152,7 @@ let filtered = [];
 let editId = null;
 
 // ===== LOAD DATA =====
-async function loadData() {
+async window.loadData = function() {
 
   const q = query(
     collection(db, "wibas"),
@@ -351,6 +356,7 @@ window.manualRefresh = function() {
 
 </body>
 </html>
+
 
 
 
