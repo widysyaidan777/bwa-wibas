@@ -151,105 +151,98 @@ footer {
   © 2026 BWA WiBAS – Lintasarta
 </footer>
 
-<script>
-const csvFile = 'data.csv';
+<script type="module">
 
-fetch(csvFile)
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.trim().split(/\r?\n/);
-    const delimiter = lines[0].includes(';') ? ';' : ',';
-    const headers = lines[0].split(delimiter).map(h => h.trim());
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-    const rows = lines.slice(1).map(l => {
-      const values = l.split(delimiter);
-      const obj = {};
-      headers.forEach((h,i) => obj[h] = values[i]?.trim() || '');
-      return obj;
-    });
+import { getFirestore, collection, getDocs } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // === AUTO DETECT COLUMN ===
-    const sectorCol = headers.find(h => h.toLowerCase().includes('sector'));
-    const nodeCol   = headers.find(h => h.toLowerCase().includes('node'));
-    const userCol   = headers.find(h => h.toLowerCase().includes('user') || h.toLowerCase().includes('msisdn'));
-    const stateCol = headers.find(h => h.toLowerCase().includes('state'));
-    const areaCol   = headers.find(h => h.toLowerCase().includes('area'));
-    const regionCol = headers.find(h => h.toLowerCase().includes('region'));
+const firebaseConfig = {
+  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
+  authDomain: "dashboard-bwa.firebaseapp.com",
+  projectId: "dashboard-bwa",
+  storageBucket: "dashboard-bwa.firebasestorage.app",
+  messagingSenderId: "1066238404578",
+  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
+};
 
-    const sectors = new Set();
-    const nodes = new Set();
-    let users = 0;
-    let active = 0;
-    let inactive = 0;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const userArea = {};
-    const nodeRegion = {};
-    const sectorArea = {};
+async function loadDashboard() {
 
-    rows.forEach(r => {
-      if (sectorCol && r[sectorCol]) sectors.add(r[sectorCol]);
-      if (nodeCol && r[nodeCol]) nodes.add(r[nodeCol]);
-      if (userCol && r[userCol]) users++;
+  const snapshot = await getDocs(collection(db, "wibas"));
 
-if (stateCol && r[stateCol]) {
-  const s = r[stateCol].toString().trim().toLowerCase();
+  let rows = [];
+  snapshot.forEach(d => {
+    rows.push(d.data());
+  });
 
-  if (s === 'active') {
-    active++;
-  } else {
-    inactive++;
-  }
+  const sectors = new Set();
+  const nodes = new Set();
+  let users = 0;
+  let active = 0;
+  let inactive = 0;
+
+  const userArea = {};
+  const nodeRegion = {};
+  const sectorArea = {};
+
+  rows.forEach(r => {
+
+    if (r["Sector Name"]) sectors.add(r["Sector Name"]);
+    if (r["Node"]) nodes.add(r["Node"]);
+    if (r["User Label"]) users++;
+
+    if (r["State"]) {
+      const s = r["State"].toString().trim().toLowerCase();
+      if (s === "active") active++;
+      else inactive++;
+    }
+
+    if (r["Area"] && r["User Label"]) {
+      userArea[r["Area"]] = (userArea[r["Area"]] || 0) + 1;
+    }
+
+    if (r["Region"] && r["Node"]) {
+      nodeRegion[r["Region"]] = (nodeRegion[r["Region"]] || 0) + 1;
+    }
+
+    if (r["Area"] && r["Sector Name"]) {
+      sectorArea[r["Area"]] = (sectorArea[r["Area"]] || 0) + 1;
+    }
+  });
+
+  // UPDATE CARD
+  document.getElementById('totalSector').textContent = sectors.size;
+  document.getElementById('totalNode').textContent = nodes.size;
+  document.getElementById('totalUser').textContent = users;
+  document.getElementById('activeCount').textContent = active;
+  document.getElementById('inactiveCount').textContent = inactive;
+
+  makePie('userAreaChart', userArea);
+  makePie('nodeRegionChart', nodeRegion);
+  makePie('sectorAreaChart', sectorArea);
 }
 
-
-      // USER PER AREA
-      if (areaCol && userCol && r[userCol]) {
-        const a = r[areaCol] || 'Unknown';
-        userArea[a] = (userArea[a] || 0) + 1;
-      }
-
-      // NODE PER REGION
-      if (regionCol && nodeCol && r[nodeCol]) {
-        const rg = r[regionCol] || 'Unknown';
-        nodeRegion[rg] = (nodeRegion[rg] || 0) + 1;
-      }
-
-      // SECTOR PER AREA
-      if (areaCol && sectorCol && r[sectorCol]) {
-        const a = r[areaCol] || 'Unknown';
-        sectorArea[a] = (sectorArea[a] || 0) + 1;
-      }
-    });
-
-    // OVERVIEW
-    document.getElementById('totalSector').textContent = sectors.size;
-    document.getElementById('totalNode').textContent = nodes.size;
-    document.getElementById('totalUser').textContent = users;
-    document.getElementById('activeCount').textContent = active;
-    document.getElementById('inactiveCount').textContent = inactive;
-
-    // PIE CHART FUNCTION
-    const makePie = (id, dataObj) => {
-      new Chart(document.getElementById(id), {
-        type: 'pie',
-        data: {
-          labels: Object.keys(dataObj),
-          datasets: [{
-            data: Object.values(dataObj)
-          }]
-        }
-      });
-    };
-
-    makePie('userAreaChart', userArea);
-    makePie('nodeRegionChart', nodeRegion);
-    makePie('sectorAreaChart', sectorArea);
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Gagal membaca data.csv');
+function makePie(id, dataObj) {
+  new Chart(document.getElementById(id), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(dataObj),
+      datasets: [{
+        data: Object.values(dataObj)
+      }]
+    }
   });
+}
+
+loadDashboard();
+
 </script>
+
 
 </body>
 </html>
