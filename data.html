@@ -91,10 +91,10 @@ table {
     <input type="file" id="importFile" accept=".csv">
 
     <!-- Refresh Icon -->
-    <button onclick="manualRefresh()" 
-            style="background:none;border:none;cursor:pointer;font-size:18px;">
-        🔄
-    </button>
+  <button id="btnRefresh"
+        style="background:none;border:none;cursor:pointer;font-size:18px;">
+    🔄
+</button>
 
 </div>
 <div class="table-wrapper">
@@ -152,7 +152,7 @@ let filtered = [];
 let editId = null;
 
 // ===== LOAD DATA =====
-async window.loadData = function() {
+async function.loadData() {
 
   const q = query(
     collection(db, "wibas"),
@@ -348,14 +348,16 @@ window.importCSV = function() {
   link.download = "data_wibas_export.csv";
   link.click();
 };
-window.manualRefresh = function() {
-  loadData();
-  console.log("Manual refresh dijalankan");
-};
+document.getElementById("btnRefresh")
+  .addEventListener("click", function() {
+      console.log("Manual refresh dijalankan");
+      loadData();
+});
 </script>
 
 </body>
 </html>
+
 
 
 
