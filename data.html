@@ -86,15 +86,18 @@ table {
 
 <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
 
-    <button onclick="exportCSV()">Export</button>
+     <button onclick="exportCSV()">Export</button>
 
     <input type="file" id="importFile" accept=".csv">
 
+    <button onclick="importCSV()">Import</button>
+
     <!-- Refresh Icon -->
-  <button id="btnRefresh"
-        style="background:none;border:none;cursor:pointer;font-size:18px;">
-    🔄
-</button>
+    <button id="btnRefresh"
+            style="background:none;border:none;cursor:pointer;font-size:18px;">
+        🔄
+    </button>
+
 
 </div>
 <div class="table-wrapper">
@@ -349,14 +352,20 @@ window.importCSV = function() {
   link.click();
 };
 document.getElementById("btnRefresh")
-  .addEventListener("click", function() {
+  .addEventListener("click", async function() {
+
       console.log("Manual refresh dijalankan");
-      loadData();
+
+      await loadData();
+
+      alert("Data berhasil direfresh");
+
 });
 </script>
 
 </body>
 </html>
+
 
 
 
