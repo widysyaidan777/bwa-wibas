@@ -184,66 +184,92 @@ async function loadDashboard() {
   const snapshot = await getDocs(collection(db, "wibas"));
 
   let rows = [];
-  snapshot.forEach(d => {
-    rows.push(d.data());
+  snapshot.forEach(d => rows.push(d.data()));
+
+  // ===== DECLARE ALL VARIABLES =====
+  const sectors = new Set();
+  const nodes = new Set();
+  let users = 0;
+
+  let nodeActive = 0;
+  let nodeInactive = 0;
+  let userActive = 0;
+  let userInactive = 0;
+
+  const userArea = {};
+  const nodeRegion = {};
+  const sectorArea = {};
+
+  const nodeStatusData = { Active: 0, Inactive: 0 };
+  const userStatusData = { Active: 0, Inactive: 0 };
+
+  // ===== LOOP DATA =====
+  rows.forEach(r => {
+
+    const sector = r["Sector Name"] || "";
+    const node = r["Node"] || "";
+    const user = r["User Label"] || "";
+    const state = (r["State"] || "").toString().trim().toLowerCase();
+    const area = r["Area"] || "";
+    const region = r["Region"] || "";
+
+    if (sector) sectors.add(sector);
+    if (node) nodes.add(node);
+    if (user) users++;
+
+    // NODE STATUS
+    if (node) {
+      if (state === "active") {
+        nodeActive++;
+        nodeStatusData.Active++;
+      } else {
+        nodeInactive++;
+        nodeStatusData.Inactive++;
+      }
+    }
+
+    // USER STATUS
+    if (user) {
+      if (state === "active") {
+        userActive++;
+        userStatusData.Active++;
+      } else {
+        userInactive++;
+        userStatusData.Inactive++;
+      }
+    }
+
+    // USER PER AREA
+    if (area && user) {
+      userArea[area] = (userArea[area] || 0) + 1;
+    }
+
+    // NODE PER REGION
+    if (region && node) {
+      nodeRegion[region] = (nodeRegion[region] || 0) + 1;
+    }
+
+    // SECTOR PER AREA
+    if (area && sector) {
+      sectorArea[area] = (sectorArea[area] || 0) + 1;
+    }
+
   });
 
-let nodeActive = 0;
-let nodeInactive = 0;
-let userActive = 0;
-let userInactive = 0;
+  // ===== UPDATE CARD =====
+  document.getElementById('nodeActive').textContent = nodeActive;
+  document.getElementById('nodeInactive').textContent = nodeInactive;
+  document.getElementById('userActive').textContent = userActive;
+  document.getElementById('userInactive').textContent = userInactive;
 
-rows.forEach(r => {
-
-  const sector = r["Sector Name"] || "";
-  const node = r["Node"] || "";
-  const user = r["User Label"] || "";
-  const state = (r["State"] || "").toString().trim().toLowerCase();
-
-  if (sector) sectors.add(sector);
-  if (node) nodes.add(node);
-  if (user) users++;
-
-  // === NODE STATUS ===
-  if (node) {
-    if (state === "active") {
-      nodeActive++;
-    } else if (state === "inactive" || 
-               state === "unreachable" || 
-               state === "dismantle") {
-      nodeInactive++;
-    }
-  }
-
-  // === USER STATUS ===
-  if (user) {
-    if (state === "active") {
-      userActive++;
-    } else if (state === "inactive" || 
-               state === "unreachable" || 
-               state === "dismantle") {
-      userInactive++;
-    }
-  }
-});
-  
-  // UPDATE CARD
-document.getElementById('totalSector').textContent = sectors.size;
-document.getElementById('totalNode').textContent = nodes.size;
-document.getElementById('totalUser').textContent = users;
-
-document.getElementById('nodeActive').textContent = nodeActive;
-document.getElementById('nodeInactive').textContent = nodeInactive;
-
-document.getElementById('userActive').textContent = userActive;
-document.getElementById('userInactive').textContent = userInactive;
-
+  // ===== MAKE CHART =====
   makePie('userAreaChart', userArea);
   makePie('nodeRegionChart', nodeRegion);
   makePie('sectorAreaChart', sectorArea);
   makePie('nodeStatusChart', nodeStatusData);
-makePie('userStatusChart', userStatusData);
+  makePie('userStatusChart', userStatusData);
 }
+  
 function makePie(id, dataObj) {
   new Chart(document.getElementById(id), {
     type: 'pie',
