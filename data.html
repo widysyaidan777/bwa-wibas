@@ -160,12 +160,29 @@ function render() {
 
   filtered.forEach(row => {
     const tr = document.createElement("tr");
+    
+columns.forEach(h => {
+  const td = document.createElement("td");
+  td.textContent = row[h] || "";
 
-    columns.forEach(h => {
-      const td = document.createElement("td");
-      td.textContent = row[h] || "";
-      tr.appendChild(td);
-    });
+  if (h === "State") {
+    const value = (row[h] || "").toLowerCase();
+    if (value.includes("inactive") || value.includes("dismantle")) {
+      td.style.color = "red";
+      td.style.fontWeight = "bold";
+    }
+  }
+
+  if (h === "Connectivity") {
+    const value = (row[h] || "").toLowerCase();
+    if (value.includes("unreachable")) {
+      td.style.color = "red";
+      td.style.fontWeight = "bold";
+    }
+  }
+
+  tr.appendChild(td);
+});
 
     const actionTd = document.createElement("td");
 
@@ -273,5 +290,6 @@ window.importCSV = function() {
 
 </body>
 </html>
+
 
 
