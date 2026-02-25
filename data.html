@@ -88,7 +88,9 @@ table {
 <button onclick="importCSV()">Import CSV</button>
 <button onclick="exportCSV()">Export CSV</button>
 </div>
-
+<div id="refreshInfo" 
+     style="font-size:12px;color:gray;text-align:right;margin-bottom:8px;">
+</div>
 <div class="table-wrapper">
   <table>
     <thead><tr id="thead"></tr></thead>
@@ -340,21 +342,21 @@ window.importCSV = function() {
   link.download = "data_wibas_export.csv";
   link.click();
 };
-  // ===== AUTO REFRESH TIAP 10 DETIK =====
+// ===== AUTO REFRESH TIAP 10 DETIK =====
 setInterval(() => {
   const modal = document.getElementById("modal");
 
-  // Jangan refresh kalau modal sedang terbuka
+  // Jangan refresh kalau modal terbuka
   if (!modal || modal.style.display !== "block") {
     loadData();
-    console.log("Auto refresh jalan...");
+    console.log("REFRESH:", new Date().toLocaleTimeString());
   }
-
-}, 10000); // 10 detik
+}, 10000);
 </script>
 
 </body>
 </html>
+
 
 
 
