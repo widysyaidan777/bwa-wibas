@@ -106,25 +106,24 @@ footer {
   <!-- OVERVIEW -->
   <div class="cards">
     <div class="card">
-      <h2 id="totalSector">0</h2>
-      <p>Total Sector</p>
-    </div>
-    <div class="card">
-      <h2 id="totalNode">0</h2>
-      <p>Total Node</p>
-    </div>
-    <div class="card">
-      <h2 id="totalUser">0</h2>
-      <p>Total User</p>
-    </div>
-    <div class="card">
-      <h2 id="activeCount">0</h2>
-      <p>Status Active</p>
-    </div>
-    <div class="card">
-      <h2 id="inactiveCount">0</h2>
-      <p>Status Inactive</p>
-    </div>
+  <h2 id="nodeActive">0</h2>
+  <p>Node Active</p>
+</div>
+
+<div class="card">
+  <h2 id="nodeInactive">0</h2>
+  <p>Node Inactive</p>
+</div>
+
+<div class="card">
+  <h2 id="userActive">0</h2>
+  <p>User Active</p>
+</div>
+
+<div class="card">
+  <h2 id="userInactive">0</h2>
+  <p>User Inactive</p>
+</div>
   </div>
 
   <!-- CHARTS -->
@@ -143,6 +142,15 @@ footer {
       <h3>Sector per Area</h3>
       <canvas id="sectorAreaChart"></canvas>
     </div>
+    <div class="chart-box">
+  <h3>Node Status</h3>
+  <canvas id="nodeStatusChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>User Status</h3>
+  <canvas id="userStatusChart"></canvas>
+</div>
   </div>
 
 </div>
@@ -180,60 +188,77 @@ async function loadDashboard() {
     rows.push(d.data());
   });
 
-  const sectors = new Set();
-  const nodes = new Set();
-  let users = 0;
-  let active = 0;
-  let inactive = 0;
+let nodeActive = 0;
+let nodeInactive = 0;
+let userActive = 0;
+let userInactive = 0;
 
-  const userArea = {};
-  const nodeRegion = {};
-  const sectorArea = {};
+rows.forEach(r => {
 
-  rows.forEach(r => {
+  const sector = r["Sector Name"] || "";
+  const node = r["Node"] || "";
+  const user = r["User Label"] || "";
+  const state = (r["State"] || "").toString().trim().toLowerCase();
 
-    if (r["Sector Name"]) sectors.add(r["Sector Name"]);
-    if (r["Node"]) nodes.add(r["Node"]);
-    if (r["User Label"]) users++;
+  if (sector) sectors.add(sector);
+  if (node) nodes.add(node);
+  if (user) users++;
 
-    if (r["State"]) {
-      const s = r["State"].toString().trim().toLowerCase();
-      if (s === "active") active++;
-      else inactive++;
+  // === NODE STATUS ===
+  if (node) {
+    if (state === "active") {
+      nodeActive++;
+    } else if (state === "inactive" || 
+               state === "unreachable" || 
+               state === "dismantle") {
+      nodeInactive++;
     }
+  }
 
-    if (r["Area"] && r["User Label"]) {
-      userArea[r["Area"]] = (userArea[r["Area"]] || 0) + 1;
+  // === USER STATUS ===
+  if (user) {
+    if (state === "active") {
+      userActive++;
+    } else if (state === "inactive" || 
+               state === "unreachable" || 
+               state === "dismantle") {
+      userInactive++;
     }
-
-    if (r["Region"] && r["Node"]) {
-      nodeRegion[r["Region"]] = (nodeRegion[r["Region"]] || 0) + 1;
-    }
-
-    if (r["Area"] && r["Sector Name"]) {
-      sectorArea[r["Area"]] = (sectorArea[r["Area"]] || 0) + 1;
-    }
-  });
-
+  }
+});
+  
   // UPDATE CARD
-  document.getElementById('totalSector').textContent = sectors.size;
-  document.getElementById('totalNode').textContent = nodes.size;
-  document.getElementById('totalUser').textContent = users;
-  document.getElementById('activeCount').textContent = active;
-  document.getElementById('inactiveCount').textContent = inactive;
+document.getElementById('totalSector').textContent = sectors.size;
+document.getElementById('totalNode').textContent = nodes.size;
+document.getElementById('totalUser').textContent = users;
+
+document.getElementById('nodeActive').textContent = nodeActive;
+document.getElementById('nodeInactive').textContent = nodeInactive;
+
+document.getElementById('userActive').textContent = userActive;
+document.getElementById('userInactive').textContent = userInactive;
 
   makePie('userAreaChart', userArea);
   makePie('nodeRegionChart', nodeRegion);
   makePie('sectorAreaChart', sectorArea);
+  makePie('nodeStatusChart', nodeStatusData);
+makePie('userStatusChart', userStatusData);
 }
-
 function makePie(id, dataObj) {
   new Chart(document.getElementById(id), {
     type: 'pie',
     data: {
       labels: Object.keys(dataObj),
       datasets: [{
-        data: Object.values(dataObj)
+        data: Object.values(dataObj),
+        backgroundColor: [
+          '#16a34a', // hijau
+          '#dc2626', // merah
+          '#f59e0b',
+          '#3b82f6',
+          '#8b5cf6',
+          '#f97316'
+        ]
       }]
     }
   });
