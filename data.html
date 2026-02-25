@@ -91,7 +91,7 @@ import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import { getFirestore, collection, getDocs, addDoc, 
-updateDoc, deleteDoc, doc } from 
+updateDoc, deleteDoc, doc, query, orderBy } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -121,11 +121,19 @@ let editId = null;
 
 // ===== LOAD DATA =====
 async function loadData() {
-  const snapshot = await getDocs(collection(db, "wibas"));
+
+  const q = query(
+    collection(db, "wibas"),
+    orderBy("No", "asc")
+  );
+
+  const snapshot = await getDocs(q);
+
   data = [];
   snapshot.forEach(d => {
     data.push({ id: d.id, ...d.data() });
   });
+
   filtered = [...data];
   render();
 }
@@ -244,11 +252,17 @@ window.importCSV = function() {
     skipEmptyLines: true,
     complete: async function(results) {
 
-      const rows = results.data;
+  const rows = results.data;
 
-      for (let row of rows) {
-        await addDoc(collection(db, "wibas"), row);
-      }
+  for (let row of rows) {
+
+  // Ubah No jadi number supaya bisa di-sort dengan benar
+  if (row["No"]) {
+    row["No"] = Number(row["No"]);
+  }
+
+  await addDoc(collection(db, "wibas"), row);
+}
 
       alert("Import selesai! Data sudah permanen.");
       loadData();
@@ -259,4 +273,5 @@ window.importCSV = function() {
 
 </body>
 </html>
+
 
