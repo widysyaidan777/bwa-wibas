@@ -12,13 +12,15 @@
       font-family: Arial, sans-serif;
       background: #f4f6f8;
     }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
 header, nav {
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-  width: 100vw;
+  width: 100%;
 }
 
 header {
@@ -37,14 +39,12 @@ nav {
       margin-right: 20px;
       font-weight: bold;
     }
-
-    .container {
-      padding: 24px;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-
+    
+   .container {
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
     input {
       padding: 10px;
       width: 100%;
@@ -55,12 +55,18 @@ nav {
       border-radius: 4px;
     }
 
-    table {
-      width: 100%;
-      table-layout: auto;
-      border-collapse: collapse;
-      background: white;
-    }
+   table {
+  width: 100%;
+  min-width: 1600px;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: white;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
 
     th, td {
       padding: 10px;
@@ -123,12 +129,12 @@ nav {
     <button onclick="exportToExcel()">Export ke Excel</button>
   </div>
 
+  <div class="table-wrapper">
   <table>
-    <thead>
-      <tr id="thead"></tr>
-    </thead>
+    <thead><tr id="thead"></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
+</div>
 
   <div class="pagination" id="pagination"></div>
 </div>
