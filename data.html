@@ -11,15 +11,38 @@ header { background:#0f172a; color:white; padding:16px; }
 nav { background:#1e293b; padding:10px; }
 nav a { color:white; margin-right:15px; text-decoration:none; }
 .container { padding:20px; }
-table { width:100%; border-collapse:collapse; background:white; }
-th, td { padding:8px; border:1px solid #ddd; }
-th { background:#f1f5f9; cursor:pointer; }
+table { width:100%; border-collapse:collapse; background:white; font-size:12px; }
+th, td { padding:6px; border:1px solid #ddd; }
+th { background:#f1f5f9; }
 button { padding:6px 10px; cursor:pointer; }
 .toolbar { margin-bottom:10px; }
-input { padding:6px; }
+input { padding:6px; margin:3px; width:180px; }
 .edit-btn { background:#2563eb; color:white; }
 .delete-btn { background:#dc2626; color:white; }
-.add-btn { background:#16a34a; color:white; margin-bottom:10px; }
+.add-btn { background:#16a34a; color:white; }
+
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  overflow:auto;
+}
+
+.modal-content {
+  background:white;
+  padding:20px;
+  margin:50px auto;
+  width:90%;
+  max-width:900px;
+}
+
+.close {
+  float:right;
+  cursor:pointer;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -38,21 +61,28 @@ input { padding:6px; }
 
 <div class="toolbar">
 <input id="search" placeholder="Search...">
-<button class="add-btn" onclick="addData()">Tambah Data</button>
+<button class="add-btn" onclick="openModal()">Tambah Data</button>
 </div>
 
 <table>
-<thead>
-<tr id="thead"></tr>
-</thead>
+<thead><tr id="thead"></tr></thead>
 <tbody id="tbody"></tbody>
 </table>
 
 </div>
 
+<!-- MODAL FORM -->
+<div id="modal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">X</span>
+<h3 id="formTitle">Tambah Data</h3>
+<div id="formFields"></div>
+<button onclick="saveData()">Save</button>
+</div>
+</div>
+
 <script type="module">
 
-// ================= FIREBASE CONFIG =================
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
@@ -72,11 +102,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ================= DATA =================
+// ===== KOLOM TETAP SESUAI CSV =====
+const columns = [
+"No","Region","Area","Node","Sector Name","ME",
+"User Label","Total Terminal","SW Version",
+"MAC Adress","Resource Type","Contact","Location",
+"Latitude","Longitude","Connectivity","State",
+"Distance (m)","Bandwidth","Service Remote"
+];
+
 let data = [];
 let filtered = [];
+let editId = null;
 
-// ================= LOAD DATA =================
+// ===== LOAD DATA =====
 async function loadData() {
   const snapshot = await getDocs(collection(db, "wibas"));
   data = [];
@@ -89,18 +128,15 @@ async function loadData() {
 
 loadData();
 
-// ================= RENDER =================
+// ===== RENDER TABLE =====
 function render() {
-  if (!filtered.length) return;
-
-  const headers = Object.keys(filtered[0]).filter(h => h !== "id");
   const thead = document.getElementById("thead");
   const tbody = document.getElementById("tbody");
 
   thead.innerHTML = "";
   tbody.innerHTML = "";
 
-  headers.forEach(h => {
+  columns.forEach(h => {
     const th = document.createElement("th");
     th.textContent = h;
     thead.appendChild(th);
@@ -113,9 +149,9 @@ function render() {
   filtered.forEach(row => {
     const tr = document.createElement("tr");
 
-    headers.forEach(h => {
+    columns.forEach(h => {
       const td = document.createElement("td");
-      td.textContent = row[h];
+      td.textContent = row[h] || "";
       tr.appendChild(td);
     });
 
@@ -124,22 +160,26 @@ function render() {
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit";
     editBtn.className = "edit-btn";
-    editBtn.onclick = () => editData(row);
+    editBtn.onclick = () => openModal(row);
 
     const delBtn = document.createElement("button");
     delBtn.textContent = "Delete";
     delBtn.className = "delete-btn";
-    delBtn.onclick = () => deleteData(row.id);
+    delBtn.onclick = async () => {
+      if(confirm("Yakin hapus?")){
+        await deleteDoc(doc(db,"wibas",row.id));
+        loadData();
+      }
+    };
 
     actionTd.appendChild(editBtn);
     actionTd.appendChild(delBtn);
-
     tr.appendChild(actionTd);
     tbody.appendChild(tr);
   });
 }
 
-// ================= SEARCH =================
+// ===== SEARCH =====
 document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.toLowerCase();
   filtered = data.filter(row =>
@@ -148,42 +188,43 @@ document.getElementById("search").addEventListener("input", e => {
   render();
 });
 
-// ================= ADD =================
-async function addData() {
-  const name = prompt("Nama Site:");
-  const state = prompt("State:");
-  const terminal = prompt("Total Terminal:");
+// ===== MODAL =====
+window.openModal = function(row=null){
+  document.getElementById("modal").style.display="block";
+  const form = document.getElementById("formFields");
+  form.innerHTML="";
+  editId = null;
 
-  if (!name) return;
-
-  await addDoc(collection(db, "wibas"), {
-    "Site Name": name,
-    "State": state || "",
-    "Total Terminal": terminal || ""
+  columns.forEach(col=>{
+    const input = document.createElement("input");
+    input.placeholder = col;
+    input.id = col;
+    if(row) input.value = row[col] || "";
+    form.appendChild(input);
   });
 
-  loadData();
+  if(row) editId = row.id;
 }
 
-// ================= EDIT =================
-async function editData(row) {
-  const name = prompt("Nama Site:", row["Site Name"]);
-  const state = prompt("State:", row["State"]);
-  const terminal = prompt("Total Terminal:", row["Total Terminal"]);
+window.closeModal = function(){
+  document.getElementById("modal").style.display="none";
+}
 
-  await updateDoc(doc(db, "wibas", row.id), {
-    "Site Name": name,
-    "State": state,
-    "Total Terminal": terminal
+// ===== SAVE =====
+window.saveData = async function(){
+
+  let obj = {};
+  columns.forEach(col=>{
+    obj[col] = document.getElementById(col).value;
   });
 
-  loadData();
-}
+  if(editId){
+    await updateDoc(doc(db,"wibas",editId),obj);
+  } else {
+    await addDoc(collection(db,"wibas"),obj);
+  }
 
-// ================= DELETE =================
-async function deleteData(id) {
-  if (!confirm("Yakin hapus data?")) return;
-  await deleteDoc(doc(db, "wibas", id));
+  closeModal();
   loadData();
 }
 
