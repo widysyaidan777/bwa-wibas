@@ -65,6 +65,7 @@ input { padding:6px; margin:3px; width:180px; }
 
 <input type="file" id="csvFile" accept=".csv">
 <button onclick="importCSV()">Import CSV</button>
+<button onclick="exportCSV()">Export CSV</button>
 </div>
 
 <table>
@@ -286,10 +287,41 @@ window.importCSV = function() {
     }
   });
 };
+  
+  window.exportCSV = function() {
+
+  if (!filtered.length) {
+    alert("Tidak ada data untuk di-export");
+    return;
+  }
+
+  let csvContent = "";
+
+  // Header
+  csvContent += columns.join(",") + "\n";
+
+  // Data
+  filtered.forEach(row => {
+    let rowData = columns.map(col => {
+      let value = row[col] || "";
+      return `"${value}"`; // pakai tanda kutip supaya aman
+    });
+    csvContent += rowData.join(",") + "\n";
+  });
+
+  // Buat file
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+  link.download = "data_wibas_export.csv";
+  link.click();
+};
 </script>
 
 </body>
 </html>
+
 
 
 
