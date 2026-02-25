@@ -289,8 +289,7 @@ window.saveData = async function(){
   loadData();
 }
 window.importCSV = function() {
-
-  const file = document.getElementById("csvFile").files[0];
+  const file = document.getElementById("importFile").files[0]; // sesuai ID input
   if (!file) {
     alert("Pilih file CSV dulu!");
     return;
@@ -301,17 +300,15 @@ window.importCSV = function() {
     skipEmptyLines: true,
     complete: async function(results) {
 
-  const rows = results.data;
+      const rows = results.data;
 
-  for (let row of rows) {
-
-  // Ubah No jadi number supaya bisa di-sort dengan benar
-  if (row["No"]) {
-    row["No"] = Number(row["No"]);
-  }
-
-  await addDoc(collection(db, "wibas"), row);
-}
+      for (let row of rows) {
+        // Ubah No jadi number supaya bisa di-sort dengan benar
+        if (row["No"]) {
+          row["No"] = Number(row["No"]);
+        }
+        await addDoc(collection(db, "wibas"), row);
+      }
 
       alert("Import selesai! Data sudah permanen.");
       loadData();
@@ -362,6 +359,7 @@ document.getElementById("btnRefresh")
 
 </body>
 </html>
+
 
 
 
