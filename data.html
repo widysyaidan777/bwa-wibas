@@ -6,339 +6,188 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-{
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  width: 100%;
-}
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
-
-header {
-  width: 100vw;
-  background: linear-gradient(90deg, #0f172a, #020617);
-  color: white;
-  padding: 16px 24px;
-}
-
-nav {
-  width: 100vw;
-  background: #1e293b;
-  padding: 10px 24px;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  margin-right: 20px;
-  font-weight: bold;
-}
-
-.container {
-  padding: 24px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.toolbar input {
-  padding: 10px;
-  width: 300px;
-}
-
-.toolbar select {
-  padding: 10px;
-}
-
-.toolbar button {
-  padding: 10px 14px;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-th, td {
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  text-align: left;
-}
-
-th {
-  background: #f1f5f9;
-  cursor: pointer;
-}
-
-.pagination {
-  margin-top: 15px;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  margin-right: 4px;
-}
-
-.status-active {
-  color: #16a34a;
-  font-weight: bold;
-}
-
-.status-inactive {
-  color: #dc2626;
-  font-weight: bold;
-}
-
-.status-nonts {
-  background: #dcfce7;
-}
-
-footer {
-  margin-top: 30px;
-  padding: 16px;
-  text-align: center;
-  background: #020617;
-  color: white;
-}
+body { font-family: Arial; margin:0; background:#f4f6f8; }
+header { background:#0f172a; color:white; padding:16px; }
+nav { background:#1e293b; padding:10px; }
+nav a { color:white; margin-right:15px; text-decoration:none; }
+.container { padding:20px; }
+table { width:100%; border-collapse:collapse; background:white; }
+th, td { padding:8px; border:1px solid #ddd; }
+th { background:#f1f5f9; cursor:pointer; }
+button { padding:6px 10px; cursor:pointer; }
+.toolbar { margin-bottom:10px; }
+input { padding:6px; }
+.edit-btn { background:#2563eb; color:white; }
+.delete-btn { background:#dc2626; color:white; }
+.add-btn { background:#16a34a; color:white; margin-bottom:10px; }
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>Data BWA WiBAS</h1>
-  <p>Lintasarta</p>
+<h2>Data BWA WiBAS</h2>
 </header>
 
 <nav>
-  <a href="index.html">Profil</a>
-  <a href="data.html">Data WiBAS</a>
-  <a href="cambium.html">Data Cambium</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="biumca.html">Cambium</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
-  </nav>
+<a href="index.html">Profil</a>
+<a href="data.html">Data WiBAS</a>
+</nav>
 
 <div class="container">
 
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <input id="search" placeholder="Search data...">
+<div class="toolbar">
+<input id="search" placeholder="Search...">
+<button class="add-btn" onclick="addData()">Tambah Data</button>
+</div>
 
-    <select id="rowsSelect">
-      <option value="5">5</option>
-      <option value="20" selected>20</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-      <option value="0">All</option>
-    </select>
-
-    <button onclick="downloadCSV()">Ekspor ke Excel</button>
-  </div>
-
-  <!-- TABLE -->
-  <table>
-    <thead>
-      <tr id="thead"></tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-
-  <!-- PAGINATION -->
-  <div class="pagination" id="pagination"></div>
+<table>
+<thead>
+<tr id="thead"></tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
 
 </div>
 
-<footer>
-  © 2026 BWA WiBAS – Lintasarta
-</footer>
+<script type="module">
 
-<script>
-const csvFile = 'data.csv';
+// ================= FIREBASE CONFIG =================
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { getFirestore, collection, getDocs, addDoc, 
+updateDoc, deleteDoc, doc } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
+  authDomain: "dashboard-bwa.firebaseapp.com",
+  projectId: "dashboard-bwa",
+  storageBucket: "dashboard-bwa.firebasestorage.app",
+  messagingSenderId: "1066238404578",
+  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ================= DATA =================
 let data = [];
 let filtered = [];
-let page = 1;
-let rowsPerPage = 20;
-let sortKey = '';
-let sortAsc = true;
 
-// ================= FETCH CSV =================
-fetch(csvFile)
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.trim().split(/\r?\n/);
-    const delimiter = lines[0].includes(';') ? ';' : ',';
-    const headers = lines[0].split(delimiter).map(h => h.trim());
-
-    data = lines.slice(1).map(line => {
-      const values = line.split(delimiter);
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
-      return obj;
-    });
-
-    filtered = [...data];
-    render();
+// ================= LOAD DATA =================
+async function loadData() {
+  const snapshot = await getDocs(collection(db, "wibas"));
+  data = [];
+  snapshot.forEach(d => {
+    data.push({ id: d.id, ...d.data() });
   });
-
-// ================= SEARCH =================
-document.getElementById('search').addEventListener('input', e => {
-  const q = e.target.value.toLowerCase();
-  filtered = data.filter(row =>
-    Object.values(row).join(' ').toLowerCase().includes(q)
-  );
-  page = 1;
+  filtered = [...data];
   render();
-});
+}
 
-// ================= ROW SELECT =================
-document.getElementById('rowsSelect').addEventListener('change', e => {
-  rowsPerPage = Number(e.target.value);
-  page = 1;
-  render();
-});
+loadData();
 
 // ================= RENDER =================
 function render() {
   if (!filtered.length) return;
 
-  const headers = Object.keys(filtered[0]);
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
+  const headers = Object.keys(filtered[0]).filter(h => h !== "id");
+  const thead = document.getElementById("thead");
+  const tbody = document.getElementById("tbody");
 
-  thead.innerHTML = '';
-  tbody.innerHTML = '';
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
 
   headers.forEach(h => {
-    const th = document.createElement('th');
+    const th = document.createElement("th");
     th.textContent = h;
-    th.onclick = () => sort(h);
     thead.appendChild(th);
   });
 
-  const start = rowsPerPage === 0 ? 0 : (page - 1) * rowsPerPage;
-  const end = rowsPerPage === 0 ? filtered.length : start + rowsPerPage;
-  const slice = filtered.slice(start, end);
+  const thAction = document.createElement("th");
+  thAction.textContent = "Action";
+  thead.appendChild(thAction);
 
-  slice.forEach(row => {
-    const tr = document.createElement('tr');
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
 
     headers.forEach(h => {
-      const td = document.createElement('td');
+      const td = document.createElement("td");
       td.textContent = row[h];
       tr.appendChild(td);
     });
 
-    applyRowStyle(tr, row);
+    const actionTd = document.createElement("td");
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.className = "edit-btn";
+    editBtn.onclick = () => editData(row);
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Delete";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => deleteData(row.id);
+
+    actionTd.appendChild(editBtn);
+    actionTd.appendChild(delBtn);
+
+    tr.appendChild(actionTd);
     tbody.appendChild(tr);
   });
-
-  pagination();
 }
 
-// ================= SORT =================
-function sort(key) {
-  sortAsc = sortKey === key ? !sortAsc : true;
-  sortKey = key;
-
-  filtered.sort((a, b) =>
-    (a[key] > b[key] ? 1 : -1) * (sortAsc ? 1 : -1)
+// ================= SEARCH =================
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  filtered = data.filter(row =>
+    Object.values(row).join(" ").toLowerCase().includes(q)
   );
   render();
+});
+
+// ================= ADD =================
+async function addData() {
+  const name = prompt("Nama Site:");
+  const state = prompt("State:");
+  const terminal = prompt("Total Terminal:");
+
+  if (!name) return;
+
+  await addDoc(collection(db, "wibas"), {
+    "Site Name": name,
+    "State": state || "",
+    "Total Terminal": terminal || ""
+  });
+
+  loadData();
 }
 
-// ================= PAGINATION =================
-function pagination() {
-  const p = document.getElementById('pagination');
-  p.innerHTML = '';
+// ================= EDIT =================
+async function editData(row) {
+  const name = prompt("Nama Site:", row["Site Name"]);
+  const state = prompt("State:", row["State"]);
+  const terminal = prompt("Total Terminal:", row["Total Terminal"]);
 
-  if (rowsPerPage === 0) return;
+  await updateDoc(doc(db, "wibas", row.id), {
+    "Site Name": name,
+    "State": state,
+    "Total Terminal": terminal
+  });
 
-  const totalPages = Math.ceil(filtered.length / rowsPerPage);
-
-  const prev = document.createElement('button');
-  prev.textContent = '« Prev';
-  prev.disabled = page === 1;
-  prev.onclick = () => { page--; render(); };
-  p.appendChild(prev);
-
-  for (let i = 1; i <= totalPages; i++) {
-    if (i > page + 2 || i < page - 2) continue;
-    const b = document.createElement('button');
-    b.textContent = i;
-    if (i === page) {
-      b.style.fontWeight = 'bold';
-      b.style.background = '#1e293b';
-      b.style.color = 'white';
-    }
-    b.onclick = () => { page = i; render(); };
-    p.appendChild(b);
-  }
-
-  const next = document.createElement('button');
-  next.textContent = 'Next »';
-  next.disabled = page === totalPages;
-  next.onclick = () => { page++; render(); };
-  p.appendChild(next);
+  loadData();
 }
 
-// ================= ROW STYLE =================
-function applyRowStyle(tr, row) {
-  const status = (row['State'] || row['Status'] || '').toLowerCase();
-  const terminal = (row['Total Terminal'] || '').toLowerCase();
-
-  if (status === 'active') {
-    tr.classList.add('status-active');
-  }
-
-  if (status === 'inactive' || status === 'dismantle') {
-    tr.classList.add('status-inactive');
-  }
-
-  if (terminal.includes('non')) {
-    tr.classList.add('status-nonts');
-  }
+// ================= DELETE =================
+async function deleteData(id) {
+  if (!confirm("Yakin hapus data?")) return;
+  await deleteDoc(doc(db, "wibas", id));
+  loadData();
 }
 
-// ================= EXPORT CSV =================
-function downloadCSV() {
-  if (!filtered.length) return;
-
-  const headers = Object.keys(filtered[0]);
-  const rows = filtered.map(row =>
-    headers.map(h => `"${row[h]}"`).join(',')
-  );
-
-  const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'wibas.csv';
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
 </script>
 
 </body>
 </html>
-
-
