@@ -8,10 +8,11 @@
 
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-    }
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  overflow-x: hidden;   /* 🔥 penting supaya header tidak ikut geser */
+}
 html, body {
   margin: 0;
   padding: 0;
@@ -90,16 +91,14 @@ nav {
 }
 
    table {
-  width: 100%;
-  min-width: 1600px;
+  width: max-content;
   table-layout: auto;
   border-collapse: collapse;
   background: white;
 }
-
 .table-wrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: auto;   /* scroll hanya di tabel */
 }
 
     th, td {
