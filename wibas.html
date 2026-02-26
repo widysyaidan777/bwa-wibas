@@ -83,6 +83,35 @@ footer {
   background: #020617;
   color: white;
 }
+    /* ===== STATISTIC CARD STYLE ===== */
+
+.stat-card {
+  min-width: 450px;
+  height: 450px;
+  background: white;
+  border: 2px solid #0f172a;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 20px;
+}
+
+.stat-card canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+  .chart-box {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #0f172a;   /* border lebih tegas */
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  height: 450px;              /* lebih besar */
+}
+
+.chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
 </style>
 </head>
 
@@ -143,21 +172,6 @@ footer {
 
   <!-- CHARTS -->
   <div class="charts">
-    <div class="chart-box">
-  <h3>Node Status</h3>
-  <canvas id="nodeStatusChart"></canvas>
-</div>
-
-<div class="chart-box">
-  <h3>User Status</h3>
-  <canvas id="userStatusChart"></canvas>
-</div>
-    <div class="chart-box">
-  <h3>Sector Status</h3>
-  <canvas id="sectorStatusChart"></canvas>
-</div>
-    <!-- ================= STATUS DETAIL ================= -->
-
 <div class="chart-box">
   <h3>User per Area - Active</h3>
   <canvas id="userAreaActiveChart"></canvas>
@@ -350,22 +364,18 @@ function makePie(id, dataObj, type = "default") {
   let colors = [];
 
   if (type === "status") {
-    // Khusus Active / Inactive
     colors = labels.map(l => {
-      if (l.toLowerCase() === "active") return "#16a34a";   // hijau
-      if (l.toLowerCase() === "inactive") return "#dc2626"; // merah
+      if (l.toLowerCase() === "active") return "#16a34a";
+      if (l.toLowerCase() === "inactive") return "#dc2626";
       return "#94a3b8";
     });
   } else {
-
-    // 🎨 AUTO GENERATE UNIQUE COLORS
     const total = labels.length;
 
     colors = labels.map((_, i) => {
-      const hue = Math.floor((360 / total) * i); 
+      const hue = Math.floor((360 / total) * i);
       return `hsl(${hue}, 70%, 55%)`;
     });
-
   }
 
   new Chart(document.getElementById(id), {
@@ -376,11 +386,24 @@ function makePie(id, dataObj, type = "default") {
         data: Object.values(dataObj),
         backgroundColor: colors
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'left',
+          labels: {
+            boxWidth: 14,
+            padding: 12,
+            font: { size: 12 }
+          }
+        }
+      }
     }
   });
 }
 loadDashboard();
-
 </script>
 
 
