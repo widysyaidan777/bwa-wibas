@@ -115,6 +115,14 @@ th{background:#020617}
   border-radius:4px;
   font-size:12px;
 }
+  #coords{
+  background:#020617;
+  border-top:1px solid #334155;
+  padding:6px 12px;
+  font-size:13px;
+  color:#22c55e;
+  font-family:monospace;
+}
 </style>
 </head>
 
@@ -174,8 +182,9 @@ th{background:#020617}
 
 <!-- MAIN -->
 <div id="main">
-  <div id="map"></div>
-  <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
+<div id="map"></div>
+<div id="coords">Lat: - | Lng: -</div>
+<div id="toggle" onclick="toggleTable()">▲ / ▼</div>
   <div id="node-section">
     <table>
       <thead>
@@ -197,12 +206,41 @@ function toggleSubmenu(region){
 /* ================= MAP ================= */
 const map = L.map('map').setView([-6.9,110.5],5);
 
-L.tileLayer(
+/* ===== GOOGLE SATELLITE ONLY ===== */
+const googleSat = L.tileLayer(
+  'https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+  {
+    maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3']
+  }
+);
+
+/* ===== GOOGLE HYBRID (Satellite + Jalan) ===== */
+const googleHybrid = L.tileLayer(
   'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
   {
     maxZoom: 20,
     subdomains:['mt0','mt1','mt2','mt3']
   }
+);
+
+/* ===== OSM (Cadangan) ===== */
+const osm = L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+);
+
+/* Default Map */
+googleHybrid.addTo(map);
+
+/* Layer Control */
+L.control.layers(
+  {
+    "Hybrid (Satellite + Jalan)": googleHybrid,
+    "Satellite Only": googleSat,
+    "OSM Map": osm
+  },
+  null,
+  { position: 'topright' }
 ).addTo(map);
 /* ================= RULER (FINAL BENAR) ================= */
 let rulerActive=false;
@@ -430,6 +468,14 @@ function toggleTable(){ document.getElementById('node-section').classList.toggle
 function backToMenu(){ window.location.href="index.html"; }
 
 showAll();
+
+  map.on('mousemove', function(e){
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+
+  document.getElementById('coords').innerHTML =
+    `Lat: ${lat} | Lng: ${lng}`;
+});
 </script>
 </body>
 </html>
