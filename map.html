@@ -197,30 +197,40 @@ function toggleSubmenu(region){
 /* ================= MAP ================= */
 const map = L.map('map').setView([-6.9,110.5],5);
 
-/* ===== BASE MAPS ===== */
+/* ===== OSM ===== */
 const osm = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   { attribution: '© OpenStreetMap' }
 );
 
+/* ===== SATELLITE ===== */
 const satellite = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   { attribution: 'Tiles © Esri' }
 );
 
-/* Default layer */
-osm.addTo(map);
+/* ===== LABELS (Nama Jalan & Kota) ===== */
+const labels = L.tileLayer(
+  'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+  { attribution: 'Labels © Esri' }
+);
 
-/* Layer Switch Control */
+/* ===== HYBRID (Satellite + Labels) ===== */
+const hybrid = L.layerGroup([satellite, labels]);
+
+/* Default Map */
+hybrid.addTo(map);
+
+/* Switch Control */
 L.control.layers(
   {
-    "OSM Map": osm,
-    "Satellite (Hybrid)": satellite
+    "Hybrid (Satelit + Jalan)": hybrid,
+    "Satellite Only": satellite,
+    "OSM Map": osm
   },
   null,
   { position: 'topright' }
 ).addTo(map);
-
 /* ================= RULER (FINAL BENAR) ================= */
 let rulerActive=false;
 let rulerPoints=[]; let rulerLine=null; let rulerMarkers=[]; let rulerLabel=null;
