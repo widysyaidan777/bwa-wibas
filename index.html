@@ -9,13 +9,13 @@
 body {
   font-family: Arial, sans-serif;
   margin: 0;
-  background: #ffffff; /* background putih menyatu */
+  background: #ffffff; /* background putih */
   color: #000000; /* font hitam */
 }
 
 /* Navbar */
 nav {
-  background: #ffffff; /* navbar menyatu putih */
+  background: #ffffff;
   padding: 12px 20px;
   display: flex;
   gap: 20px;
@@ -34,78 +34,61 @@ nav a {
 
 nav a:hover { color: #2563eb; }
 
-/* Header Banner */
-.profile-header {
-  width: 100%;
-  max-height: 300px;
-  overflow: hidden;
-}
-
-.profile-header img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-/* Logo & Running Text */
-.wibas-slider-container {
-  text-align: center;
-  margin: -70px auto 20px;
-}
-
-.wibas-slider-container img {
-  max-width: 200px;
-  height: auto;
-}
-
-.wibas-caption {
-  font-weight: bold;
-  font-size: 18px;
-  color: #000000;
-  overflow: hidden;
-  white-space: nowrap;
-  margin-top: 10px;
-}
-
-.wibas-caption span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: marquee 8s linear infinite;
-}
-
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-/* Topology Gambar */
-.wibas-topology {
+/* Section Produk */
+.product-section {
   max-width: 900px;
-  margin: 20px auto;
-  text-align: center;
+  margin: 40px auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
 }
 
-.wibas-topology img {
-  max-width: 100%;
+.product-text {
+  flex: 1;
+  text-align: justify;
+}
+
+.product-logo {
+  flex: 0 0 200px;
+  text-align: right;
+}
+
+.product-logo img {
+  max-width: 150px;
   height: auto;
 }
 
-/* History Section */
-.wibas-history {
-  max-width: 800px;
-  margin: 20px auto 40px;
+/* History / Penjelasan tambahan */
+.section-history {
+  max-width: 900px;
+  margin: 40px auto;
   line-height: 1.6;
-  text-align: justify; /* rata kanan-kiri */
+  text-align: justify;
 }
-
-.wibas-history h3 {
+.section-history h3 {
+  margin-bottom: 12px;
   color: #000000;
+}
+.section-history p {
   margin-bottom: 12px;
 }
 
-.wibas-history p {
-  color: #000000;
+/* Topology Node Sebaran */
+.topology-node {
+  max-width: 900px;
+  margin: 40px auto;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+.topology-node h3 {
   margin-bottom: 12px;
+  color: #000000;
+}
+.topology-node ul {
+  margin-left: 20px;
 }
 </style>
 </head>
@@ -113,49 +96,67 @@ nav a:hover { color: #2563eb; }
 
 <!-- Navbar -->
 <nav>
-  <a href="index.html">Profil</a>
-  <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
+  <a href="#">Profil WiBAS</a>
+  <a href="#">Data WiBAS</a>
+  <a href="#">WiBAS</a>
+  <a href="#">Map</a>
+  <a href="#">Incident</a>
 </nav>
-  
-<!-- Header Banner -->
-<div class="profile-header">
-  <img src="header-banner.jpg" alt="WiBAS Banner">
-</div>
 
-<!-- Logo & Running Text -->
-<div class="wibas-slider-container">
-  <img src="wibas.png" alt="WiBAS Logo">
-  <div class="wibas-caption">
-    <span>WiBAS 10.5 GHz</span>
+<!-- Produk 1: WiBAS OSDR -->
+<div class="product-section">
+  <div class="product-text">
+    <h3>WiBAS OSDR</h3>
+    <p>
+      WiBAS™ family of base station radios deliver state-of-the-art IP connectivity offering leading Point-to-MultiPoint (PtMP) technology in area-licensed bands.
+    </p>
+    <p>
+      WiBAS™-OSDR addresses the needs for advanced broadband Fixed Wireless Access as well as demanding HetNet backhaul and legacy access networks.
+    </p>
+    <p>
+      It is based on the software-defined platform and can also operate in Point-to-Point (PtP) mode with the appropriate license key to address sparsely-populated areas and extend the reusability of the radios in the network.
+    </p>
+    <p>
+      By employing today’s most advanced technologies, WiBAS™-OSDR combines sophisticated features, robust performance and highly efficient operation to enable a wide range of profitable business plans, providing a key differentiator of operator success.
+    </p>
+  </div>
+  <div class="product-logo">
+    <img src="wibas-osdr.png" alt="WiBAS OSDR Logo">
   </div>
 </div>
 
-<!-- Topology Gambar -->
-<div class="wibas-topology">
-  <img src="topology.png" alt="Topology PtMP WiBAS">
+<!-- Produk 2: WiBAS Connect -->
+<div class="product-section">
+  <div class="product-text">
+    <h3>WiBAS Connect</h3>
+    <p>
+      WiBAS™-Connect, the most compact and lightweight microwave radio in the market operating in the 10.5, 26, and 28 GHz area-licensed bands. With high capacity, advanced networking features, low power consumption and leading Point-to-MultiPoint (PtMP) radio technology, it offers high-quality broadband access connectivity to SMEs and premium residential customers.
+    </p>
+    <p>
+      WiBAS™-Connect employs improved modem technology that enables higher channel bandwidth utilization and denser PtMP networks.
+    </p>
+  </div>
+  <div class="product-logo">
+    <img src="wibas-connect.png" alt="WiBAS Connect Logo">
+  </div>
 </div>
 
-<!-- History / Penjelasan -->
-<div class="wibas-history">
-  <h3>About WiBAS (Intracom)</h3>
+<!-- Topology / Sebaran Node -->
+<div class="topology-node">
+  <h3>Sebaran Node WiBAS</h3>
   <p>
-    WiBAS adalah solusi broadband wireless access (BWA) yang menggunakan frekuensi 10.5 GHz 
-    untuk menyediakan konektivitas data jarak jauh. Dikembangkan oleh Intracom, WiBAS banyak digunakan 
-    untuk jaringan backhaul, hotspot publik, dan koneksi point-to-point yang membutuhkan 
-    bandwidth stabil dan latency rendah. Teknologi WiBAS dikenal andal untuk transmisi jarak menengah 
-    hingga jauh, dengan performa tinggi di lingkungan perkotaan maupun rural.
+    WiBAS nodes tersebar di 4 region utama untuk menjangkau seluruh area layanan:
   </p>
+  <ul>
+    <li><strong>Region 1:</strong> Sumatera – 25 Node</li>
+    <li><strong>Region 2:</strong> Jawa – 40 Node</li>
+    <li><strong>Region 3:</strong> Kalimantan – 15 Node</li>
+    <li><strong>Region 4:</strong> Sulawesi & Papua – 10 Node</li>
+  </ul>
   <p>
-    Sejak diperkenalkan, WiBAS / Intracom telah banyak diadopsi oleh operator dan instansi pemerintah 
-    di berbagai negara, termasuk Indonesia, untuk membangun jaringan broadband yang efisien tanpa 
-    mengandalkan kabel fiber optik secara penuh. Sistem ini mendukung manajemen jaringan terpusat 
-    dan monitoring real-time, sehingga memudahkan pengelolaan node WiBAS di berbagai lokasi.
+    Setiap node mendukung konfigurasi PtMP dengan WiBAS OSDR atau Connect, dapat diintegrasikan ke jaringan backhaul existing, dan memungkinkan monitoring serta management terpusat dari platform operator.
   </p>
 </div>
 
 </body>
 </html>
-
