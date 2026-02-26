@@ -106,6 +106,21 @@ footer {
   <!-- OVERVIEW -->
   <div class="cards">
     <div class="card">
+  <h2 id="totalSector">0</h2>
+  <p>Total Sector</p>
+</div>
+
+<div class="card">
+  <h2 id="totalNode">0</h2>
+  <p>Total Node</p>
+</div>
+
+<div class="card">
+  <h2 id="totalUser">0</h2>
+  <p>Total User</p>
+</div>
+    
+<div class="card">
   <h2 id="nodeActive">0</h2>
   <p>Node Active</p>
 </div>
@@ -151,6 +166,10 @@ footer {
   <h3>User Status</h3>
   <canvas id="userStatusChart"></canvas>
 </div>
+    <div class="chart-box">
+  <h3>Sector Status</h3>
+  <canvas id="sectorStatusChart"></canvas>
+</div>
   </div>
 
 </div>
@@ -186,24 +205,30 @@ async function loadDashboard() {
   let rows = [];
   snapshot.forEach(d => rows.push(d.data()));
 
-  // ===== DECLARE ALL VARIABLES =====
   const sectors = new Set();
   const nodes = new Set();
-  let users = 0;
+  const users = new Set();
 
   let nodeActive = 0;
   let nodeInactive = 0;
   let userActive = 0;
   let userInactive = 0;
+  let sectorActive = 0;
+  let sectorInactive = 0;
 
   const userArea = {};
-  const nodeRegion = {};
+  const nodeRegion = {
+    CRO: 0,
+    WRO: 0,
+    ERO: 0,
+    GJO: 0
+  };
   const sectorArea = {};
 
   const nodeStatusData = { Active: 0, Inactive: 0 };
   const userStatusData = { Active: 0, Inactive: 0 };
+  const sectorStatusData = { Active: 0, Inactive: 0 };
 
-  // ===== LOOP DATA =====
   rows.forEach(r => {
 
     const sector = r["Sector Name"] || "";
@@ -211,13 +236,13 @@ async function loadDashboard() {
     const user = r["User Label"] || "";
     const state = (r["State"] || "").toString().trim().toLowerCase();
     const area = r["Area"] || "";
-    const region = r["Region"] || "";
+    const region = (r["Region"] || "").toUpperCase();
 
     if (sector) sectors.add(sector);
     if (node) nodes.add(node);
-    if (user) users++;
+    if (user) users.add(user);
 
-    // NODE STATUS
+    // ===== NODE STATUS =====
     if (node) {
       if (state === "active") {
         nodeActive++;
@@ -228,7 +253,7 @@ async function loadDashboard() {
       }
     }
 
-    // USER STATUS
+    // ===== USER STATUS =====
     if (user) {
       if (state === "active") {
         userActive++;
@@ -239,57 +264,96 @@ async function loadDashboard() {
       }
     }
 
-    // USER PER AREA
+    // ===== SECTOR STATUS =====
+    if (sector) {
+      if (state === "active") {
+        sectorActive++;
+        sectorStatusData.Active++;
+      } else {
+        sectorInactive++;
+        sectorStatusData.Inactive++;
+      }
+    }
+
+    // ===== USER PER AREA =====
     if (area && user) {
       userArea[area] = (userArea[area] || 0) + 1;
     }
 
-    // NODE PER REGION
-    if (region && node) {
-      nodeRegion[region] = (nodeRegion[region] || 0) + 1;
+    // ===== NODE PER REGION (4 REGION ONLY) =====
+    if (region in nodeRegion) {
+      nodeRegion[region]++;
     }
 
-    // SECTOR PER AREA
+    // ===== SECTOR PER AREA (UNIQUE SECTOR) =====
     if (area && sector) {
-      sectorArea[area] = (sectorArea[area] || 0) + 1;
+      if (!sectorArea[area]) {
+        sectorArea[area] = new Set();
+      }
+      sectorArea[area].add(sector);
     }
 
   });
 
-  // ===== UPDATE CARD =====
+  // convert sectorArea set to number
+  Object.keys(sectorArea).forEach(a => {
+    sectorArea[a] = sectorArea[a].size;
+  });
+
+  // ===== UPDATE CARDS =====
   document.getElementById('nodeActive').textContent = nodeActive;
   document.getElementById('nodeInactive').textContent = nodeInactive;
   document.getElementById('userActive').textContent = userActive;
   document.getElementById('userInactive').textContent = userInactive;
 
-  // ===== MAKE CHART =====
+  document.getElementById('totalSector').textContent = sectors.size;
+  document.getElementById('totalNode').textContent = nodes.size;
+  document.getElementById('totalUser').textContent = users.size;
+
+  // ===== CHART =====
   makePie('userAreaChart', userArea);
   makePie('nodeRegionChart', nodeRegion);
   makePie('sectorAreaChart', sectorArea);
   makePie('nodeStatusChart', nodeStatusData);
   makePie('userStatusChart', userStatusData);
+  makePie('sectorStatusChart', sectorStatusData);
 }
   
-function makePie(id, dataObj) {
+function makePie(id, dataObj, type = "default") {
+
+  const labels = Object.keys(dataObj);
+  let colors = [];
+
+  if (type === "status") {
+    // Khusus Active / Inactive
+    colors = labels.map(l => {
+      if (l.toLowerCase() === "active") return "#16a34a";   // hijau
+      if (l.toLowerCase() === "inactive") return "#dc2626"; // merah
+      return "#94a3b8";
+    });
+  } else {
+
+    // 🎨 AUTO GENERATE UNIQUE COLORS
+    const total = labels.length;
+
+    colors = labels.map((_, i) => {
+      const hue = Math.floor((360 / total) * i); 
+      return `hsl(${hue}, 70%, 55%)`;
+    });
+
+  }
+
   new Chart(document.getElementById(id), {
     type: 'pie',
     data: {
-      labels: Object.keys(dataObj),
+      labels: labels,
       datasets: [{
         data: Object.values(dataObj),
-        backgroundColor: [
-          '#16a34a', // hijau
-          '#dc2626', // merah
-          '#f59e0b',
-          '#3b82f6',
-          '#8b5cf6',
-          '#f97316'
-        ]
+        backgroundColor: colors
       }]
     }
   });
 }
-
 loadDashboard();
 
 </script>
