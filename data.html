@@ -11,17 +11,86 @@ html, body {
   padding: 0;
   width: 100%;
 }
+    body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  overflow-x: hidden;   /* 🔥 penting supaya header tidak ikut geser */
+}
+header, nav {
+  width: 100%;
+}
 
-body {
-  font-family: Arial;
-  background:#f4f6f8;
+header {
+  background: #ffffff; /* putih */
+  color: #000000; /* teks hitam */
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
 }
-header { background:#0f172a; color:white; padding:16px; }
-nav { background:#1e293b; padding:10px; }
-nav a { color:white; margin-right:15px; text-decoration:none; }
-.container { 
-  padding: 0 20px;
+
+nav {
+  background: #ffffff;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
+nav .menu-links {
+  display: flex;
+  gap: 20px;
+}
+
+nav a {
+  text-decoration: none;
+  color: #000000;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+nav a:hover { color: #2563eb; }
+nav a {
+  color: #000000;
+  font-weight: bold;
+  margin-right: 20px;
+  text-decoration: none;
+}
+nav a:hover {
+  color: #2563eb; /* aksen biru saat hover */
+}
+nav {
+  overflow: visible;
+}    
+   .container {
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+    input {
+  padding: 6px 10px;
+  width: 300px;      /* atur lebar di sini */
+  font-size: 14px;
+}
+
+   table {
+  width: max-content;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: white;
+}
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;   /* scroll hanya di tabel */
+}
+
+
 table { width:100%; border-collapse:collapse; background:white; font-size:12px; }
 th, td { padding:6px; border:1px solid #ddd; }
 th { background:#f1f5f9; }
@@ -367,4 +436,5 @@ links.forEach(link => {
 
 </body>
 </html>
+
 
