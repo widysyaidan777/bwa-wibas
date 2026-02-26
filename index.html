@@ -9,20 +9,38 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #f4f6f8;
   margin: 0;
-  padding: 0;
+  background: #ffffff; /* background putih */
+  color: #000000; /* font hitam */
 }
 
-/* Slider WiBAS */
+/* Navbar */
+nav {
+  background: #f1f1f1;
+  padding: 12px 20px;
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+nav a {
+  text-decoration: none;
+  color: #000000;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+nav a:hover { color: #2563eb; }
+
+/* Slider / Profil WiBAS */
 .wibas-slider-container {
   position: relative;
-  max-width: 500px;
+  max-width: 700px;
   margin: 30px auto;
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  background: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: #ffffff;
 }
 
 .wibas-slider-wrapper {
@@ -33,21 +51,20 @@ body {
 .wibas-slide {
   min-width: 100%;
   text-align: center;
-  padding: 40px 20px;
+  padding: 50px 20px;
 }
 
 .wibas-slide img {
-  max-width: 200px;
+  max-width: 300px; /* logo diperbesar */
   height: auto;
   margin-bottom: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .wibas-caption {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2563eb;
+  font-size: 20px;
+  font-weight: bold; /* bold */
+  color: #000000; /* hitam */
   overflow: hidden;
   white-space: nowrap;
 }
@@ -63,41 +80,39 @@ body {
   100% { transform: translateX(-100%); }
 }
 
-/* Dots */
-.wibas-dots {
+/* Topology gambar */
+.wibas-topology {
+  max-width: 900px;
+  margin: 30px auto;
   text-align: center;
-  padding: 10px 0;
 }
 
-.wibas-dot {
-  height: 12px;
-  width: 12px;
-  margin: 0 4px;
-  background: #bbb;
-  border-radius: 50%;
-  display: inline-block;
+.wibas-topology img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
-
-.wibas-dot.active-dot { background: #2563eb; }
 
 /* History Section */
 .wibas-history {
   max-width: 800px;
   margin: 30px auto;
   background: #ffffff;
-  padding: 20px 25px;
+  padding: 25px 30px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   line-height: 1.6;
+  text-align: justify; /* rata kanan kiri */
 }
 
 .wibas-history h3 {
-  color: #2563eb;
+  color: #000000;
   margin-bottom: 12px;
 }
 
 .wibas-history p {
-  color: #374151;
+  color: #000000;
   margin-bottom: 10px;
 }
 </style>
@@ -105,21 +120,30 @@ body {
 
 <body>
 
+<!-- Navbar -->
+<nav>
+  <a href="#">Profil WiBAS</a>
+  <a href="#">Data WiBAS</a>
+  <a href="#">WiBAS</a>
+  <a href="#">Map</a>
+  <a href="#">Incident</a>
+</nav>
+
 <!-- Slider WiBAS -->
 <div class="wibas-slider-container">
   <div class="wibas-slider-wrapper">
     <div class="wibas-slide">
       <img src="wibas.png" alt="WiBAS">
       <div class="wibas-caption">
-        <span>BWA WiBAS – 10.5 GHz</span>
+        <span>WiBAS 10.5 GHz</span>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Dots (hanya satu slide) -->
-  <div class="wibas-dots">
-    <span class="wibas-dot active-dot"></span>
-  </div>
+<!-- Topology gambar -->
+<div class="wibas-topology">
+  <img src="topology.png" alt="Topology PtMP WiBAS">
 </div>
 
 <!-- History / Penjelasan WiBAS -->
@@ -140,6 +164,6 @@ body {
   </p>
 </div>
 
-<!-- Tidak perlu JS karena cuma satu slide dan marquee CSS -->
+<!-- Tidak perlu JS karena slider hanya 1 slide, marquee CSS sudah otomatis -->
 </body>
 </html>
