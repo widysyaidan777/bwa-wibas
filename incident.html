@@ -8,15 +8,15 @@
 
   <style>
     body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  overflow-x: hidden;   /* 🔥 penting supaya header tidak ikut geser */
-}
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
+  overflow-x: hidden;
 }
 
 header, nav {
@@ -24,52 +24,22 @@ header, nav {
 }
 
 header {
-  background: #ffffff; /* putih */
-  color: #000000; /* teks hitam */
+  background: linear-gradient(90deg, #0f172a, #020617);
+  color: white;
   padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
 }
 
 nav {
-  background: #ffffff;
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  background: #1e293b;
+  padding: 6px 20px;
 }
-
-nav .menu-links {
-  display: flex;
-  gap: 20px;
-}
-
-nav a {
-  text-decoration: none;
-  color: #000000;
-  font-weight: 600;
-  transition: color 0.3s;
-}
-
-nav a:hover { color: #2563eb; }
-nav a {
-  color: #000000;
-  font-weight: bold;
-  margin-right: 20px;
-  text-decoration: none;
-}
-nav a:hover {
-  color: #2563eb; /* aksen biru saat hover */
-}
-nav {
-  overflow: visible;
-}    
+      nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: bold;
+    }
+    
    .container {
   width: 100%;
   padding: 24px;
@@ -82,14 +52,16 @@ nav {
 }
 
    table {
-  width: max-content;
+  width: 100%;
+  min-width: 1600px;
   table-layout: auto;
   border-collapse: collapse;
   background: white;
 }
+
 .table-wrapper {
   width: 100%;
-  overflow-x: auto;   /* scroll hanya di tabel */
+  overflow-x: auto;
 }
 
     th, td {
@@ -130,15 +102,20 @@ nav {
 
 <body>
 
+<header>
+  <h1>Data Incident BWA WiBAS</h1>
+  <p>Lintasarta</p>
+</header>
+
 <nav>
-  <div class="menu-links">
-  <a href="index.html">WiBAS 10.5 GHz</a>
+  <a href="index.html">Profil</a>
   <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">Statistic WiBAS</a>
-  <a href="map.html">Topology</a>
-  <a href="incident.html">Incident WiBAS</a>
-  </div>
-</nav>
+  <a href="cambium.html">Data Cambium</a>
+  <a href="wibas.html">WiBAS</a>
+  <a href="biumca.html">Cambium</a>
+  <a href="map.html">Map</a>
+  <a href="incident.html">Incident</a>
+  </nav>
 
 <div class="container">
   <!-- Search Input -->
@@ -159,7 +136,7 @@ nav {
 </div>
 
 <footer>
-  © 2026 Icident – WiBAS
+  © 2026 BWA WiBAS – Lintasarta
 </footer>
 
 <script>
@@ -278,14 +255,8 @@ nav {
     const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
     XLSX.writeFile(wb, "data_incident.xlsx");
   }
-const links = document.querySelectorAll("nav .menu-links a");
 
-links.forEach(link => {
-  if (link.href === window.location.href) {
-    link.classList.add("active");
-  }
-});
 </script>
 
 </body>
-</html> 
+</html>
