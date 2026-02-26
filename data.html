@@ -16,9 +16,26 @@ body {
   font-family: Arial;
   background:#f4f6f8;
 }
-header { background:#0f172a; color:white; padding:16px; }
-nav { background:#1e293b; padding:10px; }
-nav a { color:white; margin-right:15px; text-decoration:none; }
+header { 
+  background:#0f172a; 
+  color:white; 
+  padding:16px; 
+}
+nav {
+  background: #1e293b;
+  padding: 12px 24px;
+}
+nav a {
+  color: white;
+  margin-right: 20px;
+  text-decoration: none;
+  font-weight: bold;      /* ini bikin bold */
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+nav a:hover {
+  opacity: 0.8;
+}
 .container { 
   padding: 0 20px;
 }
@@ -71,11 +88,11 @@ table {
 </header>
 
 <nav>
-  <a href="index.html">Profil</a>
+  <a href="index.html">WiBAS</a>
   <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
+  <a href="wibas.html">Statistic WiBAS</a>
+  <a href="map.html">Topology</a>
+  <a href="incident.html">Incident WiBAS</a>
 </nav>
 
 <div class="container">
@@ -359,3 +376,4 @@ document.getElementById("btnRefresh")
 
 </body>
 </html>
+
