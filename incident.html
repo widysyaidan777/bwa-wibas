@@ -34,9 +34,17 @@ header {
 }
 
 nav {
-  background: #ffffff; /* putih */
-  padding: 8px 20px;
+  background: #ffffff;
+  padding: 12px 20px;
   border-bottom: 1px solid #ddd;
+
+  display: flex;                 /* TAMBAHKAN */
+  justify-content: space-between; /* TAMBAHKAN */
+  align-items: center;            /* TAMBAHKAN */
+}
+.logo-intracom img {
+  max-height: 50px;
+  height: auto;
 }
 nav a {
   color: #000000;
@@ -104,77 +112,7 @@ nav a:hover {
       padding: 6px 12px;
       margin-right: 4px;
     }
-/* Container Halaman */
-.page-container {
-  max-width: 1100px;
-  margin: 40px auto;
-}
 
-/* Header Logo */
-.header-logo {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.header-logo img {
-  max-width: 300px;
-  height: auto;
-}
-
-/* Toolbar */
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.table-toolbar input {
-  padding: 8px 12px;
-  width: 250px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.table-toolbar button {
-  padding: 8px 16px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.table-toolbar button:hover {
-  background: #1e40af;
-}
-
-/* Table Styling */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-thead {
-  background: #f3f4f6;
-}
-
-th, td {
-  padding: 10px;
-  text-align: left;
-  font-size: 14px;
-}
-
-tbody tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-tbody tr:hover {
-  background: #eef2ff;
-}
   </style>
 </head>
 
@@ -188,11 +126,11 @@ tbody tr:hover {
   <a href="map.html">Topology</a>
   <a href="incident.html">Incident WiBAS</a>
   </div>
-<div class="header-logo">
-  <img src="wibas.png" alt="Intracom Telecom">
-</div>
+  <div class="logo-intracom">
+    <img src="wibas.png" alt="Intracom Logo">
+  </div>
 </nav>
-<div class="page-container">
+
 <div class="container">
   <!-- Search Input -->
   <input id="search" placeholder="Cari data..." />
@@ -333,7 +271,6 @@ tbody tr:hover {
   }
 
 </script>
-  
-</div>
+
 </body>
-</html>
+</html> 
