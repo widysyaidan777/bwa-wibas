@@ -6,135 +6,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
- body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  overflow-x: hidden;   /* 🔥 penting supaya header tidak ikut geser */
-}
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
 }
 
-header, nav {
-  width: 100%;
+body {
+  font-family: Arial;
+  background:#f4f6f8;
 }
+header { background:#0f172a; color:white; padding:16px; }
+nav { background:#1e293b; padding:10px; }
+nav a { color:white; margin-right:15px; text-decoration:none; }
+.container { 
+  padding: 0 20px;
+}
+table { width:100%; border-collapse:collapse; background:white; font-size:12px; }
+th, td { padding:6px; border:1px solid #ddd; }
+th { background:#f1f5f9; }
+button { padding:6px 10px; cursor:pointer; }
+.toolbar { margin-bottom:10px; }
+input { padding:6px; margin:3px; width:180px; }
+.edit-btn { background:#2563eb; color:white; }
+.delete-btn { background:#dc2626; color:white; }
+.add-btn { background:#16a34a; color:white; }
 
-header {
-  background: #ffffff; /* putih */
-  color: #000000; /* teks hitam */
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-}
-
-nav {
-  background: #ffffff;
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-nav .menu-links {
-  display: flex;
-  gap: 20px;
-}
-
-nav a {
-  text-decoration: none;
-  color: #000000;
-  font-weight: 600;
-  transition: color 0.3s;
-}
-
-nav a:hover { color: #2563eb; }
-nav a {
-  color: #000000;
-  font-weight: bold;
-  margin-right: 20px;
-  text-decoration: none;
-}
-nav a:hover {
-  color: #2563eb; /* aksen biru saat hover */
-}
-nav {
-  overflow: visible;
-}    
-   .container {
-  width: 100%;
-  padding: 24px;
-  box-sizing: border-box;
-}
-    input {
-  padding: 6px 10px;
-  width: 300px;      /* atur lebar di sini */
-  font-size: 14px;
-}
-
-   table {
-  width: max-content;
-  table-layout: auto;
-  border-collapse: collapse;
-  background: white;
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  overflow:auto;
 }
 .table-wrapper {
   width: 100%;
-  overflow-x: auto;   /* scroll hanya di tabel */
+  overflow-x: auto;
 }
 
-    th, td {
-      padding: 10px;
-      border: 1px solid #e5e7eb;
-      text-align: left;
-    }
+table {
+  min-width: 1600px;
+}
+.modal-content {
+  background:white;
+  padding:20px;
+  margin:50px auto;
+  width:90%;
+  max-width:900px;
+}
 
-    th {
-      cursor: pointer;
-      background: #f1f5f9;
-      border-top: 2px solid #e5e7eb; /* Menambahkan border atas untuk header */
-    }
-
-    td {
-      border-top: 1px solid #e5e7eb; /* Border atas pada setiap cell data */
-    }
-
-    footer {
-      margin-top: 30px;
-      padding: 24px;
-      text-align: center;
-      background: #020617;
-      color: white;
-    }
-
-    .pagination {
-      margin-top: 15px;
-    }
-
-    .pagination button {
-      padding: 6px 12px;
-      margin-right: 4px;
-    }
-
-  </style>
+.close {
+  float:right;
+  cursor:pointer;
+  font-weight:bold;
+}
+</style>
 </head>
+
 <body>
 
+<header>
+<h2>Data BWA WiBAS</h2>
+</header>
 
 <nav>
-  <a href="index.html">WiBAS 10.5 GHz</a>
+  <a href="index.html">Profil</a>
   <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">Statistic WiBAS</a>
-  <a href="map.html">Topology</a>
-  <a href="incident.html">Incident WiBAS</a>
+  <a href="wibas.html">WiBAS</a>
+  <a href="map.html">Map</a>
+  <a href="incident.html">Incident</a>
 </nav>
 
 <div class="container">
@@ -414,18 +355,7 @@ document.getElementById("btnRefresh")
       alert("Data berhasil direfresh");
 
 });
-const links = document.querySelectorAll("nav .menu-links a");
-
-links.forEach(link => {
-  if (link.href === window.location.href) {
-    link.classList.add("active");
-  }
-});
 </script>
 
 </body>
 </html>
-
-
-
-
