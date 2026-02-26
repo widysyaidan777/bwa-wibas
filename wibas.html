@@ -144,20 +144,6 @@ footer {
   <!-- CHARTS -->
   <div class="charts">
     <div class="chart-box">
-      <h3>User per Area</h3>
-      <canvas id="userAreaChart"></canvas>
-    </div>
-
-    <div class="chart-box">
-      <h3>Node per Region</h3>
-      <canvas id="nodeRegionChart"></canvas>
-    </div>
-
-    <div class="chart-box">
-      <h3>Sector per Area</h3>
-      <canvas id="sectorAreaChart"></canvas>
-    </div>
-    <div class="chart-box">
   <h3>Node Status</h3>
   <canvas id="nodeStatusChart"></canvas>
 </div>
@@ -169,6 +155,37 @@ footer {
     <div class="chart-box">
   <h3>Sector Status</h3>
   <canvas id="sectorStatusChart"></canvas>
+</div>
+    <!-- ================= STATUS DETAIL ================= -->
+
+<div class="chart-box">
+  <h3>User per Area - Active</h3>
+  <canvas id="userAreaActiveChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>User per Area - Inactive</h3>
+  <canvas id="userAreaInactiveChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Node per Region - Active</h3>
+  <canvas id="nodeRegionActiveChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Node per Region - Inactive</h3>
+  <canvas id="nodeRegionInactiveChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Sector per Area - Active</h3>
+  <canvas id="sectorAreaActiveChart"></canvas>
+</div>
+
+<div class="chart-box">
+  <h3>Sector per Area - Inactive</h3>
+  <canvas id="sectorAreaInactiveChart"></canvas>
 </div>
   </div>
 
@@ -207,23 +224,20 @@ async function loadDashboard() {
 
   const sectors = new Set();
   const nodes = new Set();
-  const users = new Set();
 
   let nodeActive = 0;
   let nodeInactive = 0;
   let userActive = 0;
   let userInactive = 0;
-  let sectorActive = 0;
-  let sectorInactive = 0;
 
-  const userArea = {};
-  const nodeRegion = {
-    CRO: 0,
-    WRO: 0,
-    ERO: 0,
-    GJO: 0
-  };
-  const sectorArea = {};
+  const userAreaActive = {};
+  const userAreaInactive = {};
+
+  const nodeRegionActive = { CRO:0, WRO:0, ERO:0, GJO:0 };
+  const nodeRegionInactive = { CRO:0, WRO:0, ERO:0, GJO:0 };
+
+  const sectorAreaActive = {};
+  const sectorAreaInactive = {};
 
   const nodeStatusData = { Active: 0, Inactive: 0 };
   const userStatusData = { Active: 0, Inactive: 0 };
@@ -238,66 +252,75 @@ async function loadDashboard() {
     const area = r["Area"] || "";
     const region = (r["Region"] || "").toUpperCase();
 
+    const isActive = state === "active";
+
     if (sector) sectors.add(sector);
     if (node) nodes.add(node);
-    if (user) users.add(user);
 
     // ===== NODE STATUS =====
     if (node) {
-      if (state === "active") {
+      if (isActive) {
         nodeActive++;
         nodeStatusData.Active++;
       } else {
         nodeInactive++;
         nodeStatusData.Inactive++;
       }
+
+      if (region in nodeRegionActive) {
+        if (isActive) nodeRegionActive[region]++;
+        else nodeRegionInactive[region]++;
+      }
     }
 
     // ===== USER STATUS =====
     if (user) {
-      if (state === "active") {
+      if (isActive) {
         userActive++;
         userStatusData.Active++;
       } else {
         userInactive++;
         userStatusData.Inactive++;
       }
+
+      if (area) {
+        if (isActive)
+          userAreaActive[area] = (userAreaActive[area] || 0) + 1;
+        else
+          userAreaInactive[area] = (userAreaInactive[area] || 0) + 1;
+      }
     }
 
     // ===== SECTOR STATUS =====
     if (sector) {
-      if (state === "active") {
-        sectorActive++;
+
+      if (isActive) {
         sectorStatusData.Active++;
+
+        if (area) {
+          if (!sectorAreaActive[area]) sectorAreaActive[area] = new Set();
+          sectorAreaActive[area].add(sector);
+        }
+
       } else {
-        sectorInactive++;
         sectorStatusData.Inactive++;
+
+        if (area) {
+          if (!sectorAreaInactive[area]) sectorAreaInactive[area] = new Set();
+          sectorAreaInactive[area].add(sector);
+        }
       }
-    }
-
-    // ===== USER PER AREA =====
-    if (area && user) {
-      userArea[area] = (userArea[area] || 0) + 1;
-    }
-
-    // ===== NODE PER REGION (4 REGION ONLY) =====
-    if (region in nodeRegion) {
-      nodeRegion[region]++;
-    }
-
-    // ===== SECTOR PER AREA (UNIQUE SECTOR) =====
-    if (area && sector) {
-      if (!sectorArea[area]) {
-        sectorArea[area] = new Set();
-      }
-      sectorArea[area].add(sector);
     }
 
   });
 
-  // convert sectorArea set to number
-  Object.keys(sectorArea).forEach(a => {
-    sectorArea[a] = sectorArea[a].size;
+  // convert sector Set → number
+  Object.keys(sectorAreaActive).forEach(a => {
+    sectorAreaActive[a] = sectorAreaActive[a].size;
+  });
+
+  Object.keys(sectorAreaInactive).forEach(a => {
+    sectorAreaInactive[a] = sectorAreaInactive[a].size;
   });
 
   // ===== UPDATE CARDS =====
@@ -309,13 +332,16 @@ async function loadDashboard() {
   document.getElementById('totalSector').textContent = sectors.size;
   document.getElementById('totalNode').textContent = nodes.size;
   document.getElementById('totalUser').textContent = userActive + userInactive;
+
   // ===== CHART =====
-  makePie('userAreaChart', userArea);
-  makePie('nodeRegionChart', nodeRegion);
-  makePie('sectorAreaChart', sectorArea);
-  makePie('nodeStatusChart', nodeStatusData);
-  makePie('userStatusChart', userStatusData);
-  makePie('sectorStatusChart', sectorStatusData);
+  makePie('userAreaActiveChart', userAreaActive);
+  makePie('userAreaInactiveChart', userAreaInactive);
+
+  makePie('nodeRegionActiveChart', nodeRegionActive);
+  makePie('nodeRegionInactiveChart', nodeRegionInactive);
+
+  makePie('sectorAreaActiveChart', sectorAreaActive);
+  makePie('sectorAreaInactiveChart', sectorAreaInactive);
 }
   
 function makePie(id, dataObj, type = "default") {
