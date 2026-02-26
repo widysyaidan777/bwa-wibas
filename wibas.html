@@ -308,8 +308,7 @@ async function loadDashboard() {
 
   document.getElementById('totalSector').textContent = sectors.size;
   document.getElementById('totalNode').textContent = nodes.size;
-  document.getElementById('totalUser').textContent = users.size;
-
+  document.getElementById('totalUser').textContent = userActive + userInactive;
   // ===== CHART =====
   makePie('userAreaChart', userArea);
   makePie('nodeRegionChart', nodeRegion);
