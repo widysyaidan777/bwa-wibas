@@ -278,7 +278,13 @@ nav {
     const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
     XLSX.writeFile(wb, "data_incident.xlsx");
   }
+const links = document.querySelectorAll("nav .menu-links a");
 
+links.forEach(link => {
+  if (link.href === window.location.href) {
+    link.classList.add("active");
+  }
+});
 </script>
 
 </body>
