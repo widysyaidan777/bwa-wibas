@@ -5,22 +5,24 @@
 <title>Profil WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Styles -->
 <style>
 body {
   font-family: Arial, sans-serif;
   margin: 0;
-  background: #ffffff; /* background putih */
+  background: #ffffff; /* background putih menyatu */
   color: #000000; /* font hitam */
 }
 
 /* Navbar */
 nav {
-  background: #f1f1f1;
+  background: #ffffff; /* navbar menyatu putih */
   padding: 12px 20px;
   display: flex;
   gap: 20px;
   border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 nav a {
@@ -32,78 +34,68 @@ nav a {
 
 nav a:hover { color: #2563eb; }
 
-/* Slider / Profil WiBAS */
-.wibas-slider-container {
-  position: relative;
-  max-width: 700px;
-  margin: 30px auto;
+/* Header Banner */
+.profile-header {
+  width: 100%;
+  max-height: 300px;
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  background: #ffffff;
 }
 
-.wibas-slider-wrapper {
-  display: flex;
-  transition: transform 0.6s ease;
-}
-
-.wibas-slide {
-  min-width: 100%;
-  text-align: center;
-  padding: 50px 20px;
-}
-
-.wibas-slide img {
-  max-width: 300px; /* logo diperbesar */
+.profile-header img {
+  width: 100%;
   height: auto;
-  margin-bottom: 20px;
-  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Logo & Running Text */
+.wibas-slider-container {
+  text-align: center;
+  margin: -70px auto 20px;
+}
+
+.wibas-slider-container img {
+  max-width: 200px;
+  height: auto;
 }
 
 .wibas-caption {
-  font-size: 20px;
-  font-weight: bold; /* bold */
-  color: #000000; /* hitam */
+  font-weight: bold;
+  font-size: 18px;
+  color: #000000;
   overflow: hidden;
   white-space: nowrap;
+  margin-top: 10px;
 }
 
 .wibas-caption span {
   display: inline-block;
   padding-left: 100%;
-  animation: wibas-marquee 8s linear infinite;
+  animation: marquee 8s linear infinite;
 }
 
-@keyframes wibas-marquee {
+@keyframes marquee {
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
 
-/* Topology gambar */
+/* Topology Gambar */
 .wibas-topology {
   max-width: 900px;
-  margin: 30px auto;
+  margin: 20px auto;
   text-align: center;
 }
 
 .wibas-topology img {
   max-width: 100%;
   height: auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 /* History Section */
 .wibas-history {
   max-width: 800px;
-  margin: 30px auto;
-  background: #ffffff;
-  padding: 25px 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin: 20px auto 40px;
   line-height: 1.6;
-  text-align: justify; /* rata kanan kiri */
+  text-align: justify; /* rata kanan-kiri */
 }
 
 .wibas-history h3 {
@@ -113,40 +105,40 @@ nav a:hover { color: #2563eb; }
 
 .wibas-history p {
   color: #000000;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 </style>
 </head>
-
 <body>
 
 <!-- Navbar -->
 <nav>
-  <a href="index.html">Profil</a>
-  <a href="data.html">Data WiBAS</a>
-  <a href="wibas.html">WiBAS</a>
-  <a href="map.html">Map</a>
-  <a href="incident.html">Incident</a>
+  <a href="#">Profil WiBAS</a>
+  <a href="#">Data WiBAS</a>
+  <a href="#">WiBAS</a>
+  <a href="#">Map</a>
+  <a href="#">Incident</a>
 </nav>
 
-<!-- Slider WiBAS -->
+<!-- Header Banner -->
+<div class="profile-header">
+  <img src="header-banner.jpg" alt="WiBAS Banner">
+</div>
+
+<!-- Logo & Running Text -->
 <div class="wibas-slider-container">
-  <div class="wibas-slider-wrapper">
-    <div class="wibas-slide">
-      <img src="wibas.png" alt="WiBAS">
-      <div class="wibas-caption">
-        <span>WiBAS 10.5 GHz</span>
-      </div>
-    </div>
+  <img src="wibas.png" alt="WiBAS Logo">
+  <div class="wibas-caption">
+    <span>WiBAS 10.5 GHz</span>
   </div>
 </div>
 
-<!-- Topology gambar -->
+<!-- Topology Gambar -->
 <div class="wibas-topology">
   <img src="topology.png" alt="Topology PtMP WiBAS">
 </div>
 
-<!-- History / Penjelasan WiBAS -->
+<!-- History / Penjelasan -->
 <div class="wibas-history">
   <h3>About WiBAS (Intracom)</h3>
   <p>
@@ -164,7 +156,5 @@ nav a:hover { color: #2563eb; }
   </p>
 </div>
 
-<!-- Tidak perlu JS karena slider hanya 1 slide, marquee CSS sudah otomatis -->
 </body>
 </html>
-
