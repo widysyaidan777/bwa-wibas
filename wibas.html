@@ -107,6 +107,17 @@ footer {
   width: 100% !important;
   height: 100% !important;
 }
+  .chart-box {
+  height: 420px;
+  position: relative;
+}
+
+/* Bikin legend jadi 2 kolom */
+.chart-box .chartjs-legend ul {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr; /* 2 kolom */
+  gap: 6px 20px;
+}
 </style>
 </head>
 
@@ -400,9 +411,11 @@ function makePie(id, dataObj, type = "default") {
     legend: {
       position: 'right',
       labels: {
-        boxWidth: 14,
-        padding: 15,
-        font: { size: 12 }
+        boxWidth: 12,
+        padding: 10,
+        font: {
+          size: 11
+        }
       }
     }
   }
