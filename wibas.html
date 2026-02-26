@@ -65,7 +65,7 @@ nav a {
 .charts {
   margin-top: 40px;
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
 }
 
@@ -99,13 +99,8 @@ footer {
   width: 100% !important;
   height: 100% !important;
 }
-  .chart-box {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 2px solid #0f172a;   /* border lebih tegas */
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  height: 450px;              /* lebih besar */
+.chart-box {
+  height: 420px;
 }
 
 .chart-box canvas {
@@ -133,37 +128,46 @@ footer {
 <div class="container">
 
   <!-- OVERVIEW -->
-  <div class="cards">
-    <div class="card">
-  <h2 id="totalSector">0</h2>
-  <p>Total Sector</p>
+<div class="cards">
+<div class="card">
+  <h2 id="totalNetworkElement">0</h2>
+  <p>Total Network Element</p>
 </div>
-
+  
 <div class="card">
   <h2 id="totalNode">0</h2>
   <p>Total Node</p>
 </div>
-
-<div class="card">
-  <h2 id="totalUser">0</h2>
-  <p>Total User</p>
-</div>
-    
 <div class="card">
   <h2 id="nodeActive">0</h2>
   <p>Node Active</p>
 </div>
-
 <div class="card">
   <h2 id="nodeInactive">0</h2>
   <p>Node Inactive</p>
 </div>
-
+  
+<div class="card">
+  <h2 id="totalSector">0</h2>
+  <p>Total Sector</p>
+</div>
+<div class="card">
+  <h2 id="sectorActive">0</h2>
+  <p>Sector Active</p>
+</div>
+<div class="card">
+  <h2 id="sectorInactive">0</h2>
+  <p>Sector Inactive</p>
+</div>
+      
+<div class="card">
+  <h2 id="totalUser">0</h2>
+  <p>Total User</p>
+</div>  
 <div class="card">
   <h2 id="userActive">0</h2>
   <p>User Active</p>
 </div>
-
 <div class="card">
   <h2 id="userInactive">0</h2>
   <p>User Inactive</p>
@@ -173,35 +177,32 @@ footer {
   <!-- CHARTS -->
   <div class="charts">
 <div class="chart-box">
-  <h3>User per Area - Active</h3>
-  <canvas id="userAreaActiveChart"></canvas>
-</div>
-
-<div class="chart-box">
-  <h3>User per Area - Inactive</h3>
-  <canvas id="userAreaInactiveChart"></canvas>
-</div>
-
-<div class="chart-box">
   <h3>Node per Region - Active</h3>
   <canvas id="nodeRegionActiveChart"></canvas>
 </div>
-
 <div class="chart-box">
   <h3>Node per Region - Inactive</h3>
   <canvas id="nodeRegionInactiveChart"></canvas>
 </div>
-
+    
 <div class="chart-box">
   <h3>Sector per Area - Active</h3>
   <canvas id="sectorAreaActiveChart"></canvas>
 </div>
-
 <div class="chart-box">
   <h3>Sector per Area - Inactive</h3>
   <canvas id="sectorAreaInactiveChart"></canvas>
 </div>
-  </div>
+    
+<div class="chart-box">
+  <h3>User per Area - Active</h3>
+  <canvas id="userAreaActiveChart"></canvas>
+</div>
+<div class="chart-box">
+  <h3>User per Area - Inactive</h3>
+  <canvas id="userAreaInactiveChart"></canvas>
+</div>
+</div>
 
 </div>
 
@@ -346,7 +347,12 @@ async function loadDashboard() {
   document.getElementById('totalSector').textContent = sectors.size;
   document.getElementById('totalNode').textContent = nodes.size;
   document.getElementById('totalUser').textContent = userActive + userInactive;
+  document.getElementById('sectorActive').textContent = sectorStatusData.Active;
+  document.getElementById('sectorInactive').textContent = sectorStatusData.Inactive;
 
+  const totalNetworkElement = sectors.size + nodes.size + (userActive + userInactive);
+  document.getElementById('totalNetworkElement').textContent = totalNetworkElement;
+  
   // ===== CHART =====
   makePie('userAreaActiveChart', userAreaActive);
   makePie('userAreaInactiveChart', userAreaInactive);
@@ -388,19 +394,19 @@ function makePie(id, dataObj, type = "default") {
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'left',
-          labels: {
-            boxWidth: 14,
-            padding: 12,
-            font: { size: 12 }
-          }
-        }
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'right',
+      labels: {
+        boxWidth: 14,
+        padding: 15,
+        font: { size: 12 }
       }
     }
+  }
+}
   });
 }
 loadDashboard();
