@@ -356,27 +356,15 @@ document.getElementById("btnRefresh")
       alert("Data berhasil direfresh");
 
 });
+const links = document.querySelectorAll("nav .menu-links a");
+
+links.forEach(link => {
+  if (link.href === window.location.href) {
+    link.classList.add("active");
+  }
+});
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
