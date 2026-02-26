@@ -16,7 +16,6 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;
 }
 
 header, nav {
@@ -64,7 +63,9 @@ nav .logo-intracom img {
   max-height: 50px;
   height: auto;
 }
-
+.logo-intracom {
+  flex-shrink: 0;
+}
 nav a {
   color: #000000;
   font-weight: bold;
@@ -90,7 +91,6 @@ nav {
 
    table {
   width: 100%;
-  min-width: 1600px;
   table-layout: auto;
   border-collapse: collapse;
   background: white;
