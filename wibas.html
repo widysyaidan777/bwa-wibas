@@ -361,7 +361,7 @@ async function loadDashboard() {
   document.getElementById('sectorActive').textContent = sectorStatusData.Active;
   document.getElementById('sectorInactive').textContent = sectorStatusData.Inactive;
 
-  const totalNetworkElement = sectors.size + nodes.size + (userActive + userInactive);
+  const totalNetworkElement = sectors.size + (userActive + userInactive);
   document.getElementById('totalNetworkElement').textContent = totalNetworkElement;
   
   // ===== CHART =====
