@@ -496,7 +496,55 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 window.db = db;
+import { collection, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* =============================
+   LAYER KHUSUS USER & LINK
+============================= */
+
+const userLayer = L.layerGroup().addTo(map);
+const linkLayer = L.layerGroup().addTo(map);
+
+/* =============================
+   REALTIME LOAD USERS
+============================= */
+
+onSnapshot(collection(db,"topology_users"), snapshot=>{
+
+  // bersihkan dulu supaya tidak dobel
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
+
+  snapshot.forEach(doc=>{
+    const u = doc.data();
+
+    // marker user
+    L.circleMarker([u.lat,u.lng],{
+      radius:6,
+      color:"#22c55e",
+      fillColor:"#22c55e",
+      fillOpacity:1
+    }).addTo(userLayer)
+      .bindPopup(`<b>${u.name}</b><br>Link: ${u.nodeName}`);
+
+    // cari node tujuan dari array nodes lama
+    const node = nodes.find(n=>n.name===u.nodeName);
+
+    if(node){
+      L.polyline([
+        [u.lat,u.lng],
+        [node.lat,node.lng]
+      ],{
+        color:"#22c55e",
+        weight:2,
+        dashArray:"4"
+      }).addTo(linkLayer);
+    }
+
+  });
+
+});
 console.log("🔥 Firebase Connected");
 
 </script>
