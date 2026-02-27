@@ -559,15 +559,16 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
   redrawLinks();   // 🔥 WAJIB
 
 });
-    /* =============================
-   MODE TAMBAH USER
+
+/* =============================
+   MODE TAMBAH USER (UPGRADE)
 ============================= */
 
 let addUserMode = false;
 
 window.activateAddUser = function(){
   addUserMode = true;
-  alert("Klik lokasi di map untuk menambahkan user");
+  alert("Klik lokasi di map untuk memilih posisi user");
   map.getContainer().style.cursor = "crosshair";
 };
 
@@ -578,8 +579,8 @@ map.on("click", async function(e){
   addUserMode = false;
   map.getContainer().style.cursor = "";
 
-  const lat = e.latlng.lat;
-  const lng = e.latlng.lng;
+  let lat = e.latlng.lat;
+  let lng = e.latlng.lng;
 
   const name = prompt("Masukkan nama user:");
   if(!name) return;
@@ -587,20 +588,27 @@ map.on("click", async function(e){
   const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
 
+  // 🔥 OPSI EDIT MANUAL LAT LONG
+  const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
+  const manualLng = prompt("Longitude (enter untuk pakai titik klik):", lng);
+
+  if(manualLat) lat = parseFloat(manualLat);
+  if(manualLng) lng = parseFloat(manualLng);
+
   try{
     const { addDoc, collection } = await import(
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
 
-      await addDoc(collection(db,"topology_users"),{
-    name:name,
-    lat:lat,
-    lng:lng,
-    nodeName:nodeName,
-    status:"UP"
-  });
+    await addDoc(collection(db,"topology_users"),{
+      name:name,
+      lat:lat,
+      lng:lng,
+      nodeName:nodeName,
+      status:"UP"
+    });
 
-    alert("User berhasil ditambahkan & terhubung!");
+    alert("User berhasil ditambahkan!");
   }catch(err){
     console.error(err);
     alert("Gagal menambahkan user");
