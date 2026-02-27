@@ -528,48 +528,36 @@ let usersData = [];
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
-  // bersihkan dulu supaya tidak dobel
+  usersData = [];                // 🔥 reset array
   userLayer.clearLayers();
-  linkLayer.clearLayers();
 
   snapshot.forEach(doc=>{
     const u = doc.data();
 
-            // marker user
+    usersData.push(u);           // 🔥 simpan ke array
+
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
-    
+
     marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Status: ${u.status}<br><br>
-    
       <button onclick="deleteUser('${doc.id}')"
       style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
       Delete User
       </button>
     `);
-    // cari node tujuan dari array nodes lama
-    const node = nodes.find(n=>n.name===u.nodeName);
-
-    if(node){
-      L.polyline([
-        [u.lat,u.lng],
-        [node.lat,node.lng]
-      ],{
-        color:"#22c55e",
-        weight:2,
-        dashArray:"4"
-      }).addTo(linkLayer);
-    }
-
   });
-  drawLinks(); // panggil ulang link
+
+  redrawLinks();   // 🔥 WAJIB
+
 });
     /* =============================
    MODE TAMBAH USER
@@ -822,22 +810,31 @@ window.editNodeStatus = async function(docId,currentStatus){
     status:newStatus.toUpperCase()
   });
 };
-    function drawLinks(){
+function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  usersData.forEach(u=>{
-    const node = nodesData.find(n=>n.name === u.nodeName);
+  usersData.forEach(u=>{   // 🔥 PAKAI usersData
 
-    if(node){
-      L.polyline([
-        [node.lat, node.lng],
-        [u.lat, u.lng]
-      ],{
-        color:"#3b82f6",
-        weight:2
-      }).addTo(linkLayer);
-    }
+    const node = nodes.find(n => n.name === u.nodeName);
+
+    if(!node) return;
+
+    const line = L.polyline(
+      [
+        [u.lat, u.lng],
+        [node.lat, node.lng]
+      ],
+      {
+        color: "#facc15",
+        weight: 2,
+        opacity: 0.9,
+        dashArray:"4"
+      }
+    );
+
+    linkLayer.addLayer(line);
+
   });
 
 }
