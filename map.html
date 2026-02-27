@@ -181,6 +181,7 @@ th{background:#020617}
 <hr style="border:1px solid #334155">
 
 <h4>Topology Editor</h4>
+<button class="blue" onclick="activateAddNode()">Tambah Node</button>
 <button class="blue" onclick="activateAddUser()">Tambah User</button>
 
 <hr style="border:1px solid #334155">
@@ -598,6 +599,112 @@ map.on("click", async function(e){
     console.error(err);
     alert("Gagal menambahkan user");
   }
+
+});
+    /* =============================
+   MODE TAMBAH NODE
+============================= */
+
+let addNodeMode = false;
+
+window.activateAddNode = function(){
+  addNodeMode = true;
+  alert("Klik lokasi di map untuk menambahkan NODE");
+  map.getContainer().style.cursor = "crosshair";
+};
+
+map.on("click", async function(e){
+
+  if(!addNodeMode) return;
+
+  addNodeMode = false;
+  map.getContainer().style.cursor = "";
+
+  const lat = e.latlng.lat;
+  const lng = e.latlng.lng;
+
+  const name = prompt("Masukkan nama NODE (contoh: TGRNEW01)");
+  if(!name) return;
+
+  const region = prompt("Masukkan region (contoh: BWA / EJA / CJDA)");
+  if(!region) return;
+
+  try{
+    const { addDoc, collection } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+    );
+
+    await addDoc(collection(db,"nodes"),{
+      name:name,
+      region:region,
+      lat:lat,
+      lng:lng,
+      status:"UP",
+      sectorDefs:[
+        {start:0,end:90},
+        {start:90,end:180},
+        {start:180,end:270},
+        {start:270,end:360}
+      ]
+    });
+
+    alert("NODE berhasil ditambahkan!");
+  }catch(err){
+    console.error(err);
+    alert("Gagal menambahkan node");
+  }
+});
+    /* =============================
+   REALTIME LOAD NODE BARU
+============================= */
+
+onSnapshot(collection(db,"nodes"), snapshot=>{
+
+  snapshot.docChanges().forEach(change=>{
+
+    if(change.type === "added"){
+
+      const n = change.doc.data();
+
+      // hindari duplikat jika sudah ada di array lama
+      if(nodes.find(x=>x.name === n.name)) return;
+
+      nodes.push(n);
+
+      const col = ['#2563eb','#22c55e','#2563eb','#22c55e'];
+
+      n.marker = L.marker([n.lat,n.lng],{
+        icon:icon(col,false)
+      }).addTo(map)
+       .bindPopup(`<b>${n.name}</b><br>Area: ${n.region}<br>Status: ${n.status}`);
+
+      n.sectors = [];
+
+      n.sectorDefs.forEach((sec,idx)=>{
+        const c = col[idx % col.length];
+
+        const s = createSector(
+          L.latLng(n.lat,n.lng),
+          5000,
+          sec.start,
+          sec.end,
+          {
+            color:c,
+            fillColor:c,
+            fillOpacity:.25,
+            weight:1,
+            interactive:false
+          }
+        ).addTo(map);
+
+        n.sectors.push(s);
+      });
+
+      render(nodes);
+
+    }
+
+  });
 
 });
 console.log("🔥 Firebase Connected");
