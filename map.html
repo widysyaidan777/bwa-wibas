@@ -177,7 +177,15 @@ th{background:#020617}
   <hr style="border:1px solid #334155">
 
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-  <button class="blue" onclick="backToMenu()">Kembali ke Menu</button>
+
+<hr style="border:1px solid #334155">
+
+<h4>Topology Editor</h4>
+<button class="blue" onclick="activateAddUser()">Tambah User</button>
+
+<hr style="border:1px solid #334155">
+
+<button class="blue" onclick="backToMenu()">Kembali ke Menu</button>
 </div>
 
 <!-- MAIN -->
@@ -543,6 +551,53 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
     }
 
   });
+
+});
+    /* =============================
+   MODE TAMBAH USER
+============================= */
+
+let addUserMode = false;
+
+window.activateAddUser = function(){
+  addUserMode = true;
+  alert("Klik lokasi di map untuk menambahkan user");
+  map.getContainer().style.cursor = "crosshair";
+};
+
+map.on("click", async function(e){
+
+  if(!addUserMode) return;
+
+  addUserMode = false;
+  map.getContainer().style.cursor = "";
+
+  const lat = e.latlng.lat;
+  const lng = e.latlng.lng;
+
+  const name = prompt("Masukkan nama user:");
+  if(!name) return;
+
+  const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
+  if(!nodeName) return;
+
+  try{
+    const { addDoc, collection } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+    );
+
+    await addDoc(collection(db,"topology_users"),{
+      name:name,
+      lat:lat,
+      lng:lng,
+      nodeName:nodeName
+    });
+
+    alert("User berhasil ditambahkan & terhubung!");
+  }catch(err){
+    console.error(err);
+    alert("Gagal menambahkan user");
+  }
 
 });
 console.log("🔥 Firebase Connected");
