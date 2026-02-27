@@ -518,54 +518,24 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
+let nodesData = [];
+let usersData = [];
+
 /* =============================
    REALTIME LOAD USERS
 ============================= */
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
-  // bersihkan dulu supaya tidak dobel
-  userLayer.clearLayers();
-  linkLayer.clearLayers();
+  usersData = [];
 
   snapshot.forEach(doc=>{
     const u = doc.data();
-
-            // marker user
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
-    
-    marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Status: ${u.status}<br><br>
-    
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-    `);
-    // cari node tujuan dari array nodes lama
-    const node = nodes.find(n=>n.name===u.nodeName);
-
-    if(node){
-      L.polyline([
-        [u.lat,u.lng],
-        [node.lat,node.lng]
-      ],{
-        color:"#22c55e",
-        weight:2,
-        dashArray:"4"
-      }).addTo(linkLayer);
-    }
-
+    u.id = doc.id;
+    usersData.push(u);
   });
 
+  drawAll(); // panggil redraw
 });
     /* =============================
    MODE TAMBAH USER
@@ -702,66 +672,15 @@ await addDoc(collection(db,"nodes"),{
 
 onSnapshot(collection(db,"nodes"), snapshot=>{
 
+  nodesData = [];
+  
   snapshot.forEach(doc=>{
-
     const n = doc.data();
-
-    // hindari duplikat
-    if(nodes.find(x=>x.name === n.name)) return;
-
-    nodes.push(n);
-
-const col = n.status === "OFF"
-  ? ['#dc2626','#f97316','#dc2626','#f97316']
-  : ['#2563eb','#22c55e','#2563eb','#22c55e'];
-    
-    n.marker = L.marker([n.lat,n.lng],{
-icon:icon(col, n.status === "OFF")
-    }).addTo(map)
-     .bindPopup(`
-    <b>${n.name}</b><br>
-    Area: ${n.region}<br>
-    Status: ${n.status}<br><br>
-  
-    <button onclick="editNodeStatus('${doc.id}','${n.status}')"
-      style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Ubah Status
-    </button><br>
-  
-    <button onclick="deleteNode('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete Node
-    </button>
-  `);
-
-    n.sectors = [];
-
-    if(n.sectorDefs){
-      n.sectorDefs.forEach((sec,idx)=>{
-        const c = col[idx % col.length];
-
-        const s = createSector(
-          L.latLng(n.lat,n.lng),
-          5000,
-          sec.start,
-          sec.end,
-          {
-            color:c,
-            fillColor:c,
-            fillOpacity:.25,
-            weight:1,
-            interactive:false
-          }
-        ).addTo(map);
-
-        n.sectors.push(s);
-      });
-    }
-
+    n.id = doc.id;
+    nodesData.push(n);
   });
 
-  render(nodes);
-
+  drawAll(); // panggil redraw
 });
     window.editUser = async function(docId,currentData){
 
@@ -818,6 +737,52 @@ window.editNodeStatus = async function(docId,currentStatus){
     status:newStatus.toUpperCase()
   });
 };
+    function drawAll(){
+
+  // bersihkan dulu
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
+
+  // ===== DRAW USER =====
+  usersData.forEach(u=>{
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    const marker = L.circleMarker([u.lat,u.lng],{
+      radius:6,
+      color:userColor,
+      fillColor:userColor,
+      fillOpacity:1
+    }).addTo(userLayer);
+
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Status: ${u.status}<br><br>
+
+      <button onclick="deleteUser('${u.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+    `);
+
+    // ===== CARI NODE DARI nodesData =====
+    const node = nodesData.find(n=>n.name===u.nodeName);
+
+    if(node){
+      L.polyline([
+        [u.lat,u.lng],
+        [node.lat,node.lng]
+      ],{
+        color:"#22c55e",
+        weight:2,
+        dashArray:"4"
+      }).addTo(linkLayer);
+    }
+
+  });
+
+}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
