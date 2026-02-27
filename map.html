@@ -711,20 +711,28 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
     nodes.push(n);
 
-    const col = ['#2563eb','#22c55e','#2563eb','#22c55e'];
-
+const col = n.status === "OFF"
+  ? ['#dc2626','#f97316','#dc2626','#f97316']
+  : ['#2563eb','#22c55e','#2563eb','#22c55e'];
+    
     n.marker = L.marker([n.lat,n.lng],{
-      icon:icon(col,false)
+icon:icon(col, n.status === "OFF")
     }).addTo(map)
-    .bindPopup(`
-      <b>${n.name}</b><br>
-      Area: ${n.region}<br>
-      Status: ${n.status}<br><br>
-      <button onclick="deleteNode('${doc.id}')"
-        style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-        Delete Node
-      </button>
-    `);
+     .bindPopup(`
+    <b>${n.name}</b><br>
+    Area: ${n.region}<br>
+    Status: ${n.status}<br><br>
+  
+    <button onclick="editNodeStatus('${doc.id}','${n.status}')"
+      style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Ubah Status
+    </button><br>
+  
+    <button onclick="deleteNode('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete Node
+    </button>
+  `);
 
     n.sectors = [];
 
@@ -793,6 +801,22 @@ window.deleteNode = async function(docId){
   );
 
   await deleteDoc(doc(db,"nodes",docId));
+};
+    // =============================
+// EDIT NODE STATUS
+// =============================
+window.editNodeStatus = async function(docId,currentStatus){
+
+  const newStatus = prompt("Status baru (UP / OFF):", currentStatus);
+  if(!newStatus) return;
+
+  const { updateDoc, doc } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  await updateDoc(doc(db,"nodes",docId),{
+    status:newStatus.toUpperCase()
+  });
 };
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
