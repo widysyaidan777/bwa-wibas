@@ -297,179 +297,6 @@ function createSector(center, radius, startAz, endAz, opt){
   return L.polygon(pts, opt);
 }
 
-
-/* ================= NODE DATA ================= */
-const nodes=[
- {name:'SLOSRH',region:'CJDA',lat:-7.563986,lng:110.819334,status:'UP',
- sectorDefs:[{start:0,end:90},{start:90,end:180},{start:180,end:270}]},
- {name:'BLPRAM',region:'KAA',lat:-1.247917,lng:116.838194,status:'DOWN',
- sectorDefs:[{start:45,end:135}]},
- {name:'BDGBBPB',region:'WJA',lat:-6.836141,lng:107.48698,status:'UP',
- sectorDefs:[{start:165,end:255}]},
- {name:'BDGCLY',region:'WJA',lat:-6.940522,lng:107.75132,status:'DOWN',
- sectorDefs:[{start:135,end:225}]},
- {name:'DPSIKT',region:'BNA',lat:-8.735832,lng:115.178706,status:'UP',
- sectorDefs:[{start:175,end:265},{start:350,end:80}]},
- {name:'GRSTGP',region:'EJA',lat:-7.150680,lng:112.646615,status:'UP',
- sectorDefs:[{start:135,end:225},{start:315,end:45}]},
- {name:'MJKGTO',region:'EJA',lat:-7.484068,lng:112.439306,status:'UP',
- sectorDefs:[{start:70,end:160},{start:250,end:340},{start:340,end:70}]},
- {name:'SDJCNG',region:'EJA',lat:-7.407205,lng:112.618979,status:'UP'},
- {name:'SDJSNY',region:'EJA',lat:-7.348534,lng:112.767766,status:'UP',
- sectorDefs:[{start:90,end:180},{start:180,end:270},{start:270,end:360}]},
- {name:'SDJWGP',region:'EJA',lat:-7.376449,lng:112.694152,status:'UP'},
- {name:'SBYGPN',region:'EJA',lat:-7.319528,lng:112.731423,status:'UP'},
- {name:'SBYILT',region:'EJA',lat:-7.272927,lng:112.742805,status:'UP',
- sectorDefs:[{start:180,end:270}]},
- {name:'SBYKYN',region:'EJA',lat:-7.271313,lng:112.744322,status:'UP',
- sectorDefs:[{start:0,end:90},{start:270,end:360}]},
- {name:'SBYPGT',region:'EJA',lat:-7.234389,lng:112.773033,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315}]},
- {name:'SBYRWJ',region:'EJA',lat:-7.231425,lng:112.729394,status:'UP'},
- {name:'SBYSNR',region:'EJA',lat:-7.275505,lng:112.684784,status:'UP'},
- {name:'SBYSPO',region:'EJA',lat:-7.289116,lng:112.678018,status:'UP',
- sectorDefs:[{start:270,end:360}]},
- {name:'MKSHAM',region:'MAPUA',lat:-5.1480556,lng:119.41046667,status:'UP',
- sectorDefs:[{start:20,end:110},{start:110,end:200},{start:245,end:335}]},
- {name:'MKSHBR',region:'MAPUA',lat:-5.10165,lng:119.511,status:'DOWN',
- sectorDefs:[{start:193,end:283}]},
- {name:'CLGIM3',region:'BWA',lat:-6.119008,lng:106.338023,status:'UP',
- sectorDefs:[{start:315,end:45}]},
- {name:'JKTCIG',region:'BWA',lat:-6.130824,lng:106.735322,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315}]},
- {name:'JKTKD2',region:'BWA',lat:-6.188801,lng:106.767965,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'SRGSTR',region:'BWA',lat:-6.120406,lng:106.157626,status:'UP',
- sectorDefs:[{start:45,end:135},{start:315,end:45}]},
- {name:'TGRBLD',region:'BWA',lat:-6.138183,lng:106.659738,status:'DOWN'},
- {name:'TGRCIL',region:'BWA',lat:-6.225322525,lng:106.708201,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315}]},
- {name:'TGRCUR',region:'BWA',lat:-6.217032745,lng:106.5673415,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'TGRMTH',region:'BWA',lat:-6.229061217,lng:106.6097212,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315}]},
- {name:'TGRMUB',region:'BWA',lat:-6.14180778,lng:106.68481951,status:'UP',
- sectorDefs:[{start:45,end:135},{start:315,end:45}]},
- {name:'TGRSTS',region:'BWA',lat:-6.221908,lng:106.632164,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTBRI',region:'BDA',lat:-6.216943,lng:106.813893,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTIMP',region:'BDA',lat:-6.210278,lng:106.831211,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTHST',region:'CDA',lat:-6.192211,lng:106.864625,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTMNC',region:'CDA',lat:-6.184064,lng:106.831195,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTASK',region:'NEA',lat:-6.12725,lng:106.805,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTGKR',region:'NEA',lat:-6.15129,lng:106.8872,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTKGD',region:'NEA',lat:-6.171444,lng:106.916252,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'JKTPTC',region:'NEA',lat:-6.183722,lng:106.915222,status:'UP',
- sectorDefs:[{start:135,end:225},{start:225,end:315}]},
- {name:'JKTBDR',region:'SAST',lat:-6.29100,lng:106.78655,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'TGRAJS',region:'SAST',lat:-6.2958,lng:106.6802,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'TGRBIA',region:'SAST',lat:-6.2705,lng:106.7091,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'BKSCRW',region:'SEOA',lat:-6.330000,lng:107.134489,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315}]},
- {name:'BKSHHR',region:'SEOA',lat:-6.2483,lng:106.99084,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225}]},
- {name:'BKSJBB',region:'SAST',lat:-6.296083,lng:107.162247,status:'UP',
- sectorDefs:[{start:45,end:135},{start:135,end:225},{start:225,end:315},{start:315,end:45}]},
- {name:'PBRSDU',region:'CSA',lat:0.51185,lng:101.449133,status:'UP',
- sectorDefs:[{start:135,end:225}]},
- {name:'BDALTH',region:'NSA',lat:5.551675,lng:95.345611,status:'UP',
- sectorDefs:[{start:75,end:165},{start:200,end:290},{start:290,end:20}]},
- {name:'MDNCMB',region:'NSA',lat:3.584542,lng:98.666989,status:'UP',
- sectorDefs:[{start:45,end:135},{start:120,end:210},{start:315,end:45}]},
- {name:'MDNIDS',region:'NSA',lat:3.599222,lng:98.686306,status:'UP',
- sectorDefs:[{start:0,end:90},{start:180,end:270}]},
- {name:'MDNTGM',region:'NSA',lat:3.541423,lng:98.809228,status:'UP',
- sectorDefs:[{start:220,end:310}]},
- {name:'BKLHST',region:'SSA',lat:-3.79793,lng:102.27345,status:'UP',
- sectorDefs:[{start:75,end:165}]},
- {name:'BKLPDH',region:'SSA',lat:-3.82776,lng:102.29074,status:'UP',
- sectorDefs:[{start:125,end:215}]},
- {name:'PKPRKI',region:'SSA',lat:-2.15641,lng:106.13115,status:'UP',
- sectorDefs:[{start:25,end:115},{start:275,end:5}]},
- {name:'PLBBSG',region:'SSA',lat:-2.9982961,lng:104.7240517,status:'UP',
- sectorDefs:[{start:315,end:45}]},
- {name:'PLBKBN',region:'SSA',lat:-2.9200622,lng:104.7226304,status:'UP',
- sectorDefs:[{start:0,end:90},{start:270,end:360}]},
-
-];
-
-let coverageVisible=true;
-
-/* ================= CREATE NODE ================= */
-nodes.forEach(n=>{
-  const col = n.status==='UP'
-    ? ['#2563eb','#22c55e','#2563eb','#22c55e']
-    : ['#dc2626','#f97316','#dc2626','#f97316'];
-
-  n.marker = L.marker([n.lat,n.lng],{
-    icon:icon(col,n.status==='DOWN')
-  }).addTo(map)
-  .bindPopup(`
-  <b>${n.name}</b><br>
-  Area: ${n.region}<br>
-  Status: ${n.status}
-`);
-  n.marker.on('click',e=>{
-    if(rulerActive){
-      addRulerPoint(e.latlng);
-      L.DomEvent.stopPropagation(e);
-    }
-  });
-
-  n.sectors = [];
-
-  /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
-  if(n.sectorDefs){
-    n.sectorDefs.forEach((sec,idx)=>{
-      const c = col[idx % col.length];
-      const s = createSector(
-        L.latLng(n.lat,n.lng),
-        5000,
-        sec.start,
-        sec.end,
-        {
-          color:c,
-          fillColor:c,
-          fillOpacity:.25,
-          weight:1,
-          interactive:false
-        }
-      ).addTo(map);
-      n.sectors.push(s);
-    });
-
-  /* ===== JIKA TIDAK ADA → DEFAULT 4 SEKTOR ===== */
-  }else{
-    for(let i=0;i<4;i++){
-      const s = createSector(
-        L.latLng(n.lat,n.lng),
-        5000,
-        i*90,
-        (i+1)*90,
-        {
-          color:col[i],
-          fillColor:col[i],
-          fillOpacity:.25,
-          weight:1,
-          interactive:false
-        }
-      ).addTo(map);
-      n.sectors.push(s);
-    }
-  }
-});
-
-
 /* ================= TABLE & FILTER ================= */
 function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
@@ -489,335 +316,187 @@ showAll();
     `Lat: ${lat} | Lng: ${lng}`;
 });
 </script>
-  <script type="module">
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
-  authDomain: "dashboard-bwa.firebaseapp.com",
-  projectId: "dashboard-bwa",
-  storageBucket: "dashboard-bwa.firebasestorage.app",
-  messagingSenderId: "1066238404578",
-  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
+  apiKey: "APIKEY",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECTID",
+  storageBucket: "PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.db = db;
-import { collection, onSnapshot } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+/* ================= LAYER ================= */
 
-/* =============================
-   LAYER KHUSUS USER & LINK
-============================= */
-
+const nodeLayer = L.layerGroup().addTo(map);
 const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
-/* =============================
-   REALTIME LOAD USERS
-============================= */
+/* ================= GLOBAL DATA ================= */
+
+let nodesData = [];
+let usersData = [];
+
+/* ================= REALTIME NODE ================= */
+
+onSnapshot(collection(db,"nodes"), snapshot=>{
+
+  nodeLayer.clearLayers();
+  nodesData = [];
+
+  snapshot.forEach(docSnap=>{
+    const n = docSnap.data();
+    n.id = docSnap.id;
+    nodesData.push(n);
+
+    const color = n.status === "UP" ? "#22c55e" : "#ef4444";
+
+    L.circleMarker([n.lat,n.lng],{
+      radius:10,
+      color:color,
+      fillColor:color,
+      fillOpacity:1
+    })
+    .addTo(nodeLayer)
+    .bindPopup(`
+      <b>${n.name}</b><br>
+      Region: ${n.region}<br>
+      Status: ${n.status}<br><br>
+      <button onclick="deleteNode('${n.id}')">Delete</button>
+    `);
+  });
+
+  drawLinks();
+});
+
+/* ================= REALTIME USER ================= */
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
-  // bersihkan dulu supaya tidak dobel
   userLayer.clearLayers();
-  linkLayer.clearLayers();
+  usersData = [];
 
-  snapshot.forEach(doc=>{
-    const u = doc.data();
+  snapshot.forEach(docSnap=>{
+    const u = docSnap.data();
+    u.id = docSnap.id;
+    usersData.push(u);
 
-            // marker user
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
-    
-    marker.bindPopup(`
+    const color = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    L.circleMarker([u.lat,u.lng],{
+      radius:6,
+      color:color,
+      fillColor:color,
+      fillOpacity:1
+    })
+    .addTo(userLayer)
+    .bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Status: ${u.status}<br><br>
-    
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
+      <button onclick="deleteUser('${u.id}')">Delete</button>
     `);
-    // cari node tujuan dari array nodes lama
-    const node = nodes.find(n=>n.name===u.nodeName);
+  });
+
+  drawLinks();
+});
+
+/* ================= DRAW LINK (PERMANENT ENGINE) ================= */
+
+function drawLinks(){
+
+  linkLayer.clearLayers();
+
+  usersData.forEach(u=>{
+    const node = nodesData.find(n=>n.name === u.nodeName);
 
     if(node){
       L.polyline([
         [u.lat,u.lng],
         [node.lat,node.lng]
       ],{
-        color:"#22c55e",
-        weight:2,
-        dashArray:"4"
+        color:"#3b82f6",
+        weight:2
       }).addTo(linkLayer);
     }
-
   });
 
-});
-    /* =============================
-   MODE TAMBAH USER
-============================= */
+}
 
-let addUserMode = false;
-
-window.activateAddUser = function(){
-  addUserMode = true;
-  alert("Klik lokasi di map untuk menambahkan user");
-  map.getContainer().style.cursor = "crosshair";
-};
-
-map.on("click", async function(e){
-
-  if(!addUserMode) return;
-
-  addUserMode = false;
-  map.getContainer().style.cursor = "";
-
-  const lat = e.latlng.lat;
-  const lng = e.latlng.lng;
-
-  const name = prompt("Masukkan nama user:");
-  if(!name) return;
-
-  const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
-  if(!nodeName) return;
-
-  try{
-    const { addDoc, collection } = await import(
-      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-    );
-
-      await addDoc(collection(db,"topology_users"),{
-    name:name,
-    lat:lat,
-    lng:lng,
-    nodeName:nodeName,
-    status:"UP"
-  });
-
-    alert("User berhasil ditambahkan & terhubung!");
-  }catch(err){
-    console.error(err);
-    alert("Gagal menambahkan user");
-  }
-
-});
-    /* =============================
-   MODE TAMBAH NODE
-============================= */
-
-let addNodeMode = false;
+/* ================= TAMBAH NODE ================= */
 
 window.activateAddNode = function(){
-  addNodeMode = true;
-  alert("Klik lokasi di map untuk menambahkan NODE");
-  map.getContainer().style.cursor = "crosshair";
-};
+  alert("Klik lokasi untuk tambah node");
+  map.once("click", async function(e){
 
-map.on("click", async function(e){
+    const name = prompt("Nama Node:");
+    if(!name) return;
 
-  if(!addNodeMode) return;
+    const region = prompt("Region:");
+    if(!region) return;
 
-  addNodeMode = false;
-  map.getContainer().style.cursor = "";
-
-  const lat = e.latlng.lat;
-  const lng = e.latlng.lng;
-
-  const name = prompt("Masukkan nama NODE (contoh: TGRNEW01)");
-  if(!name) return;
-
-  const region = prompt("Masukkan region (contoh: BWA / EJA / CJDA)");
-  if(!region) return;
-
-  try{
-    const { addDoc, collection } = await import(
-      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-    );
-
-   // jumlah sektor
-const sectorCount = parseInt(prompt("Jumlah sektor? (1-4)", "1"));
-if(!sectorCount || sectorCount < 1 || sectorCount > 4){
-  alert("Jumlah sektor harus 1 sampai 4");
-  return;
-}
-
-let sectorDefs = [];
-
-for(let i=0;i<sectorCount;i++){
-
-  const azimuth = parseInt(
-    prompt(`Masukkan azimuth sektor ${i+1} (contoh 135)`)
-  );
-
-  const beamwidth = parseInt(
-    prompt(`Masukkan beamwidth sektor ${i+1} (contoh 90)`,"90")
-  );
-
-  if(isNaN(azimuth) || isNaN(beamwidth)){
-    alert("Azimuth / Beamwidth tidak valid");
-    return;
-  }
-
-  let start = azimuth - (beamwidth/2);
-  let end   = azimuth + (beamwidth/2);
-
-  // handle lewat 360
-  if(start < 0) start += 360;
-  if(end > 360) end -= 360;
-
-  sectorDefs.push({start:start,end:end});
-}
-
-await addDoc(collection(db,"nodes"),{
-  name:name,
-  region:region,
-  lat:lat,
-  lng:lng,
-  status:"UP",
-  sectorDefs:sectorDefs
-});
-    alert("NODE berhasil ditambahkan!");
-  }catch(err){
-    console.error(err);
-    alert("Gagal menambahkan node");
-  }
-});
-    /* =============================
-   REALTIME LOAD NODE BARU
-============================= */
-
-onSnapshot(collection(db,"nodes"), snapshot=>{
-
-  snapshot.forEach(doc=>{
-
-    const n = doc.data();
-
-    // hindari duplikat
-    if(nodes.find(x=>x.name === n.name)) return;
-
-    nodes.push(n);
-
-const col = n.status === "OFF"
-  ? ['#dc2626','#f97316','#dc2626','#f97316']
-  : ['#2563eb','#22c55e','#2563eb','#22c55e'];
-    
-    n.marker = L.marker([n.lat,n.lng],{
-icon:icon(col, n.status === "OFF")
-    }).addTo(map)
-     .bindPopup(`
-    <b>${n.name}</b><br>
-    Area: ${n.region}<br>
-    Status: ${n.status}<br><br>
-  
-    <button onclick="editNodeStatus('${doc.id}','${n.status}')"
-      style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Ubah Status
-    </button><br>
-  
-    <button onclick="deleteNode('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete Node
-    </button>
-  `);
-
-    n.sectors = [];
-
-    if(n.sectorDefs){
-      n.sectorDefs.forEach((sec,idx)=>{
-        const c = col[idx % col.length];
-
-        const s = createSector(
-          L.latLng(n.lat,n.lng),
-          5000,
-          sec.start,
-          sec.end,
-          {
-            color:c,
-            fillColor:c,
-            fillOpacity:.25,
-            weight:1,
-            interactive:false
-          }
-        ).addTo(map);
-
-        n.sectors.push(s);
-      });
-    }
+    await addDoc(collection(db,"nodes"),{
+      name:name,
+      region:region,
+      lat:e.latlng.lat,
+      lng:e.latlng.lng,
+      status:"UP"
+    });
 
   });
+};
 
-  render(nodes);
+/* ================= TAMBAH USER ================= */
 
-});
-    window.editUser = async function(docId,currentData){
+window.activateAddUser = function(){
+  alert("Klik lokasi untuk tambah user");
+  map.once("click", async function(e){
 
-  const newStatus = prompt("Status (UP / OFF):", currentData.status);
-  if(!newStatus) return;
+    const name = prompt("Nama User:");
+    if(!name) return;
 
-  const { updateDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
+    const nodeName = prompt("Link ke node mana?");
+    if(!nodeName) return;
 
-  await updateDoc(doc(db,"topology_users",docId),{
-    status:newStatus
+    await addDoc(collection(db,"topology_users"),{
+      name:name,
+      lat:e.latlng.lat,
+      lng:e.latlng.lng,
+      nodeName:nodeName,
+      status:"UP"
+    });
+
   });
 };
-// =============================
-// DELETE USER
-// =============================
-window.deleteUser = async function(docId){
-  if(!confirm("Yakin hapus user?")) return;
 
-  const { deleteDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
+/* ================= DELETE ================= */
 
-  await deleteDoc(doc(db,"topology_users",docId));
+window.deleteNode = async function(id){
+  await deleteDoc(doc(db,"nodes",id));
 };
 
-
-// =============================
-// DELETE NODE
-// =============================
-window.deleteNode = async function(docId){
-  if(!confirm("Yakin hapus node?")) return;
-
-  const { deleteDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
-
-  await deleteDoc(doc(db,"nodes",docId));
+window.deleteUser = async function(id){
+  await deleteDoc(doc(db,"topology_users",id));
 };
-    // =============================
-// EDIT NODE STATUS
-// =============================
-window.editNodeStatus = async function(docId,currentStatus){
 
-  const newStatus = prompt("Status baru (UP / OFF):", currentStatus);
-  if(!newStatus) return;
-
-  const { updateDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
-
-  await updateDoc(doc(db,"nodes",docId),{
-    status:newStatus.toUpperCase()
-  });
-};
+</script>
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
