@@ -181,6 +181,10 @@ th{background:#020617}
 <hr style="border:1px solid #334155">
 
 <h4>Topology Editor</h4>
+<button onclick="refreshMap()" 
+style="background:#2563eb;color:white;border:none;padding:6px 12px;border-radius:6px;">
+🔄 Refresh Map
+</button>
 <button class="blue" onclick="activateAddNode()">Tambah Node</button>
 <button class="blue" onclick="activateAddUser()">Tambah User</button>
 
@@ -840,11 +844,41 @@ function redrawLinks(){
         dashArray:"4"
       }
     );
-
     linkLayer.addLayer(line);
+  });
+}
+    
+  async function refreshMap(){
+  nodeLayer.clearLayers();
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
 
+  const { getDocs, collection } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  // Load ulang nodes
+  const nodeSnap = await getDocs(collection(db,"topology_nodes"));
+  nodeSnap.forEach(doc=>{
+    const n = doc.data();
+
+    L.marker([n.lat,n.lng])
+      .bindPopup(`<b>${n.name}</b><br>Status: ${n.status}`)
+      .addTo(nodeLayer);
   });
 
+  // Load ulang users
+  const userSnap = await getDocs(collection(db,"topology_users"));
+  userSnap.forEach(doc=>{
+    const u = doc.data();
+
+    L.circleMarker([u.lat,u.lng],{
+      radius:6
+    }).bindPopup(`<b>${u.name}</b>`)
+      .addTo(userLayer);
+  });
+
+  alert("Map berhasil direfresh");
 }
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
