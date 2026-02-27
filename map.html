@@ -702,34 +702,33 @@ await addDoc(collection(db,"nodes"),{
 
 onSnapshot(collection(db,"nodes"), snapshot=>{
 
-  snapshot.docChanges().forEach(change=>{
+  snapshot.forEach(doc=>{
 
-    if(change.type === "added"){
+    const n = doc.data();
 
-      const n = change.doc.data();
+    // hindari duplikat
+    if(nodes.find(x=>x.name === n.name)) return;
 
-      // hindari duplikat jika sudah ada di array lama
-      if(nodes.find(x=>x.name === n.name)) return;
+    nodes.push(n);
 
-      nodes.push(n);
+    const col = ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
-      const col = ['#2563eb','#22c55e','#2563eb','#22c55e'];
+    n.marker = L.marker([n.lat,n.lng],{
+      icon:icon(col,false)
+    }).addTo(map)
+    .bindPopup(`
+      <b>${n.name}</b><br>
+      Area: ${n.region}<br>
+      Status: ${n.status}<br><br>
+      <button onclick="deleteNode('${doc.id}')"
+        style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+        Delete Node
+      </button>
+    `);
 
-      n.marker = L.marker([n.lat,n.lng],{
-        icon:icon(col,false)
-      }).addTo(map)
-      .bindPopup(`
-        <b>${n.name}</b><br>
-        Area: ${n.region}<br>
-        Status: ${n.status}<br><br>
-      
-        <button onclick="deleteNode('${change.doc.id}')"
-          style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-          Delete Node
-        </button>
-      `);
-      n.sectors = [];
+    n.sectors = [];
 
+    if(n.sectorDefs){
       n.sectorDefs.forEach((sec,idx)=>{
         const c = col[idx % col.length];
 
@@ -749,12 +748,11 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
         n.sectors.push(s);
       });
-
-      render(nodes);
-
     }
 
   });
+
+  render(nodes);
 
 });
     window.editUser = async function(docId,currentData){
