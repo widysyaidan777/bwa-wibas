@@ -531,12 +531,13 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
   snapshot.forEach(doc=>{
     const u = doc.data();
 
-        // marker user
-       const marker = L.circleMarker([u.lat,u.lng],{
-      radius:6,
-      color:userColor,
-      fillColor:userColor,
-      fillOpacity:1
+            // marker user
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
     }).addTo(userLayer);
     
     marker.bindPopup(`
@@ -545,8 +546,8 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       Status: ${u.status}<br><br>
     
       <button onclick="deleteUser('${doc.id}')"
-        style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-        Delete User
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
       </button>
     `);
     // cari node tujuan dari array nodes lama
