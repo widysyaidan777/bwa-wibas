@@ -545,21 +545,15 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       fillOpacity: 1
     }).addTo(userLayer);
 
-   marker.bindPopup(`
-  <b>${u.name}</b><br>
-  Node: ${u.nodeName}<br>
-  Status: ${u.status}<br><br>
-
-  <button onclick="editUserStatus('${doc.id}','${u.status}')"
-  style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-  Ubah Status
-  </button><br>
-
-  <button onclick="deleteUser('${doc.id}')"
-  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-  Delete User
-  </button>
-`);
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Status: ${u.status}<br><br>
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+    `);
   });
 
   redrawLinks();   // 🔥 WAJIB
@@ -716,34 +710,16 @@ const col = n.status === "OFF"
     n.marker = L.marker([n.lat,n.lng],{
 icon:icon(col, n.status === "OFF")
     }).addTo(map)
-     .bindPopup(() => {
-
-  const userList = usersData.filter(u => u.nodeName === n.name);
-
-  const totalUsers = userList.length;
-
-  let userNames = userList.map(u => `• ${u.name}`).join("<br>");
-
-  if(totalUsers === 0){
-    userNames = "Tidak ada user";
-  }
-
-  return `
+     .bindPopup(`
     <b>${n.name}</b><br>
     Area: ${n.region}<br>
-    Status: ${n.status}<br>
-    Total User: <b>${totalUsers}</b><br><br>
-
-    <div style="max-height:120px;overflow:auto;font-size:12px;">
-      ${userNames}
-    </div>
-
-    <br>
+    Status: ${n.status}<br><br>
+  
     <button onclick="editNodeStatus('${doc.id}','${n.status}')"
       style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
       Ubah Status
     </button><br>
-
+  
     <button onclick="deleteNode('${doc.id}')"
       style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
       Delete Node
@@ -833,20 +809,6 @@ window.editNodeStatus = async function(docId,currentStatus){
   await updateDoc(doc(db,"nodes",docId),{
     status:newStatus.toUpperCase()
   });
-};
-    window.editUserStatus = async function(docId,currentStatus){
-
-  const newStatus = prompt("Status baru (UP / OFF):", currentStatus);
-  if(!newStatus) return;
-
-  const { updateDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
-
-  await updateDoc(doc(db,"topology_users",docId),{
-    status:newStatus.toUpperCase()
-  });
-
 };
 function redrawLinks(){
 
