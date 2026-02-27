@@ -477,5 +477,28 @@ showAll();
     `Lat: ${lat} | Lng: ${lng}`;
 });
 </script>
+  <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
+  authDomain: "dashboard-bwa.firebaseapp.com",
+  projectId: "dashboard-bwa",
+  storageBucket: "dashboard-bwa.firebasestorage.app",
+  messagingSenderId: "1066238404578",
+  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db = db;
+
+console.log("🔥 Firebase Connected");
+
+</script>
 </body>
 </html>
