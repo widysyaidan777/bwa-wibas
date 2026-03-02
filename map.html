@@ -282,20 +282,52 @@ function icon(colors,fast=false){ return L.divIcon({className:`node-blink ${fast
 
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
+
   const pts = [center];
 
-  for(let az = startAz; az <= endAz; az += 2){
-    const rad = az * Math.PI / 180;
+  // 🔥 jika tidak melewati 360
+  if(startAz <= endAz){
 
-    // azimuth: 0 = north
-    const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-    const lng = center.lng + (radius * Math.sin(rad)) /
-      (111320 * Math.cos(center.lat * Math.PI / 180));
+    for(let az = startAz; az <= endAz; az += 2){
+      const rad = az * Math.PI / 180;
 
-    pts.push([lat, lng]);
+      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+      const lng = center.lng + (radius * Math.sin(rad)) /
+        (111320 * Math.cos(center.lat * Math.PI / 180));
+
+      pts.push([lat, lng]);
+    }
+
+  }
+  // 🔥 jika melewati 360 (contoh 315 → 45)
+  else{
+
+    // dari start sampai 360
+    for(let az = startAz; az <= 360; az += 2){
+      const rad = az * Math.PI / 180;
+
+      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+      const lng = center.lng + (radius * Math.sin(rad)) /
+        (111320 * Math.cos(center.lat * Math.PI / 180));
+
+      pts.push([lat, lng]);
+    }
+
+    // dari 0 sampai end
+    for(let az = 0; az <= endAz; az += 2){
+      const rad = az * Math.PI / 180;
+
+      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+      const lng = center.lng + (radius * Math.sin(rad)) /
+        (111320 * Math.cos(center.lat * Math.PI / 180));
+
+      pts.push([lat, lng]);
+    }
+
   }
 
   pts.push(center);
+
   return L.polygon(pts, opt);
 }
 
