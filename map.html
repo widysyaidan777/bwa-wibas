@@ -661,27 +661,31 @@ let sectorDefs = [];
 
 for(let i=0;i<sectorCount;i++){
 
-  const azimuth = parseInt(
+  let azimuth = parseInt(
     prompt(`Masukkan azimuth sektor ${i+1} (contoh 135)`)
   );
 
-  const beamwidth = parseInt(
-    prompt(`Masukkan beamwidth sektor ${i+1} (contoh 90)`,"90")
-  );
-
-  if(isNaN(azimuth) || isNaN(beamwidth)){
-    alert("Azimuth / Beamwidth tidak valid");
+  if(isNaN(azimuth)){
+    alert("Azimuth tidak valid");
     return;
   }
+
+  // ✅ NORMALISASI supaya selalu 0–359
+  azimuth = ((azimuth % 360) + 360) % 360;
+
+  const beamwidth = 90;   // 🔥 FIX 90 DERJAT
 
   let start = azimuth - (beamwidth/2);
   let end   = azimuth + (beamwidth/2);
 
-  // handle lewat 360
-  if(start < 0) start += 360;
-  if(end > 360) end -= 360;
+  // ✅ normalisasi start & end
+  start = ((start % 360) + 360) % 360;
+  end   = ((end % 360) + 360) % 360;
 
-  sectorDefs.push({start:start,end:end});
+  sectorDefs.push({
+    start: start,
+    end: end
+  });
 }
 
 await addDoc(collection(db,"nodes"),{
