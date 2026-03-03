@@ -559,16 +559,21 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       fillOpacity: 1
     }).addTo(userLayer);
 
-    marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Status: ${u.status}<br><br>
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-    `);
+   marker.bindPopup(`
+  <b>${u.name}</b><br>
+  Node: ${u.nodeName}<br>
+  Status: ${u.status}<br><br>
 
+  <button onclick="editFullUser('${doc.id}')"
+  style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+  Edit User
+  </button><br>
+
+  <button onclick="deleteUser('${doc.id}')"
+  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+  Delete User
+  </button>
+`);
   });
   redrawLinks();
 });
@@ -737,21 +742,25 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
       icon:icon(col, n.status === "OFF")
     }).addTo(nodeLayer)
     .bindPopup(`
-      <b>${n.name}</b><br>
-      Area: ${n.region}<br>
-      Status: ${n.status}<br><br>
+  <b>${n.name}</b><br>
+  Area: ${n.region}<br>
+  Status: ${n.status}<br><br>
 
-      <button onclick="editNodeStatus('${doc.id}','${n.status}')"
-      style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Ubah Status
-      </button><br>
+  <button onclick="editFullNode('${doc.id}')"
+  style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+  Edit Node
+  </button><br>
 
-      <button onclick="deleteNode('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete Node
-      </button>
-    `);
+  <button onclick="editNodeStatus('${doc.id}','${n.status}')"
+  style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+  Ubah Status
+  </button><br>
 
+  <button onclick="deleteNode('${doc.id}')"
+  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+  Delete Node
+  </button>
+`);
     n.marker = marker;
     n.sectors = [];
 
@@ -880,6 +889,81 @@ function refreshMap(){
   alert("✅ Topology telah berhasil di-refresh");
 
 }
+    window.editFullNode = async function(docId){
+
+  const node = nodes.find(n => n.id === docId);
+  if(!node) return;
+
+  const newName = prompt("Nama Node:", node.name);
+  if(!newName) return;
+
+  const newRegion = prompt("Region:", node.region);
+  if(!newRegion) return;
+
+  const sectorCount = parseInt(prompt("Jumlah sektor?", node.sectorDefs?.length || 1));
+
+  if(!sectorCount || sectorCount < 1 || sectorCount > 4){
+    alert("Jumlah sektor 1-4");
+    return;
+  }
+
+  let sectorDefs = [];
+
+  for(let i=0;i<sectorCount;i++){
+
+    let azimuth = parseInt(prompt(`Azimuth sektor ${i+1}`));
+
+    azimuth = ((azimuth % 360) + 360) % 360;
+
+    const beamwidth = 90;
+
+    let start = azimuth - (beamwidth/2);
+    let end   = azimuth + (beamwidth/2);
+
+    start = ((start % 360) + 360) % 360;
+    end   = ((end % 360) + 360) % 360;
+
+    sectorDefs.push({ start, end });
+  }
+
+  const { updateDoc, doc } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  await updateDoc(doc(db,"nodes",docId),{
+    name:newName,
+    region:newRegion,
+    sectorDefs:sectorDefs
+  });
+
+  alert("Node berhasil diupdate!");
+};
+    window.editFullUser = async function(docId){
+
+  const user = usersData.find(u => u.id === docId);
+  if(!user) return;
+
+  const newName = prompt("Nama User:", user.name);
+  if(!newName) return;
+
+  const newNode = prompt("Node Tujuan:", user.nodeName);
+  if(!newNode) return;
+
+  const newStatus = prompt("Status (UP/OFF):", user.status);
+  if(!newStatus) return;
+
+  const { updateDoc, doc } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  await updateDoc(doc(db,"topology_users",docId),{
+    name:newName,
+    nodeName:newNode,
+    status:newStatus.toUpperCase()
+  });
+
+  alert("User berhasil diupdate!");
+};
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
