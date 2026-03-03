@@ -309,18 +309,57 @@ function createSector(center, radius, startAz, endAz, opt){
   return L.polygon(pts, opt);
 }
 
-
+let coverageVisible = true;
 
 /* ================= TABLE & FILTER ================= */
 function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
 function focusNode(name){ const n=nodesData.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodesData); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodesData.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
-function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
-function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
-function backToMenu(){ window.location.href="index.html"; }
+function showAll(){
 
-showAll();
+  render(nodesData);
+
+  nodeLayer.clearLayers();
+
+  nodesData.forEach(n=>{
+    n.marker.addTo(nodeLayer);
+
+    if(coverageVisible){
+      n.sectors.forEach(s=>s.addTo(nodeLayer));
+    }
+  });
+}
+function filterRegion(r){
+
+  render(nodesData.filter(n=>n.region===r));
+
+  nodeLayer.clearLayers();
+
+  nodesData.forEach(n=>{
+
+    if(n.region===r){
+
+      n.marker.addTo(nodeLayer);
+
+      if(coverageVisible){
+        n.sectors.forEach(s=>s.addTo(nodeLayer));
+      }
+
+    }
+  });
+}
+  function toggleCoverage(){ 
+    coverageVisible=!coverageVisible; 
+    nodesData.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); 
+  }
+      )); 
+  }
+function toggleTable(){ 
+  document.getElementById('node-section').classList.toggle('hidden'); 
+}
+function backToMenu(){ 
+  window.location.href="index.html"; 
+}
+
 
   map.on('mousemove', function(e){
   const lat = e.latlng.lat.toFixed(6);
@@ -680,13 +719,16 @@ function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  usersData.forEach(u=>{   // 🔥 PAKAI usersData
+  const nodeMap = new Map(
+    nodesData.map(n => [n.name, n])
+  );
 
-    const node = nodesData.find(n => n.name === u.nodeName);
+  usersData.forEach(u=>{
 
+    const node = nodeMap.get(u.nodeName);
     if(!node) return;
 
-    const line = L.polyline(
+    L.polyline(
       [
         [u.lat, u.lng],
         [node.lat, node.lng]
@@ -697,8 +739,8 @@ function redrawLinks(){
         opacity: 0.9,
         dashArray:"4"
       }
-    );
-    linkLayer.addLayer(line);
+    ).addTo(linkLayer);
+
   });
 }
     
