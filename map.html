@@ -285,45 +285,25 @@ function createSector(center, radius, startAz, endAz, opt){
 
   const pts = [center];
 
-  // 🔥 jika tidak melewati 360
-  if(startAz <= endAz){
+  // normalisasi
+  startAz = ((startAz % 360) + 360) % 360;
+  endAz   = ((endAz % 360) + 360) % 360;
 
-    for(let az = startAz; az <= endAz; az += 2){
-      const rad = az * Math.PI / 180;
+  let az = startAz;
 
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
+  while(true){
 
-      pts.push([lat, lng]);
-    }
+    const rad = az * Math.PI / 180;
 
-  }
-  // 🔥 jika melewati 360 (contoh 315 → 45)
-  else{
+    const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+    const lng = center.lng + (radius * Math.sin(rad)) /
+      (111320 * Math.cos(center.lat * Math.PI / 180));
 
-    // dari start sampai 360
-    for(let az = startAz; az <= 360; az += 2){
-      const rad = az * Math.PI / 180;
+    pts.push([lat, lng]);
 
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
+    if(az === endAz) break;
 
-      pts.push([lat, lng]);
-    }
-
-    // dari 0 sampai end
-    for(let az = 0; az <= endAz; az += 2){
-      const rad = az * Math.PI / 180;
-
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
-
-      pts.push([lat, lng]);
-    }
-
+    az = (az + 2) % 360;   // 🔥 WRAP OTOMATIS
   }
 
   pts.push(center);
