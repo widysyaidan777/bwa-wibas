@@ -187,8 +187,6 @@ th{background:#020617}
 
 <hr style="border:1px solid #334155">
 <button class="blue" onclick="backToMenu()">Kembali ke Menu</button>
-<button onclick="refreshMap()" 
-style="background:#2563eb;color:white;border:none;padding:6px 12px;border-radius:6px;">🔄 Refresh Map</button>
 </div>
 
 <!-- MAIN -->
@@ -285,45 +283,25 @@ function createSector(center, radius, startAz, endAz, opt){
 
   const pts = [center];
 
-  // 🔥 jika tidak melewati 360
-  if(startAz <= endAz){
+  // normalisasi
+  startAz = ((startAz % 360) + 360) % 360;
+  endAz   = ((endAz % 360) + 360) % 360;
 
-    for(let az = startAz; az <= endAz; az += 2){
-      const rad = az * Math.PI / 180;
+  let az = startAz;
 
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
+  while(true){
 
-      pts.push([lat, lng]);
-    }
+    const rad = az * Math.PI / 180;
 
-  }
-  // 🔥 jika melewati 360 (contoh 315 → 45)
-  else{
+    const lat = center.lat + (radius * Math.cos(rad)) / 111320;
+    const lng = center.lng + (radius * Math.sin(rad)) /
+      (111320 * Math.cos(center.lat * Math.PI / 180));
 
-    // dari start sampai 360
-    for(let az = startAz; az <= 360; az += 2){
-      const rad = az * Math.PI / 180;
+    pts.push([lat, lng]);
 
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
+    if(az === endAz) break;
 
-      pts.push([lat, lng]);
-    }
-
-    // dari 0 sampai end
-    for(let az = 0; az <= endAz; az += 2){
-      const rad = az * Math.PI / 180;
-
-      const lat = center.lat + (radius * Math.cos(rad)) / 111320;
-      const lng = center.lng + (radius * Math.sin(rad)) /
-        (111320 * Math.cos(center.lat * Math.PI / 180));
-
-      pts.push([lat, lng]);
-    }
-
+    az = (az + 2) % 360;   // 🔥 WRAP OTOMATIS
   }
 
   pts.push(center);
@@ -562,13 +540,15 @@ let usersData = [];
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
-  usersData = [];                // 🔥 reset array
+  usersData.length = 0;
   userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
-    const u = doc.data();
 
-    usersData.push(u);           // 🔥 simpan ke array
+    const u = doc.data();
+    u.id = doc.id;
+
+    usersData.push(u);
 
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
 
@@ -588,12 +568,11 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       Delete User
       </button>
     `);
+
   });
-
-  redrawLinks();   // 🔥 WAJIB
-
+  redrawLinks();
 });
-
+    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
@@ -740,38 +719,40 @@ await addDoc(collection(db,"nodes"),{
 
 onSnapshot(collection(db,"nodes"), snapshot=>{
 
+  nodes.length = 0;          // reset array
+  nodeLayer.clearLayers();   // reset layer
+
   snapshot.forEach(doc=>{
 
     const n = doc.data();
-
-    // hindari duplikat
-    if(nodes.find(x=>x.name === n.name)) return;
+    n.id = doc.id;
 
     nodes.push(n);
 
-const col = n.status === "OFF"
-  ? ['#dc2626','#f97316','#dc2626','#f97316']
-  : ['#2563eb','#22c55e','#2563eb','#22c55e'];
-    
-    n.marker = L.marker([n.lat,n.lng],{
-icon:icon(col, n.status === "OFF")
-    }).addTo(map)
-     .bindPopup(`
-    <b>${n.name}</b><br>
-    Area: ${n.region}<br>
-    Status: ${n.status}<br><br>
-  
-    <button onclick="editNodeStatus('${doc.id}','${n.status}')"
+    const col = n.status === "OFF"
+      ? ['#dc2626','#f97316','#dc2626','#f97316']
+      : ['#2563eb','#22c55e','#2563eb','#22c55e'];
+
+    const marker = L.marker([n.lat,n.lng],{
+      icon:icon(col, n.status === "OFF")
+    }).addTo(nodeLayer)
+    .bindPopup(`
+      <b>${n.name}</b><br>
+      Area: ${n.region}<br>
+      Status: ${n.status}<br><br>
+
+      <button onclick="editNodeStatus('${doc.id}','${n.status}')"
       style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
       Ubah Status
-    </button><br>
-  
-    <button onclick="deleteNode('${doc.id}')"
+      </button><br>
+
+      <button onclick="deleteNode('${doc.id}')"
       style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
       Delete Node
-    </button>
-  `);
+      </button>
+    `);
 
+    n.marker = marker;
     n.sectors = [];
 
     if(n.sectorDefs){
@@ -790,7 +771,7 @@ icon:icon(col, n.status === "OFF")
             weight:1,
             interactive:false
           }
-        ).addTo(map);
+        ).addTo(nodeLayer);
 
         n.sectors.push(s);
       });
@@ -799,9 +780,11 @@ icon:icon(col, n.status === "OFF")
   });
 
   render(nodes);
-  redrawLinks();   // ✅ TARUH DI SINI
+  redrawLinks();
+
 });
-    window.editUser = async function(docId,currentData){
+    
+  window.editUser = async function(docId,currentData){
 
   const newStatus = prompt("Status (UP / OFF):", currentData.status);
   if(!newStatus) return;
@@ -882,37 +865,20 @@ function redrawLinks(){
   });
 }
     
-  async function refreshMap(){
-  nodeLayer.clearLayers();
-  userLayer.clearLayers();
+function refreshMap(){
+
+  // Clear semua layer
   linkLayer.clearLayers();
+  userLayer.clearLayers();
 
-  const { getDocs, collection } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
+  // Re-render table & marker
+  render(nodes);
 
-  // Load ulang nodes
-  const nodeSnap = await getDocs(collection(db,"topology_nodes"));
-  nodeSnap.forEach(doc=>{
-    const n = doc.data();
+  // Gambar ulang link
+  redrawLinks();
 
-    L.marker([n.lat,n.lng])
-      .bindPopup(`<b>${n.name}</b><br>Status: ${n.status}`)
-      .addTo(nodeLayer);
-  });
+  alert("✅ Topology telah berhasil di-refresh");
 
-  // Load ulang users
-  const userSnap = await getDocs(collection(db,"topology_users"));
-  userSnap.forEach(doc=>{
-    const u = doc.data();
-
-    L.circleMarker([u.lat,u.lng],{
-      radius:6
-    }).bindPopup(`<b>${u.name}</b>`)
-      .addTo(userLayer);
-  });
-
-  alert("Map berhasil direfresh");
 }
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
