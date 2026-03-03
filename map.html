@@ -313,9 +313,9 @@ function createSector(center, radius, startAz, endAz, opt){
 
 /* ================= TABLE & FILTER ================= */
 function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
-function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function focusNode(name){ const n=nodesData.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
+function showAll(){ render(nodesData); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodesData.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function backToMenu(){ window.location.href="index.html"; }
@@ -553,7 +553,7 @@ await addDoc(collection(db,"nodes"),{
 
 onSnapshot(collection(db,"nodes"), snapshot=>{
 
-  nodes.length = 0;          // reset array
+  nodesData.length = 0;         // reset array
   nodeLayer.clearLayers();   // reset layer
 
   snapshot.forEach(doc=>{
@@ -561,8 +561,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
     const n = doc.data();
     n.id = doc.id;
 
-    nodes.push(n);
-
+  nodesData.push(n);
     const col = n.status === "OFF"
       ? ['#dc2626','#f97316','#dc2626','#f97316']
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
@@ -617,8 +616,8 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
   });
 
-  render(nodes);
-  redrawLinks();
+render(nodesData);
+redrawLinks();
 
 });
     
@@ -683,7 +682,7 @@ function redrawLinks(){
 
   usersData.forEach(u=>{   // 🔥 PAKAI usersData
 
-    const node = nodes.find(n => n.name === u.nodeName);
+    const node = nodesData.find(n => n.name === u.nodeName);
 
     if(!node) return;
 
@@ -710,7 +709,7 @@ function refreshMap(){
   userLayer.clearLayers();
 
   // Re-render table & marker
-  render(nodes);
+  render(nodesData);
 
   // Gambar ulang link
   redrawLinks();
@@ -720,7 +719,7 @@ function refreshMap(){
 }
     window.editFullNode = async function(docId){
 
-  const node = nodes.find(n => n.id === docId);
+  const node = nodesData.find(n => n.id === docId);
   if(!node) return;
 
   const newName = prompt("Nama Node:", node.name);
