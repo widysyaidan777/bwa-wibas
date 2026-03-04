@@ -608,7 +608,6 @@ await addDoc(collection(db,"nodes"),{
   region:region,
   lat:lat,
   lng:lng,
-  status:"UP",
   sectorDefs:sectorDefs
 });
     alert("NODE berhasil ditambahkan!");
@@ -664,8 +663,11 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
     n.sectors = [];
 
     if(n.sectorDefs){
-      n.sectorDefs.forEach((sec,idx)=>{
-        const c = col[idx % col.length];
+  n.sectorDefs.forEach((sec)=>{
+
+    const c = sec.status === "OFF"
+      ? "#dc2626"
+      : "#22c55e";
 
         const s = createSector(
           L.latLng(n.lat,n.lng),
