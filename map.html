@@ -336,12 +336,12 @@ nodes.forEach(n=>{
   n.sectors = [];
 
   /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
-    if(n.sectorDefs){
+   if(n.sectorDefs){
   n.sectorDefs.forEach((sec)=>{
 
     const c = sec.status === "OFF"
       ? "#dc2626"
-      : (sec.color || "#22c55e");  // 🔥 PAKAI WARNA FIRESTORE
+      : (sec.color || "#22c55e");  // ✅ PAKAI WARNA FIRESTORE
 
     const s = createSector(
       L.latLng(n.lat,n.lng),
@@ -355,7 +355,7 @@ nodes.forEach(n=>{
         weight:1,
         interactive:false
       }
-    ).addTo(map);
+    ).addTo(nodeLayer);
 
     n.sectors.push(s);
   });
