@@ -656,7 +656,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
     const c = sec.status === "OFF"
       ? "#dc2626"
-      : "#22c55e";
+      : (sec.color || "#22c55e");  // ✅ pakai warna firestore
 
         const s = createSector(
           L.latLng(n.lat,n.lng),
