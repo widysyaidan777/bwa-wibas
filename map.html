@@ -854,7 +854,7 @@ function refreshMap(){
 
   alert("User berhasil diupdate!");
 };
-    window.editSectorStatus = async function(docId){
+   window.editSectorStatus = async function(docId){
 
   const node = nodes.find(n => n.id === docId);
   if(!node || !node.sectorDefs) return;
@@ -876,12 +876,12 @@ function refreshMap(){
       `Sector ${i+1} Status (UP/OFF):`,
       currentStatus
     );
-
     if(!newStatus) return;
 
-    sectorDefs[i].status = newStatus.toUpperCase();
+    const finalStatus = newStatus.toUpperCase();
+    sectorDefs[i].status = finalStatus;
 
-    if(newStatus.toUpperCase() === "UP"){
+    if(finalStatus === "UP"){
 
       const pilih = prompt(
         "Pilih warna:\n1=Hijau\n2=Biru\n3=Kuning\n4=Oranye",
@@ -889,6 +889,17 @@ function refreshMap(){
       );
 
       sectorDefs[i].color = colorOptions[pilih] || "#22c55e";
+
+    } else {
+      sectorDefs[i].color = "#dc2626"; // 🔥 OFF selalu merah
+    }
+
+    // 🔥 UPDATE LANGSUNG KE MAP TANPA RELOAD
+    if(node.sectors && node.sectors[i]){
+      node.sectors[i].setStyle({
+        color: sectorDefs[i].color,
+        fillColor: sectorDefs[i].color
+      });
     }
   }
 
