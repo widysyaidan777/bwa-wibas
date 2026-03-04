@@ -336,9 +336,12 @@ nodes.forEach(n=>{
   n.sectors = [];
 
   /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
-  if(n.sectorDefs){
-    n.sectorDefs.forEach((sec,idx)=>{
-      const c = col[idx % col.length];
+ if(n.sectorDefs){
+  n.sectorDefs.forEach((sec)=>{
+
+    const c = sec.status === "OFF"
+      ? "#dc2626"
+      : "#22c55e";
       const s = createSector(
         L.latLng(n.lat,n.lng),
         5000,
@@ -594,8 +597,9 @@ for(let i=0;i<sectorCount;i++){
   end   = ((end % 360) + 360) % 360;
 
   sectorDefs.push({
-    start: start,
-    end: end
+  start: start,
+  end: end,
+  status: "UP" // default
   });
 }
 
@@ -645,7 +649,12 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
   style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
   Edit Node
   </button><br>
-
+  
+  <button onclick="editSectorStatus('${doc.id}')"
+  style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+  Edit Sector Status
+  </button><br>
+  
   <button onclick="editNodeStatus('${doc.id}','${n.status}')"
   style="background:orange;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
   Ubah Status
@@ -858,6 +867,37 @@ function refreshMap(){
   });
 
   alert("User berhasil diupdate!");
+};
+    window.editSectorStatus = async function(docId){
+
+  const node = nodes.find(n => n.id === docId);
+  if(!node || !node.sectorDefs) return;
+
+  let sectorDefs = [...node.sectorDefs];
+
+  for(let i=0;i<sectorDefs.length;i++){
+
+    const current = sectorDefs[i].status || "UP";
+
+    const newStatus = prompt(
+      `Sector ${i+1} (${sectorDefs[i].start}-${sectorDefs[i].end}) Status (UP/OFF):`,
+      current
+    );
+
+    if(!newStatus) return;
+
+    sectorDefs[i].status = newStatus.toUpperCase();
+  }
+
+  const { updateDoc, doc } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  await updateDoc(doc(db,"nodes",docId),{
+    sectorDefs: sectorDefs
+  });
+
+  alert("Status sector berhasil diupdate!");
 };
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
