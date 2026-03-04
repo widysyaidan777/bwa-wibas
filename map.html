@@ -336,49 +336,30 @@ nodes.forEach(n=>{
   n.sectors = [];
 
   /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
- if(n.sectorDefs){
+    if(n.sectorDefs){
   n.sectorDefs.forEach((sec)=>{
 
     const c = sec.status === "OFF"
       ? "#dc2626"
-      : "#22c55e";
-      const s = createSector(
-        L.latLng(n.lat,n.lng),
-        5000,
-        sec.start,
-        sec.end,
-        {
-          color:c,
-          fillColor:c,
-          fillOpacity:.25,
-          weight:1,
-          interactive:false
-        }
-      ).addTo(map);
-      n.sectors.push(s);
-    });
+      : (sec.color || "#22c55e");  // 🔥 PAKAI WARNA FIRESTORE
 
-  /* ===== JIKA TIDAK ADA → DEFAULT 4 SEKTOR ===== */
-  }else{
-    for(let i=0;i<4;i++){
-      const s = createSector(
-        L.latLng(n.lat,n.lng),
-        5000,
-        i*90,
-        (i+1)*90,
-        {
-          color:col[i],
-          fillColor:col[i],
-          fillOpacity:.25,
-          weight:1,
-          interactive:false
-        }
-      ).addTo(map);
-      n.sectors.push(s);
-    }
-  }
-});
+    const s = createSector(
+      L.latLng(n.lat,n.lng),
+      5000,
+      sec.start,
+      sec.end,
+      {
+        color:c,
+        fillColor:c,
+        fillOpacity:.25,
+        weight:1,
+        interactive:false
+      }
+    ).addTo(map);
 
+    n.sectors.push(s);
+  });
+}
 
 /* ================= TABLE & FILTER ================= */
 function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
@@ -596,11 +577,19 @@ for(let i=0;i<sectorCount;i++){
   start = ((start % 360) + 360) % 360;
   end   = ((end % 360) + 360) % 360;
 
-  sectorDefs.push({
+const defaultColors = [
+  "#22c55e", // hijau
+  "#3b82f6", // biru
+  "#facc15", // kuning
+  "#f97316"  // oranye
+];
+
+sectorDefs.push({
   start: start,
   end: end,
-  status: "UP" // default
-  });
+  status: "UP",
+  color: defaultColors[i] || "#22c55e"
+});
 }
 
 await addDoc(collection(db,"nodes"),{
@@ -872,18 +861,35 @@ function refreshMap(){
 
   let sectorDefs = [...node.sectorDefs];
 
+  const colorOptions = {
+    1: "#22c55e", // hijau
+    2: "#3b82f6", // biru
+    3: "#facc15", // kuning
+    4: "#f97316"  // oranye
+  };
+
   for(let i=0;i<sectorDefs.length;i++){
 
-    const current = sectorDefs[i].status || "UP";
+    const currentStatus = sectorDefs[i].status || "UP";
 
     const newStatus = prompt(
-      `Sector ${i+1} (${sectorDefs[i].start}-${sectorDefs[i].end}) Status (UP/OFF):`,
-      current
+      `Sector ${i+1} Status (UP/OFF):`,
+      currentStatus
     );
 
     if(!newStatus) return;
 
     sectorDefs[i].status = newStatus.toUpperCase();
+
+    if(newStatus.toUpperCase() === "UP"){
+
+      const pilih = prompt(
+        "Pilih warna:\n1=Hijau\n2=Biru\n3=Kuning\n4=Oranye",
+        "1"
+      );
+
+      sectorDefs[i].color = colorOptions[pilih] || "#22c55e";
+    }
   }
 
   const { updateDoc, doc } = await import(
@@ -894,7 +900,7 @@ function refreshMap(){
     sectorDefs: sectorDefs
   });
 
-  alert("Status sector berhasil diupdate!");
+  alert("Sector berhasil diupdate!");
 };
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
