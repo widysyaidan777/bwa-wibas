@@ -420,16 +420,21 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       Node: ${u.nodeName}<br>
       Sector: ${u.sector || "-"}<br>
       Status: ${u.status}<br><br>
-
-  <button onclick="editFullUser('${doc.id}')"
-  style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-  Edit User
-  </button><br>
-
-  <button onclick="deleteUser('${doc.id}')"
-  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-  Delete User
-  </button>
+      
+     <button onclick="hideUser('${u.id}')"
+      style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;">
+      Hide User
+      </button>
+      
+      <button onclick="editFullUser('${doc.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+    
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
 `);
   });
   redrawLinks();
@@ -610,7 +615,12 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
   <b>${n.name}</b><br>
   Area: ${n.region}<br>
   Status: ${n.status}<br><br>
-
+  
+  <button onclick="hideSector('${n.name}',90)">Hide Sector 90</button><br>
+  <button onclick="hideSector('${n.name}',180)">Hide Sector 180</button><br>
+  <button onclick="hideSector('${n.name}',270)">Hide Sector 270</button><br>
+  <button onclick="hideSector('${n.name}',360)">Hide Sector 360</button>
+  
   <button onclick="editFullNode('${doc.id}')"
   style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
   Edit Node
@@ -649,7 +659,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
             interactive:false
           }
         ).addTo(nodeLayer);
-
+        s.sector = sec.start;
         n.sectors.push(s);
       });
     }
@@ -985,6 +995,46 @@ await addDoc(collection(db,"topology_users"),{
   };
 
   reader.readAsText(file);
+}
+    function hideUser(id){
+
+  const user = users.find(u => u.id === id);
+
+  if(!user) return;
+
+  if(user.marker){
+    map.removeLayer(user.marker);
+  }
+
+}
+    function hideSector(nodeName,sector){
+
+  /* hide sector coverage */
+  nodes.forEach(n=>{
+    if(n.name === nodeName){
+
+      if(n.sectors){
+        n.sectors.forEach(s=>{
+          if(s.sector === sector){
+            nodeLayer.removeLayer(s);
+          }
+        });
+      }
+
+    }
+  });
+
+  /* hide user di sector itu */
+  users.forEach(u=>{
+    if(u.nodeName === nodeName && u.sector === sector){
+
+      if(u.marker){
+        map.removeLayer(u.marker);
+      }
+
+    }
+  });
+
 }
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
