@@ -985,10 +985,8 @@ async function handleCSVImport(event){
 
       for(let i=1;i<rows.length;i++){
 
-        const cols = rows[i].split(",");
-
-        if(cols.length < 4) continue;
-
+        const cols = rows[i].split(/\t|,/); // bisa baca tab atau koma
+        
         const name = cols[0].trim();
         const lat = parseFloat(cols[1].trim());
         const lng = parseFloat(cols[2].trim());
