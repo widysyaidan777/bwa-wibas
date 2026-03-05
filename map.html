@@ -568,6 +568,7 @@ const defaultColors = [
 ];
 
 sectorDefs.push({
+  azimuth: azimuth,   // 🔥 simpan arah sektor
   start: start,
   end: end,
   status: "UP",
@@ -611,25 +612,35 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
     const marker = L.marker([n.lat,n.lng],{
       icon:icon(col, n.status === "OFF")
     }).addTo(nodeLayer)
-    .bindPopup(`
-  <b>${n.name}</b><br>
-  Area: ${n.region}<br>
-  Status: ${n.status}<br><br>
-  
-  <button onclick="hideSector('${n.name}',90)">Hide Sector 90</button><br>
-  <button onclick="hideSector('${n.name}',180)">Hide Sector 180</button><br>
-  <button onclick="hideSector('${n.name}',270)">Hide Sector 270</button><br>
-  <button onclick="hideSector('${n.name}',360)">Hide Sector 360</button>
-  
-  <button onclick="editFullNode('${doc.id}')"
-  style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-  Edit Node
-  </button><br>
-  
-  <button onclick="editSectorStatus('${doc.id}')"
-  style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-  Edit Sector Status
-  </button><br>
+   let sectorButtons = "";
+
+if(n.sectorDefs){
+  n.sectorDefs.forEach(sec=>{
+    sectorButtons += `
+      <button onclick="hideSector('${n.name}',${sec.azimuth})">
+      Hide Sector ${sec.azimuth}
+      </button><br>
+    `;
+  });
+}
+
+marker.bindPopup(`
+<b>${n.name}</b><br>
+Area: ${n.region}<br>
+Status: ${n.status}<br><br>
+
+${sectorButtons}
+
+<button onclick="editFullNode('${doc.id}')"
+style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+Edit Node
+</button><br>
+
+<button onclick="editSectorStatus('${doc.id}')"
+style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+Edit Sector Status
+</button><br>
+
 
   <button onclick="deleteNode('${doc.id}')"
   style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
@@ -659,7 +670,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
             interactive:false
           }
         ).addTo(nodeLayer);
-        s.sector = sec.start;
+        s.sector = sec.azimuth;
         n.sectors.push(s);
       });
     }
