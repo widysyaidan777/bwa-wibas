@@ -337,55 +337,7 @@ function createSector(center, radius, startAz, endAz, opt){
 let nodes = [];
 let coverageVisible=true;
 
-/* ================= CREATE NODE ================= */
-nodes.forEach(n=>{
-  const col = n.status==='UP'
-    ? ['#2563eb','#22c55e','#2563eb','#22c55e']
-    : ['#dc2626','#f97316','#dc2626','#f97316'];
 
-  n.marker = L.marker([n.lat,n.lng],{
-    icon:icon(col,n.status==='DOWN')
-  }).addTo(map)
-  .bindPopup(`
-  <b>${n.name}</b><br>
-  Area: ${n.region}<br>
-  Status: ${n.status}
-`);
-  n.marker.on('click',e=>{
-    if(rulerActive){
-      addRulerPoint(e.latlng);
-      L.DomEvent.stopPropagation(e);
-    }
-  });
-
-  n.sectors = [];
-
-  /* ===== JIKA ADA sectorDefs → PAKAI ITU ===== */
-   if(n.sectorDefs){
-  n.sectorDefs.forEach((sec)=>{
-
-    const c = sec.status === "OFF"
-      ? "#dc2626"
-      : (sec.color || "#22c55e");  // ✅ PAKAI WARNA FIRESTORE
-
-    const s = createSector(
-      L.latLng(n.lat,n.lng),
-      5000,
-      sec.start,
-      sec.end,
-      {
-        color:c,
-        fillColor:c,
-        fillOpacity:.25,
-        weight:1,
-        interactive:false
-      }
-    ).addTo(nodeLayer);
-
-    n.sectors.push(s);
-  });
-}
-});
 /* ================= TABLE & FILTER ================= */
 function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
@@ -986,24 +938,26 @@ async function handleCSVImport(event){
         const line = rows[i].trim();
         if(!line) continue;  // skip baris kosong
 
-        const cols = line.split(/\t|,/).map(c => c.trim());
+     const cols = line.split(/[\t,;]/).map(c => c.trim());
 
-        // minimal 4 kolom: name, lat, lng, nodeName
-        if(cols.length < 4) continue;
+if(cols.length < 4) continue;
 
-        const name = cols[0] || "";
-        const lat = parseFloat(cols[1]) || 0;
-        const lng = parseFloat(cols[2]) || 0;
-        const nodeName = cols[3] || "";
-        const status = cols[4] ? cols[4].toUpperCase() : "UP";
+const name = cols[0];
+const lat = parseFloat(cols[1]);
+const lng = parseFloat(cols[2]);
+const nodeName = cols[3];
+const status = cols[4] ? cols[4].toUpperCase() : "UP";
 
-        // skip jika data penting kosong
-        if(!name || !nodeName) continue;
+if(!name || !nodeName) continue;
+if(isNaN(lat) || isNaN(lng)) continue;
 
-        await addDoc(collection(db,"topology_users"),{
-          name, lat, lng, nodeName, status
-        });
-
+await addDoc(collection(db,"topology_users"),{
+  name,
+  lat,
+  lng,
+  nodeName,
+  status
+});
         success++;
 
         const percent = Math.round((i/(rows.length-1))*100);
