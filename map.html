@@ -183,7 +183,30 @@ th{background:#020617}
 <h4>Topology Editor</h4>
 <button class="blue" onclick="importUsersCSV()">Import Users CSV</button>
 <input type="file" id="csvImport" accept=".csv" style="display:none">
+<div id="importProgress" style="
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#020617;
+padding:20px;
+border:1px solid #334155;
+border-radius:8px;
+display:none;
+z-index:9999;
+text-align:center;
+">
 
+<div style="margin-bottom:10px">Importing Users...</div>
+
+<div style="width:300px;height:16px;background:#334155;border-radius:10px;overflow:hidden">
+<div id="progressBar" style="height:100%;width:0%;background:#22c55e"></div>
+</div>
+
+<div id="progressText" style="margin-top:8px;font-size:13px">0%</div>
+
+</div>
+  
 <button class="blue" onclick="activateAddNode()">Tambah Node</button>
 <button class="blue" onclick="activateAddUser()">Tambah User</button>
 
@@ -916,79 +939,70 @@ function refreshMap(){
   alert("Sector berhasil diupdate!");
 };
     window.importUsersCSV = function(){
-  document.getElementById("csvImport").click();
-};
 
-document.getElementById("csvImport").addEventListener("change", async function(e){
+  const input = document.getElementById("csvImport");
+  input.click();
 
-  const file = e.target.files[0];
-  if(!file) return;
+  input.onchange = async function(e){
 
-  const text = await file.text();
-  const rows = text.split("\n").slice(1); // skip header
+    const file = e.target.files[0];
+    if(!file) return;
 
-  const { addDoc, collection } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
+    const text = await file.text();
+    const rows = text.split("\n").map(r=>r.split(","));
 
-  let success = 0;
-  let failed = 0;
+    rows.shift(); // hapus header
 
-  for(const row of rows){
+    const total = rows.length;
 
-    if(!row.trim()) continue;
+    const progressBox = document.getElementById("importProgress");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
 
-    const cols = row.split(",");
+    progressBox.style.display = "block";
 
-    if(cols.length < 5){
-      failed++;
-      continue;
-    }
+    let count = 0;
 
-    let [name, lat, lng, nodeName, sectorAzimuth, status] = cols;
+    for(const r of rows){
 
-    name = name?.trim();
-    lat = parseFloat(lat);
-    lng = parseFloat(lng);
-    nodeName = nodeName?.trim();
-    sectorAzimuth = parseInt(sectorAzimuth);
-    status = (status || "UP").trim().toUpperCase();
+      const name = r[0];
+      const lat = parseFloat(r[1]);
+      const lng = parseFloat(r[2]);
+      const nodeName = r[3];
+      const sector = parseInt(r[4]);
+      const status = r[5] || "UP";
 
-    // Validasi dasar
-    if(!name || isNaN(lat) || isNaN(lng) || !nodeName || isNaN(sectorAzimuth)){
-      failed++;
-      continue;
-    }
+      const { addDoc, collection } = await import(
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      );
 
-    // Cek node ada
-    const nodeExists = nodes.find(n => n.name === nodeName);
-
-    if(!nodeExists){
-      console.warn("Node tidak ditemukan:", nodeName);
-      failed++;
-      continue;
-    }
-
-    try{
       await addDoc(collection(db,"topology_users"),{
         name,
         lat,
         lng,
         nodeName,
-        sectorAzimuth,
+        sector,
         status
       });
 
-      success++;
+      count++;
 
-    }catch(err){
-      console.error(err);
-      failed++;
+      const percent = Math.floor((count/total)*100);
+
+      progressBar.style.width = percent + "%";
+      progressText.innerText =
+        `${percent}% (${count}/${total})`;
     }
-  }
 
-  alert(`Import selesai!\nBerhasil: ${success}\nGagal: ${failed}`);
-});
+    progressText.innerText = "Import selesai!";
+    
+    setTimeout(()=>{
+      progressBox.style.display="none";
+    },1500);
+
+  };
+
+};
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
