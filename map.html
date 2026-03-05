@@ -945,11 +945,10 @@ function refreshMap(){
 window.importUsersCSV = function(){
   document.getElementById("csvImport").click();
 };
-
+    
 document.getElementById("csvImport").addEventListener("change", handleCSVImport);
 
 async function handleCSVImport(event){
-
   const file = event.target.files[0];
   if(!file){
     alert("File tidak dipilih");
@@ -967,11 +966,9 @@ async function handleCSVImport(event){
   const reader = new FileReader();
 
   reader.onload = async function(e){
-
     try{
-
-      const csv = e.target.result;
-      const rows = csv.split("\n");
+      const csv = e.target.result.trim();
+      const rows = csv.split(/\r?\n/); // support Windows/Mac/Linux
 
       if(rows.length < 2){
         alert("CSV kosong atau format salah");
@@ -983,108 +980,46 @@ async function handleCSVImport(event){
         "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
       );
 
-      for(let i=1;i<rows.length;i++){
+      let success = 0;
 
-        const cols = rows[i].split(/\t|,/); // bisa baca tab atau koma
-        
-        const name = cols[0].trim();
-        const lat = parseFloat(cols[1].trim());
-        const lng = parseFloat(cols[2].trim());
-        const nodeName = cols[3].trim();
-        const status = (cols[4] || "UP").trim();
+      for(let i=1;i<rows.length;i++){  // mulai dari 1 untuk skip header
+        const line = rows[i].trim();
+        if(!line) continue;  // skip baris kosong
 
-        await addDoc(collection(db,"topology_users"),{
-          name:name,
-          lat:lat,
-          lng:lng,
-          nodeName:nodeName,
-          status:status
-        });
+        const cols = line.split(/\t|,/).map(c => c.trim());
 
-        const percent = Math.round((i/(rows.length-1))*100);
+        // minimal 4 kolom: name, lat, lng, nodeName
+        if(cols.length < 4) continue;
 
-        bar.style.width = percent+"%";
-        text.innerText = percent+"%";
-      }
+        const name = cols[0] || "";
+        const lat = parseFloat(cols[1]) || 0;
+        const lng = parseFloat(cols[2]) || 0;
+        const nodeName = cols[3] || "";
+        const status = cols[4] ? cols[4].toUpperCase() : "UP";
 
-      alert("Import CSV berhasil!");
-
-    }catch(err){
-
-      console.error(err);
-      alert("Import gagal: "+err.message);
-
-    }
-
-    progressBox.style.display = "none";
-  };
-
-  reader.readAsText(file);
-}
-    document.getElementById("csvImport").addEventListener("change", handleCSV);
-
-async function handleCSV(e){
-
-  const file = e.target.files[0];
-  if(!file){
-    alert("File tidak dipilih");
-    return;
-  }
-
-  const progressBox = document.getElementById("importProgress");
-  const bar = document.getElementById("progressBar");
-  const text = document.getElementById("progressText");
-
-  progressBox.style.display="block";
-  bar.style.width="0%";
-  text.innerText="0%";
-
-  const reader = new FileReader();
-
-  reader.onload = async function(event){
-
-    try{
-
-      const csv = event.target.result.trim();
-      const rows = csv.split("\n");
-
-      const { addDoc, collection } = await import(
-        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-      );
-
-      let success=0;
-
-      for(let i=1;i<rows.length;i++){
-
-        const c = rows[i].split(",");
-
-        if(c.length < 4) continue;
+        // skip jika data penting kosong
+        if(!name || !nodeName) continue;
 
         await addDoc(collection(db,"topology_users"),{
-          name:c[0],
-          lat:parseFloat(c[1]),
-          lng:parseFloat(c[2]),
-          nodeName:c[3],
-          status:c[4] || "UP"
+          name, lat, lng, nodeName, status
         });
 
         success++;
 
-        const p = Math.round((i/(rows.length-1))*100);
-        bar.style.width=p+"%";
-        text.innerText=p+"%";
+        const percent = Math.round((i/(rows.length-1))*100);
+        bar.style.width = percent+"%";
+        text.innerText = percent+"%";
       }
 
-      alert("Import selesai : "+success+" users");
+      alert("Import CSV selesai: "+success+" users berhasil ditambahkan!");
 
     }catch(err){
-
       console.error(err);
-      alert("Import gagal : "+err.message);
-
+      alert("Import gagal: "+err.message);
     }
 
-    progressBox.style.display="none";
+    progressBox.style.display = "none";
+    event.target.value = ""; // reset input agar bisa import lagi
   };
 
   reader.readAsText(file);
