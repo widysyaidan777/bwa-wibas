@@ -1023,6 +1023,74 @@ async function handleCSVImport(event){
 
   reader.readAsText(file);
 }
+    document.getElementById("csvImport").addEventListener("change", handleCSV);
+
+async function handleCSV(e){
+
+  const file = e.target.files[0];
+  if(!file){
+    alert("File tidak dipilih");
+    return;
+  }
+
+  const progressBox = document.getElementById("importProgress");
+  const bar = document.getElementById("progressBar");
+  const text = document.getElementById("progressText");
+
+  progressBox.style.display="block";
+  bar.style.width="0%";
+  text.innerText="0%";
+
+  const reader = new FileReader();
+
+  reader.onload = async function(event){
+
+    try{
+
+      const csv = event.target.result.trim();
+      const rows = csv.split("\n");
+
+      const { addDoc, collection } = await import(
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      );
+
+      let success=0;
+
+      for(let i=1;i<rows.length;i++){
+
+        const c = rows[i].split(",");
+
+        if(c.length < 4) continue;
+
+        await addDoc(collection(db,"topology_users"),{
+          name:c[0],
+          lat:parseFloat(c[1]),
+          lng:parseFloat(c[2]),
+          nodeName:c[3],
+          status:c[4] || "UP"
+        });
+
+        success++;
+
+        const p = Math.round((i/(rows.length-1))*100);
+        bar.style.width=p+"%";
+        text.innerText=p+"%";
+      }
+
+      alert("Import selesai : "+success+" users");
+
+    }catch(err){
+
+      console.error(err);
+      alert("Import gagal : "+err.message);
+
+    }
+
+    progressBox.style.display="none";
+  };
+
+  reader.readAsText(file);
+}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
