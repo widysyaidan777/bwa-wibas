@@ -414,11 +414,12 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
-
-   marker.bindPopup(`
-  <b>${u.name}</b><br>
-  Node: ${u.nodeName}<br>
-  Status: ${u.status}<br><br>
+    
+     marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sector || "-"}<br>
+      Status: ${u.status}<br><br>
 
   <button onclick="editFullUser('${doc.id}')"
   style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
@@ -946,15 +947,14 @@ const name = cols[0];
 const lat = parseFloat(cols[1]);
 const lng = parseFloat(cols[2]);
 const nodeName = cols[3];
-let status = "UP";
 
+let status = "UP";
 if(cols[4]){
   status = cols[4].trim().toUpperCase();
 }
 
-if(status !== "UP" && status !== "OFF"){
-  status = "UP";
-}
+const sector = cols[5] ? parseInt(cols[5]) : null;
+
 if(!name || !nodeName) continue;
 if(isNaN(lat) || isNaN(lng)) continue;
 
@@ -963,7 +963,8 @@ await addDoc(collection(db,"topology_users"),{
   lat,
   lng,
   nodeName,
-  status
+  status,
+  sector
 });
         success++;
 
