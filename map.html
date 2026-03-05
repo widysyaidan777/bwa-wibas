@@ -1036,6 +1036,59 @@ await addDoc(collection(db,"topology_users"),{
   });
 
 }
+    window.hideUser = function(userId){
+
+  const user = usersData.find(u => u.id === userId);
+  if(!user) return;
+
+  // cari marker user di layer
+  userLayer.eachLayer(layer=>{
+    const latlng = layer.getLatLng();
+
+    if(
+      latlng.lat === user.lat &&
+      latlng.lng === user.lng
+    ){
+      userLayer.removeLayer(layer);
+    }
+  });
+
+};
+    window.hideSector = function(nodeName, sector){
+
+  const node = nodes.find(n => n.name === nodeName);
+  if(!node) return;
+
+  node.sectors.forEach(s=>{
+
+    if(s.sector === sector){
+
+      map.removeLayer(s);
+
+      // hide user yang berada di sektor ini
+      usersData.forEach(u=>{
+        if(
+          u.nodeName === nodeName &&
+          parseInt(u.sector) === sector
+        ){
+          userLayer.eachLayer(layer=>{
+            const latlng = layer.getLatLng();
+
+            if(
+              latlng.lat === u.lat &&
+              latlng.lng === u.lng
+            ){
+              userLayer.removeLayer(layer);
+            }
+          });
+        }
+      });
+
+    }
+
+  });
+
+};
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
