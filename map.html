@@ -938,22 +938,27 @@ function refreshMap(){
 
   alert("Sector berhasil diupdate!");
 };
-    window.importUsersCSV = function(){
+   /* =============================
+   IMPORT USERS CSV
+============================= */
 
-  const input = document.getElementById("csvImport");
-  input.click();
+window.importUsersCSV = function(){
+  document.getElementById("csvImport").click();
+};
 
-  input.onchange = async function(e){
+document.getElementById("csvImport").addEventListener("change", async function(e){
 
-    const file = e.target.files[0];
-    if(!file) return;
+  const file = e.target.files[0];
+  if(!file) return;
 
-    const text = await file.text();
-    const rows = text.split("\n").map(r=>r.split(","));
+  const reader = new FileReader();
+
+  reader.onload = async function(event){
+
+    const text = event.target.result;
+    const rows = text.split("\n").map(r=>r.trim()).filter(r=>r);
 
     rows.shift(); // hapus header
-
-    const total = rows.length;
 
     const progressBox = document.getElementById("importProgress");
     const progressBar = document.getElementById("progressBar");
@@ -961,48 +966,62 @@ function refreshMap(){
 
     progressBox.style.display = "block";
 
-    let count = 0;
+    const total = rows.length;
 
-    for(const r of rows){
+    const { addDoc, collection } = await import(
+      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+    );
 
-      const name = r[0];
-      const lat = parseFloat(r[1]);
-      const lng = parseFloat(r[2]);
-      const nodeName = r[3];
-      const sector = parseInt(r[4]);
-      const status = r[5] || "UP";
+    for(let i=0;i<rows.length;i++){
 
-      const { addDoc, collection } = await import(
-        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-      );
+      const cols = rows[i].split(",");
 
+      const name = cols[0];
+      const lat = parseFloat(cols[1]);
+      const lng = parseFloat(cols[2]);
+      const nodeName = cols[3];
+      const status = cols[4] || "UP";
+
+      try{
+
+      const nodeExists = nodes.find(n => n.name === nodeName);
+
+      if(!nodeExists){
+        console.warn("Node tidak ditemukan:", nodeName);
+        continue;
+      }
+      
       await addDoc(collection(db,"topology_users"),{
-        name,
-        lat,
-        lng,
-        nodeName,
-        sector,
-        status
+        name:name,
+        lat:lat,
+        lng:lng,
+        nodeName:nodeName,
+        status:status
       });
 
-      count++;
+      }catch(err){
+        console.error("Import error:",err);
+      }
 
-      const percent = Math.floor((count/total)*100);
+      const percent = Math.round(((i+1)/total)*100);
 
-      progressBar.style.width = percent + "%";
-      progressText.innerText =
-        `${percent}% (${count}/${total})`;
+      progressBar.style.width = percent+"%";
+      progressText.innerText = percent+"%";
+
     }
 
     progressText.innerText = "Import selesai!";
-    
     setTimeout(()=>{
       progressBox.style.display="none";
     },1500);
 
+  // 🔥 RESET INPUT FILE (taruh di sini)
+  document.getElementById("csvImport").value = "";
   };
 
-};
+  reader.readAsText(file);
+
+});
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
