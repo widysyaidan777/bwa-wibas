@@ -455,7 +455,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
     usersData.push(u);
 
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
+    
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
@@ -769,7 +769,7 @@ function redrawLinks(){
 
   usersData.forEach(u=>{   // 🔥 PAKAI usersData
 
-    const node = nodes.find(n => n.name === u.nodeName);
+    const node = nodes.find(n => n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase());
 
     if(!node) return;
 
@@ -989,11 +989,11 @@ async function handleCSVImport(event){
 
         if(cols.length < 4) continue;
 
-        const name = cols[0];
-        const lat = parseFloat(cols[1]);
-        const lng = parseFloat(cols[2]);
-        const nodeName = cols[3];
-        const status = cols[4] || "UP";
+        const name = cols[0].trim();
+        const lat = parseFloat(cols[1].trim());
+        const lng = parseFloat(cols[2].trim());
+        const nodeName = cols[3].trim();
+        const status = (cols[4] || "UP").trim();
 
         await addDoc(collection(db,"topology_users"),{
           name:name,
