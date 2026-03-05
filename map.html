@@ -938,90 +938,91 @@ function refreshMap(){
 
   alert("Sector berhasil diupdate!");
 };
-   /* =============================
-   IMPORT USERS CSV
+/* =============================
+   IMPORT CSV USERS
 ============================= */
 
 window.importUsersCSV = function(){
   document.getElementById("csvImport").click();
 };
 
-document.getElementById("csvImport").addEventListener("change", async function(e){
+document.getElementById("csvImport").addEventListener("change", handleCSVImport);
 
-  const file = e.target.files[0];
-  if(!file) return;
+async function handleCSVImport(event){
+
+  const file = event.target.files[0];
+  if(!file){
+    alert("File tidak dipilih");
+    return;
+  }
+
+  const progressBox = document.getElementById("importProgress");
+  const bar = document.getElementById("progressBar");
+  const text = document.getElementById("progressText");
+
+  progressBox.style.display = "block";
+  bar.style.width = "0%";
+  text.innerText = "0%";
 
   const reader = new FileReader();
 
-  reader.onload = async function(event){
+  reader.onload = async function(e){
 
-    const text = event.target.result;
-    const rows = text.split("\n").map(r=>r.trim()).filter(r=>r);
+    try{
 
-    rows.shift(); // hapus header
+      const csv = e.target.result;
+      const rows = csv.split("\n");
 
-    const progressBox = document.getElementById("importProgress");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
-
-    progressBox.style.display = "block";
-
-    const total = rows.length;
-
-    const { addDoc, collection } = await import(
-      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-    );
-
-    for(let i=0;i<rows.length;i++){
-
-      const cols = rows[i].split(",");
-
-      const name = cols[0];
-      const lat = parseFloat(cols[1]);
-      const lng = parseFloat(cols[2]);
-      const nodeName = cols[3];
-      const status = cols[4] || "UP";
-
-      try{
-
-      const nodeExists = nodes.find(n => n.name === nodeName);
-
-      if(!nodeExists){
-        console.warn("Node tidak ditemukan:", nodeName);
-        continue;
-      }
-      
-      await addDoc(collection(db,"topology_users"),{
-        name:name,
-        lat:lat,
-        lng:lng,
-        nodeName:nodeName,
-        status:status
-      });
-
-      }catch(err){
-        console.error("Import error:",err);
+      if(rows.length < 2){
+        alert("CSV kosong atau format salah");
+        progressBox.style.display = "none";
+        return;
       }
 
-      const percent = Math.round(((i+1)/total)*100);
+      const { addDoc, collection } = await import(
+        "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      );
 
-      progressBar.style.width = percent+"%";
-      progressText.innerText = percent+"%";
+      for(let i=1;i<rows.length;i++){
+
+        const cols = rows[i].split(",");
+
+        if(cols.length < 4) continue;
+
+        const name = cols[0];
+        const lat = parseFloat(cols[1]);
+        const lng = parseFloat(cols[2]);
+        const nodeName = cols[3];
+        const status = cols[4] || "UP";
+
+        await addDoc(collection(db,"topology_users"),{
+          name:name,
+          lat:lat,
+          lng:lng,
+          nodeName:nodeName,
+          status:status
+        });
+
+        const percent = Math.round((i/(rows.length-1))*100);
+
+        bar.style.width = percent+"%";
+        text.innerText = percent+"%";
+      }
+
+      alert("Import CSV berhasil!");
+
+    }catch(err){
+
+      console.error(err);
+      alert("Import gagal: "+err.message);
 
     }
 
-    progressText.innerText = "Import selesai!";
-    setTimeout(()=>{
-      progressBox.style.display="none";
-    },1500);
-
-  // 🔥 RESET INPUT FILE (taruh di sini)
-  document.getElementById("csvImport").value = "";
+    progressBox.style.display = "none";
   };
 
   reader.readAsText(file);
-
-});
+}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
