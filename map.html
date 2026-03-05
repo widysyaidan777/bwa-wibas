@@ -946,8 +946,15 @@ const name = cols[0];
 const lat = parseFloat(cols[1]);
 const lng = parseFloat(cols[2]);
 const nodeName = cols[3];
-const status = cols[4] ? cols[4].toUpperCase() : "UP";
+let status = "UP";
 
+if(cols[4]){
+  status = cols[4].trim().toUpperCase();
+}
+
+if(status !== "UP" && status !== "OFF"){
+  status = "UP";
+}
 if(!name || !nodeName) continue;
 if(isNaN(lat) || isNaN(lng)) continue;
 
