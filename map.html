@@ -434,17 +434,20 @@ const node = nodes.find(n=>n.name===nodeName);
 
 if(!node) return;
 
-node.coverage = !node.coverage;
+node.coverageOn = !node.coverageOn;
 
 node.sectors.forEach(s=>{
-  if(node.coverage && coverageVisible){
-    s.addTo(map);
-  }else{
-    map.removeLayer(s);
-  }
+
+if(node.coverageOn && coverageVisible){
+s.addTo(map);
+}else{
+map.removeLayer(s);
+}
+
 });
 
 }
+  
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function searchTopology(){
 
@@ -618,10 +621,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       Delete User
       </button>
       
-      <button onclick="toggleNodeCoverage('${n.name}')"
-      style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Toggle Coverage
-      </button><br>
+   
 `);
   });
   redrawLinks();
@@ -778,7 +778,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
     const n = doc.data();
     n.id = doc.id;
-    n.coverage = true;
+    n.coverageOn = true;
     nodes.push(n);
 
     const col = n.status === "OFF"
@@ -805,6 +805,10 @@ style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:
 Edit Sector Status
 </button><br>
 
+<button onclick="toggleNodeCoverage('${n.name}')"
+style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
+Toggle Coverage Node
+</button><br>
 
   <button onclick="deleteNode('${doc.id}')"
   style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
