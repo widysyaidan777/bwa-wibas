@@ -1275,6 +1275,10 @@ await addDoc(collection(db,"topology_users"),{
   alert("Data tidak ditemukan");
 
 }
+    function formatCoord(v){
+  if(v === undefined || v === null || v === "") return "";
+  return Number(v).toFixed(6);
+}
 window.exportTopologyCSV = function(){
 
 let csv = "TYPE,NAME,NODE,SECTOR,STATUS,LAT,LNG\n";
@@ -1291,8 +1295,8 @@ n.name,
 "",
 "",
 n.status || "UP",
-Number(n.lat).toFixed(6),
-Number(n.lng).toFixed(6)
+formatCoord(n.lat),
+formatCoord(n.lng)
 ].join(",") + "\n";
 
 });
@@ -1307,10 +1311,10 @@ csv += [
 "USER",
 u.name,
 u.nodeName,
-u.sector,
+u.sector || "",
 u.status || "UP",
-Number(u.lat).toFixed(6),
-Number(u.lng).toFixed(6)
+formatCoord(u.lat),
+formatCoord(u.lng)
 ].join(",") + "\n";
 
 });
