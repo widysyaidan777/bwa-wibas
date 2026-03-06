@@ -593,22 +593,10 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
     }).addTo(nodeLayer)
    let sectorButtons = "";
 
-if(n.sectorDefs){
-  n.sectorDefs.forEach(sec=>{
-    sectorButtons += `
-      <button onclick="hideSector('${n.name}',${sec.azimuth ?? "-"})">
-      Hide Sector ${sec.azimuth ?? "-"}
-      </button><br>
-    `;
-  });
-}
-
 marker.bindPopup(`
 <b>${n.name}</b><br>
 Area: ${n.region}<br>
 Status: ${n.status}<br><br>
-
-${sectorButtons}
 
 <button onclick="editFullNode('${doc.id}')"
 style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
