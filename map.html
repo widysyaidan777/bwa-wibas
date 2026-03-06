@@ -359,6 +359,70 @@ function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sec
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
+function searchTopology(){
+
+  const keyword = document
+    .getElementById("searchBox")
+    .value
+    .trim()
+    .toUpperCase();
+    document.getElementById("searchBox")
+    .addEventListener("keypress",function(e){
+      if(e.key==="Enter"){
+        searchTopology();
+      }
+});
+  if(!keyword){
+    showAll();
+    return;
+  }
+
+  /* =====================
+     SEARCH NODE
+  ===================== */
+
+  const node = nodes.find(n =>
+    n.name.toUpperCase().includes(keyword)
+  );
+
+  if(node){
+
+    focusNode(node.name);
+
+    const filtered = nodes.filter(n =>
+      n.name.toUpperCase().includes(keyword)
+    );
+
+    render(filtered);
+
+    return;
+  }
+
+  /* =====================
+     SEARCH USER
+  ===================== */
+
+  const user = usersData.find(u =>
+    u.name.toUpperCase().includes(keyword)
+  );
+
+  if(user){
+
+    const node = nodes.find(n =>
+      n.name.toUpperCase() === user.nodeName.toUpperCase()
+    );
+
+    if(node){
+      map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
+      node.marker.openPopup();
+      render([node]);
+    }
+
+    return;
+  }
+
+  alert("Node / User tidak ditemukan");
+}
 function backToMenu(){ window.location.href="index.html"; }
 
 showAll();
@@ -475,9 +539,12 @@ map.on("click", async function(e){
   const name = prompt("Masukkan nama user:");
   if(!name) return;
 
-  const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
+   const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
-
+  
+  const sector = prompt("Masuk ke sector berapa? (1-4)");
+  if(!sector) return;
+  
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
   const manualLng = prompt("Longitude (enter untuk pakai titik klik):", lng);
@@ -489,12 +556,13 @@ map.on("click", async function(e){
     const { addDoc, collection } = await import(
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
-
-    await addDoc(collection(db,"topology_users"),{
+    
+     await addDoc(collection(db,"topology_users"),{
       name:name,
       lat:lat,
       lng:lng,
       nodeName:nodeName,
+      sector:sector,
       status:"UP"
     });
 
