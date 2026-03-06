@@ -1275,14 +1275,10 @@ await addDoc(collection(db,"topology_users"),{
   alert("Data tidak ditemukan");
 
 }
-    
-function fixCoord(v){
-return Number(parseFloat(v)).toFixed(6);
-}
 window.exportTopologyCSV = function(){
 
 let csv = "TYPE,NAME,REGION,AREA,NODE,SECTOR,STATUS,LAT,LNG\n";
-  
+
 /* =========================
    EXPORT NODE
 ========================= */
@@ -1297,11 +1293,13 @@ n.area || "",
 "",
 "",
 n.status || "UP",
-fixCoord(n.lat),
-fixCoord(n.lng)
+parseFloat(n.lat).toFixed(6),
+parseFloat(n.lng).toFixed(6)
 ].join(",") + "\n";
+
 });
-  
+
+
 /* =========================
    EXPORT USER
 ========================= */
@@ -1313,14 +1311,15 @@ csv += [
 u.name,
 u.region || "",
 u.area || "",
-u.nodeName,
+u.nodeName || "",
 u.sector || "",
 u.status || "UP",
-fixCoord(n.lat),
-fixCoord(n.lng)
+parseFloat(u.lat).toFixed(6),
+parseFloat(u.lng).toFixed(6)
 ].join(",") + "\n";
 
 });
+
 
 /* =========================
    DOWNLOAD FILE
@@ -1339,7 +1338,6 @@ URL.revokeObjectURL(url);
 alert("Topology berhasil di export");
 
 };
-    
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
