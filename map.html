@@ -1283,6 +1283,8 @@ let csv = "TYPE,NAME,NODE,SECTOR,STATUS,LAT,LNG\n";
    EXPORT NODE
 ========================= */
 
+nodesData.forEach(n=>{
+
 csv += [
 "NODE",
 n.name,
@@ -1292,6 +1294,8 @@ n.status || "UP",
 Number(n.lat).toFixed(6),
 Number(n.lng).toFixed(6)
 ].join(",") + "\n";
+
+});
 
 /* =========================
    EXPORT USER
@@ -1328,6 +1332,7 @@ URL.revokeObjectURL(url);
 alert("Topology berhasil di export");
 
 };
+    
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
