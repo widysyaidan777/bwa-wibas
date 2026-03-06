@@ -539,43 +539,26 @@ let sectorDefs = [];
 
 for(let i=0;i<sectorCount;i++){
 
-  let azimuth = parseInt(
-    prompt(`Masukkan azimuth sektor ${i+1} (contoh 135)`)
-  );
+  let azimuth = parseInt(prompt(`Azimuth sektor ${i+1}`));
 
-  if(isNaN(azimuth)){
-    alert("Azimuth tidak valid");
-    return;
-  }
-
-  // ✅ NORMALISASI supaya selalu 0–359
   azimuth = ((azimuth % 360) + 360) % 360;
 
-  const beamwidth = 90;   // 🔥 FIX 90 DERJAT
+  const beamwidth = 90;
 
   let start = azimuth - (beamwidth/2);
   let end   = azimuth + (beamwidth/2);
 
-  // ✅ normalisasi start & end
   start = ((start % 360) + 360) % 360;
   end   = ((end % 360) + 360) % 360;
 
-const defaultColors = [
-  "#22c55e", // hijau
-  "#3b82f6", // biru
-  "#facc15", // kuning
-  "#f97316"  // oranye
-];
-
-sectorDefs.push({
-  azimuth: azimuth,   // 🔥 simpan arah sektor
-  start: start,
-  end: end,
-  status: "UP",
-  color: defaultColors[i] || "#22c55e"
-});
+  sectorDefs.push({
+    azimuth: azimuth,
+    start: start,
+    end: end,
+    status: "UP",
+    color: "#22c55e"
+  });
 }
-
 await addDoc(collection(db,"nodes"),{
   name:name,
   region:region,
@@ -617,8 +600,8 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 if(n.sectorDefs){
   n.sectorDefs.forEach(sec=>{
     sectorButtons += `
-      <button onclick="hideSector('${n.name}',${sec.azimuth})">
-      Hide Sector ${sec.azimuth}
+      <button onclick="hideSector('${n.name}',${sec.azimuth ?? "-"})">
+      Hide Sector ${sec.azimuth ?? "-"}
       </button><br>
     `;
   });
