@@ -167,39 +167,21 @@ th{background:#020617}
     <button onclick="filterRegion('SSA')">SSA</button>
   </div>
 
-<hr style="border:1px solid #334155">
-
-<h4>Search</h4>
-
-<div style="position:relative">
-
-<input id="searchBox"
-placeholder="Search Node / User / Customer / Region"
-autocomplete="off"
-style="
-width:100%;
-padding:6px;
-border-radius:6px;
-border:none;
-">
-
-<div id="suggestions"
-style="
-position:absolute;
-top:34px;
-left:0;
-right:0;
-background:#020617;
-border:1px solid #334155;
-border-radius:6px;
-display:none;
-max-height:200px;
-overflow:auto;
-z-index:999;
-"></div>
-
-</div>
+  <hr style="border:1px solid #334155">
   
+  <h4>Search</h4>
+  
+  <input id="searchBox" placeholder="Node/ User/Customer"
+  style="
+  width:100%;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  margin-bottom:6px;
+  ">
+
+<button class="blue" onclick="searchTopology()">Search</button>
+ 
   <hr style="border:1px solid #334155">
 
   <h4>Ruler</h4>
@@ -1007,159 +989,104 @@ await addDoc(collection(db,"topology_users"),{
 
   reader.readAsText(file);
 }
+ window.searchTopology = function(){
 
-    /* =============================
-   ADVANCED SEARCH ENGINE
-============================= */
+  const keyword = document
+  .getElementById("searchBox")
+  .value
+  .trim()
+  .toUpperCase();
 
-const searchBox = document.getElementById("searchBox");
-const suggestionBox = document.getElementById("suggestions");
+  if(!keyword) return;
 
-let highlightedLinks = [];
+  let foundUser = null;
+  let foundNode = null;
+  let userMatches = [];
 
-/* CLEAR HIGHLIGHT */
-function clearHighlight(){
+  // =====================
+  // CEK USER
+  // =====================
+  usersData.forEach(u=>{
 
-  highlightedLinks.forEach(l=>{
-    linkLayer.removeLayer(l);
+    const name = (u.name || "").toUpperCase();
+    const node = (u.nodeName || "").toUpperCase();
+
+    if(
+      name.includes(keyword) ||
+      node.includes(keyword)
+    ){
+      userMatches.push(u);
+    }
+
+    if(name === keyword){
+      foundUser = u;
+    }
+
   });
 
-  highlightedLinks = [];
+  // =====================
+  // CEK NODE
+  // =====================
+  nodes.forEach(n=>{
 
-}
+    const nodeName = (n.name || "").toUpperCase();
 
-/* HIGHLIGHT LINK USER -> NODE */
-function highlightUserLink(user){
-
-  const node = nodes.find(n =>
-    n.name.trim().toUpperCase() === user.nodeName.trim().toUpperCase()
-  );
-
-  if(!node) return;
-
-  const line = L.polyline(
-    [
-      [user.lat,user.lng],
-      [node.lat,node.lng]
-    ],
-    {
-      color:"#22c55e",
-      weight:4,
-      opacity:1
+    if(nodeName === keyword){
+      foundNode = n;
     }
-  );
 
-  linkLayer.addLayer(line);
-  highlightedLinks.push(line);
+  });
 
-}
+  // =====================
+  // PRIORITAS 1 : USER EXACT
+  // =====================
+  if(foundUser){
 
-/* REALTIME SEARCH */
-searchBox.addEventListener("input",function(){
+    map.flyTo([foundUser.lat,foundUser.lng],14);
 
-  const keyword = this.value.trim().toUpperCase();
+    L.popup()
+    .setLatLng([foundUser.lat,foundUser.lng])
+    .setContent(`<b>${foundUser.name}</b><br>Node: ${foundUser.nodeName}`)
+    .openOn(map);
 
-  suggestionBox.innerHTML="";
-  suggestionBox.style.display="none";
-
-  clearHighlight();
-
-  if(!keyword){
-    showAll();
     return;
   }
 
-  let results=[];
+  // =====================
+  // PRIORITAS 2 : NODE
+  // =====================
+  if(foundNode){
 
-  /* SEARCH NODE */
-  nodes.forEach(n=>{
-    if(n.name.toUpperCase().includes(keyword)){
-      results.push({
-        type:"node",
-        label:"NODE : "+n.name,
-        data:n
-      });
-    }
-  });
+    map.flyTo([foundNode.lat,foundNode.lng],12);
+    foundNode.marker.openPopup();
 
-  /* SEARCH USER */
-  usersData.forEach(u=>{
+    return;
+  }
 
-    const name = (u.name||"").toUpperCase();
+  // =====================
+  // PRIORITAS 3 : CUSTOMER / PARTIAL
+  // =====================
+  if(userMatches.length){
 
-    if(name.includes(keyword)){
-      results.push({
-        type:"user",
-        label:"USER : "+u.name,
-        data:u
-      });
-    }
+    const group = L.featureGroup();
 
-  });
+    userMatches.forEach(u=>{
 
-  /* SEARCH REGION */
-  nodes.forEach(n=>{
-    if((n.region||"").toUpperCase().includes(keyword)){
-      results.push({
-        type:"region",
-        label:"REGION : "+n.region,
-        data:n.region
-      });
-    }
-  });
+      const marker = L.circleMarker([u.lat,u.lng]);
+      group.addLayer(marker);
 
-  if(!results.length) return;
+    });
 
-  suggestionBox.style.display="block";
+    map.fitBounds(group.getBounds());
 
-  results.slice(0,15).forEach(r=>{
+    alert(userMatches.length + " user ditemukan");
 
-    const item=document.createElement("div");
+    return;
+  }
 
-    item.style.padding="6px";
-    item.style.cursor="pointer";
-    item.style.borderBottom="1px solid #334155";
+  alert("Data tidak ditemukan");
 
-    item.innerHTML=r.label;
-
-    item.onclick=function(){
-
-      suggestionBox.style.display="none";
-      searchBox.value=r.label.replace(/.*:\s*/,"");
-
-      if(r.type==="node"){
-
-        map.flyTo([r.data.lat,r.data.lng],13);
-        r.data.marker.openPopup();
-
-      }
-
-      if(r.type==="user"){
-
-        map.flyTo([r.data.lat,r.data.lng],14);
-
-        highlightUserLink(r.data);
-
-        L.popup()
-        .setLatLng([r.data.lat,r.data.lng])
-        .setContent(`<b>${r.data.name}</b><br>Node: ${r.data.nodeName}`)
-        .openOn(map);
-
-      }
-
-      if(r.type==="region"){
-
-        filterRegion(r.data);
-
-      }
-
-    };
-
-    suggestionBox.appendChild(item);
-
-  });
-
-});
+}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
