@@ -1275,11 +1275,14 @@ await addDoc(collection(db,"topology_users"),{
   alert("Data tidak ditemukan");
 
 }
-
+    
+function fixCoord(v){
+return Number(parseFloat(v)).toFixed(6);
+}
 window.exportTopologyCSV = function(){
 
-let csv = "TYPE,NAME,NODE,SECTOR,STATUS,LAT,LNG\n";
-
+let csv = "TYPE,NAME,REGION,AREA,NODE,SECTOR,STATUS,LAT,LNG\n";
+  
 /* =========================
    EXPORT NODE
 ========================= */
@@ -1289,15 +1292,16 @@ nodes.forEach(n=>{
 csv += [
 "NODE",
 n.name,
+n.region || "",
+n.area || "",
 "",
 "",
 n.status || "UP",
-Number(n.lat).toFixed(6),
-Number(n.lng).toFixed(6)
+fixCoord(n.lat),
+fixCoord(n.lng)
 ].join(",") + "\n";
-
 });
-
+  
 /* =========================
    EXPORT USER
 ========================= */
@@ -1307,11 +1311,13 @@ usersData.forEach(u=>{
 csv += [
 "USER",
 u.name,
+u.region || "",
+u.area || "",
 u.nodeName,
 u.sector || "",
 u.status || "UP",
-Number(u.lat).toFixed(6),
-Number(u.lng).toFixed(6)
+fixCoord(n.lat),
+fixCoord(n.lng)
 ].join(",") + "\n";
 
 });
