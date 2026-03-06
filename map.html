@@ -836,7 +836,7 @@ function refreshMap(){
 
   alert("User berhasil diupdate!");
 };
-   window.editSectorStatus = async function(docId){
+ window.editSectorStatus = async function(docId){
 
   const node = nodes.find(n => n.id === docId);
   if(!node || !node.sectorDefs) return;
@@ -844,10 +844,10 @@ function refreshMap(){
   let sectorDefs = [...node.sectorDefs];
 
   const colorOptions = {
-    1: "#22c55e", // hijau
-    2: "#3b82f6", // biru
-    3: "#facc15", // kuning
-    4: "#f97316"  // oranye
+    1:"#22c55e",
+    2:"#3b82f6",
+    3:"#facc15",
+    4:"#f97316"
   };
 
   for(let i=0;i<sectorDefs.length;i++){
@@ -863,7 +863,7 @@ function refreshMap(){
     const finalStatus = newStatus.toUpperCase();
     sectorDefs[i].status = finalStatus;
 
-    if(finalStatus === "UP"){
+    if(finalStatus==="UP"){
 
       const pilih = prompt(
         "Pilih warna:\n1=Hijau\n2=Biru\n3=Kuning\n4=Oranye",
@@ -872,17 +872,17 @@ function refreshMap(){
 
       sectorDefs[i].color = colorOptions[pilih] || "#22c55e";
 
-    } else {
-      sectorDefs[i].color = "#dc2626"; // 🔥 OFF selalu merah
+    }else{
+      sectorDefs[i].color = "#dc2626";
     }
 
-    // 🔥 UPDATE LANGSUNG KE MAP TANPA RELOAD
     if(node.sectors && node.sectors[i]){
       node.sectors[i].setStyle({
         color: sectorDefs[i].color,
         fillColor: sectorDefs[i].color
       });
     }
+
   }
 
   const { updateDoc, doc } = await import(
@@ -895,6 +895,7 @@ function refreshMap(){
 
   alert("Sector berhasil diupdate!");
 };
+    
 /* =============================
    IMPORT CSV USERS
 ============================= */
@@ -990,17 +991,7 @@ await addDoc(collection(db,"topology_users"),{
 
   reader.readAsText(file);
 }
-    function hideUser(id){
-
-  const user = users.find(u => u.id === id);
-
-  if(!user) return;
-
-  if(user.marker){
-    map.removeLayer(user.marker);
-  }
-
-}
+ 
 window.hideUser = function(userId){
 
   const user = usersData.find(u => u.id === userId);
