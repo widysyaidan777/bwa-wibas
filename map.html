@@ -167,6 +167,21 @@ th{background:#020617}
     <button onclick="filterRegion('SSA')">SSA</button>
   </div>
 
+  <hr style="border:1px solid #334155">
+  
+  <h4>Search</h4>
+  
+  <input id="searchBox" placeholder="Search Node / User / Customer"
+  style="
+  width:100%;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  margin-bottom:6px;
+  ">
+
+<button class="blue" onclick="searchTopology()">Search</button>
+<button class="gray" onclick="resetSearch()">Reset Search</button>
   
   <hr style="border:1px solid #334155">
 
@@ -975,7 +990,113 @@ await addDoc(collection(db,"topology_users"),{
 
   reader.readAsText(file);
 }
- 
+ window.searchTopology = function(){
+
+  const keyword = document
+  .getElementById("searchBox")
+  .value
+  .trim()
+  .toUpperCase();
+
+  if(!keyword) return;
+
+  let foundUser = null;
+  let foundNode = null;
+  let userMatches = [];
+
+  // =====================
+  // CEK USER
+  // =====================
+  usersData.forEach(u=>{
+
+    const name = (u.name || "").toUpperCase();
+    const node = (u.nodeName || "").toUpperCase();
+
+    if(
+      name.includes(keyword) ||
+      node.includes(keyword)
+    ){
+      userMatches.push(u);
+    }
+
+    if(name === keyword){
+      foundUser = u;
+    }
+
+  });
+
+  // =====================
+  // CEK NODE
+  // =====================
+  nodes.forEach(n=>{
+
+    const nodeName = (n.name || "").toUpperCase();
+
+    if(nodeName === keyword){
+      foundNode = n;
+    }
+
+  });
+
+  // =====================
+  // PRIORITAS 1 : USER EXACT
+  // =====================
+  if(foundUser){
+
+    map.flyTo([foundUser.lat,foundUser.lng],14);
+
+    L.popup()
+    .setLatLng([foundUser.lat,foundUser.lng])
+    .setContent(`<b>${foundUser.name}</b><br>Node: ${foundUser.nodeName}`)
+    .openOn(map);
+
+    return;
+  }
+
+  // =====================
+  // PRIORITAS 2 : NODE
+  // =====================
+  if(foundNode){
+
+    map.flyTo([foundNode.lat,foundNode.lng],12);
+    foundNode.marker.openPopup();
+
+    return;
+  }
+
+  // =====================
+  // PRIORITAS 3 : CUSTOMER / PARTIAL
+  // =====================
+  if(userMatches.length){
+
+    const group = L.featureGroup();
+
+    userMatches.forEach(u=>{
+
+      const marker = L.circleMarker([u.lat,u.lng]);
+      group.addLayer(marker);
+
+    });
+
+    map.fitBounds(group.getBounds());
+
+    alert(userMatches.length + " user ditemukan");
+
+    return;
+  }
+
+  alert("Data tidak ditemukan");
+
+}
+    window.resetSearch = function(){
+
+  document.getElementById("searchBox").value="";
+
+  showAll();
+
+  alert("Map kembali normal");
+
+}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
