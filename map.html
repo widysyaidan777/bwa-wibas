@@ -45,6 +45,14 @@ button{
   color:white;
   cursor:pointer
 }
+  #searchBox{
+  width:100%;
+  padding:8px;
+  border:none;
+  border-radius:4px;
+  margin-bottom:6px;
+  box-sizing:border-box;
+}
 .blue{background:#2563eb}
 .gray{background:#334155}
 .red{background:#dc2626}
@@ -171,14 +179,7 @@ th{background:#020617}
   
   <h4>Search</h4>
   
-  <input id="searchBox" placeholder="Node/ User/Customer"
-  style="
-  width:100%;
-  padding:6px;
-  border-radius:4px;
-  border:none;
-  margin-bottom:6px;
-  ">
+ <input id="searchBox" placeholder="Node / User / Customer">
 
 <button class="blue" onclick="searchTopology()">Search</button>
  
@@ -238,7 +239,8 @@ text-align:center;
       <thead>
         <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
       </thead>
-    <tbody id="nodeTableBody">    </table>
+    <tbody id="nodeTableBody"></tbody>
+    </table>
   </div>
 </div>
 
@@ -352,7 +354,76 @@ let coverageVisible=true;
 
 
 /* ================= TABLE & FILTER ================= */
-function render(list){ const tb=document.getElementById('node-table'); tb.innerHTML=''; list.forEach(n=>{ tb.innerHTML+=`<tr onclick="focusNode('${n.name}')" style="cursor:pointer"><td>${n.name}</td><td>${n.region}</td><td class="${n.status==='UP'?'up':'down'}">${n.status}</td></tr>`; }); }
+function render(list){
+
+  const tb = document.getElementById("nodeTableBody");
+
+  tb.innerHTML = "";
+
+  list.forEach(n=>{
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${n.name}</td>
+      <td>${n.region}</td>
+      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+    `;
+
+    tr.onclick = () => focusNode(n.name);
+
+    tb.appendChild(tr);
+
+  });
+
+}
+  function renderSearchResult(node){
+
+const tb = document.getElementById("nodeTableBody");
+
+tb.innerHTML = "";
+
+/* tampilkan node */
+
+const tr = document.createElement("tr");
+
+tr.innerHTML = `
+<td>${node.name}</td>
+<td>${node.region}</td>
+<td class="${node.status==="UP"?"up":"down"}">${node.status}</td>
+`;
+
+tb.appendChild(tr);
+
+
+/* cari user yang ada di node ini */
+
+const users = usersData.filter(u =>
+u.nodeName &&
+u.nodeName.toUpperCase() === node.name.toUpperCase()
+);
+
+
+/* tampilkan user */
+
+users.forEach(u=>{
+
+const trUser = document.createElement("tr");
+
+trUser.innerHTML = `
+<td colspan="3" style="padding-left:40px;color:#9fdcff">
+${u.name}<br>
+Node: ${u.nodeName}<br>
+Sector: ${u.sector || "-"}<br>
+Status: ${u.status || "UP"}
+</td>
+`;
+
+tb.appendChild(trUser);
+
+});
+
+}
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
 function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
@@ -379,6 +450,17 @@ function searchTopology(){
 
   if(node){
 
+    /* sembunyikan node lain */
+    nodes.forEach(n=>{
+      if(n.name === node.name){
+        n.marker.addTo(map);
+        n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+      }else{
+        map.removeLayer(n.marker);
+        n.sectors.forEach(s=>map.removeLayer(s));
+      }
+    });
+
     map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
     node.marker.openPopup();
 
@@ -402,11 +484,21 @@ function searchTopology(){
 
     if(node){
 
+      /* sembunyikan node lain */
+      nodes.forEach(n=>{
+        if(n.name === node.name){
+          n.marker.addTo(map);
+          n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+        }else{
+          map.removeLayer(n.marker);
+          n.sectors.forEach(s=>map.removeLayer(s));
+        }
+      });
+
       map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
       node.marker.openPopup();
 
       renderSearchResult(node);
-
     }
 
     return;
@@ -542,8 +634,10 @@ map.on("click", async function(e){
    const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-  const sector = prompt("Masuk ke sector berapa? (1-4)");
-  if(!sector) return;
+  let sector = prompt("Masuk ke sector berapa? (1-4)");
+  if(!sector){
+  sector = "-";
+  }
   
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
@@ -1155,45 +1249,7 @@ await addDoc(collection(db,"topology_users"),{
   alert("Data tidak ditemukan");
 
 }
-function renderSearchResult(node){
 
-  const tbody = document.querySelector("#nodeTable tbody");
-  tbody.innerHTML = "";
-
-  /* tampilkan node */
-  const tr = document.createElement("tr");
-
-  tr.innerHTML = `
-    <td>${node.name}</td>
-    <td>${node.area}</td>
-    <td style="color:${node.status==="UP"?"#00ff88":"#ff4444"}">
-      ${node.status}
-    </td>
-  `;
-
-  tbody.appendChild(tr);
-
-  /* tampilkan user di node tersebut */
-  const users = usersData.filter(u => u.nodeName === node.name);
-
-  users.forEach(u => {
-
-    const trUser = document.createElement("tr");
-
-    trUser.innerHTML = `
-      <td colspan="3" style="padding-left:30px;color:#9fdcff">
-        ${u.name}<br>
-        Node: ${u.nodeName}<br>
-        Sector: ${u.sector || "-"}<br>
-        Status: ${u.status}
-      </td>
-    `;
-
-    tbody.appendChild(trUser);
-
-  });
-
-}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
