@@ -362,52 +362,44 @@ function toggleTable(){ document.getElementById('node-section').classList.toggle
 function searchTopology(){
 
   const keyword = document
-    .getElementById("searchBox")
-    .value
-    .trim()
-    .toUpperCase();
-    document.getElementById("searchBox")
-    .addEventListener("keypress",function(e){
-      if(e.key==="Enter"){
-        searchTopology();
-      }
-});
+  .getElementById("searchBox")
+  .value
+  .trim()
+  .toUpperCase();
+
   if(!keyword){
     showAll();
     return;
   }
 
-  /* =====================
+  /* =================
      SEARCH NODE
-  ===================== */
+  ================= */
 
- const node = nodes.find(n =>
-  n.name.toUpperCase().includes(keyword)
-);
+  const node = nodes.find(n =>
+    n.name.toUpperCase().includes(keyword)
+  );
 
-if(node){
+  if(node){
+    map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
+    node.marker.openPopup();
+    render([node]);
+    return;
+  }
 
-  focusNode(node.name);
-
-  renderSearchResult(node);
-
-  return;
-}
-
-  /* =====================
+  /* =================
      SEARCH USER
-  ===================== */
+  ================= */
 
- if(node){
-  map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
-  node.marker.openPopup();
+  const user = usersData.find(u =>
+    u.name.toUpperCase().includes(keyword)
+  );
 
-  renderSearchResult(node);
-}
   if(user){
 
     const node = nodes.find(n =>
-      n.name.toUpperCase() === user.nodeName.toUpperCase()
+      n.name.trim().toUpperCase() ===
+      user.nodeName.trim().toUpperCase()
     );
 
     if(node){
@@ -421,6 +413,14 @@ if(node){
 
   alert("Node / User tidak ditemukan");
 }
+  /* ENTER SEARCH */
+document
+.getElementById("searchBox")
+.addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+searchTopology();
+}
+});
 function backToMenu(){ window.location.href="index.html"; }
 
 showAll();
