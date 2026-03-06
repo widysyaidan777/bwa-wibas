@@ -1280,9 +1280,14 @@ window.exportTopologyCSV = function(){
 
 let csv = "TYPE,NAME,NODE,SECTOR,STATUS,LAT,LNG\n";
 
-/* EXPORT NODE */
+/* =========================
+   EXPORT NODE
+========================= */
 
-Object.values(nodesData).forEach(n=>{
+for (let id in nodesData){
+
+const n = nodesData[id];
+
 csv += [
 "NODE",
 n.name,
@@ -1292,11 +1297,17 @@ n.status || "UP",
 Number(n.lat).toFixed(6),
 Number(n.lng).toFixed(6)
 ].join(",") + "\n";
-});
 
-/* EXPORT USER */
+}
 
-Object.values(usersData).forEach(u=>{
+/* =========================
+   EXPORT USER
+========================= */
+
+for (let id in usersData){
+
+const u = usersData[id];
+
 csv += [
 "USER",
 u.name,
@@ -1306,8 +1317,8 @@ u.status || "UP",
 Number(u.lat).toFixed(6),
 Number(u.lng).toFixed(6)
 ].join(",") + "\n";
-});
 
+}
 /* DOWNLOAD */
 
 const blob = new Blob([csv], {type:"text/csv"});
