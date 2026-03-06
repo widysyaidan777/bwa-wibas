@@ -421,10 +421,6 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       Sector: ${u.sector || "-"}<br>
       Status: ${u.status}<br><br>
       
-     <button onclick="hideUser('${u.id}')"
-      style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:6px;">
-      Hide User
-      </button>
       
       <button onclick="editFullUser('${doc.id}')"
       style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
@@ -992,58 +988,6 @@ await addDoc(collection(db,"topology_users"),{
   reader.readAsText(file);
 }
  
-window.hideUser = function(userId){
-
-  const user = usersData.find(u => u.id === userId);
-  if(!user) return;
-
-  userLayer.eachLayer(layer=>{
-    const lat = layer.getLatLng().lat;
-    const lng = layer.getLatLng().lng;
-
-    if(
-      Math.abs(lat - user.lat) < 0.00001 &&
-      Math.abs(lng - user.lng) < 0.00001
-    ){
-      userLayer.removeLayer(layer);
-    }
-  });
-
-}
-    window.hideSector = function(nodeName, sector){
-
-  const node = nodes.find(n => n.name === nodeName);
-  if(!node) return;
-
-  node.sectors.forEach(s=>{
-    if(Math.round(s.sector) === sector){
-      map.removeLayer(s);
-    }
-  });
-
-  // hide user yg link ke node itu dan sector sama
-  usersData.forEach(u=>{
-    if(
-      u.nodeName === nodeName &&
-      parseInt(u.sector) === sector
-    ){
-
-      userLayer.eachLayer(layer=>{
-        const lat = layer.getLatLng().lat;
-        const lng = layer.getLatLng().lng;
-
-        if(
-          Math.abs(lat - u.lat) < 0.00001 &&
-          Math.abs(lng - u.lng) < 0.00001
-        ){
-          userLayer.removeLayer(layer);
-        }
-      });
-
-    }
-  });
-
-}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
