@@ -1293,8 +1293,8 @@ n.area || "",
 "",
 "",
 n.status || "UP",
-parseFloat(n.lat).toFixed(6),
-parseFloat(n.lng).toFixed(6)
+(n.lat / 1000000).toFixed(6),
+(n.lng / 1000000).toFixed(6)
 ].join(",") + "\n";
 
 });
@@ -1314,8 +1314,8 @@ u.area || "",
 u.nodeName || "",
 u.sector || "",
 u.status || "UP",
-parseFloat(u.lat).toFixed(6),
-parseFloat(u.lng).toFixed(6)
+(n.lat / 1000000).toFixed(6),
+(n.lng / 1000000).toFixed(6)
 ].join(",") + "\n";
 
 });
