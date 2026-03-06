@@ -1277,7 +1277,7 @@ await addDoc(collection(db,"topology_users"),{
 }
 window.exportTopologyCSV = function(){
 
-let csv = "TYPE,NAME,REGION,AREA,NODE,SECTOR,STATUS,LAT,LNG\n";
+let csv = "TYPE,NAME,REGION,AREA,NODE,SECTOR,STATUS,LATLNG\n";
 
 /* =========================
    EXPORT NODE
@@ -1285,20 +1285,22 @@ let csv = "TYPE,NAME,REGION,AREA,NODE,SECTOR,STATUS,LAT,LNG\n";
 
 nodes.forEach(n=>{
 
+const latlng =
+parseFloat(n.lat).toFixed(6) + " " +
+parseFloat(n.lng).toFixed(6);
+
 csv += [
 "NODE",
 n.name,
 n.region || "",
-n.area || "",
+"",
 "",
 "",
 n.status || "UP",
-(n.lat / 1000000).toFixed(6),
-(n.lng / 1000000).toFixed(6)
+latlng
 ].join(",") + "\n";
 
 });
-
 
 /* =========================
    EXPORT USER
@@ -1306,20 +1308,22 @@ n.status || "UP",
 
 usersData.forEach(u=>{
 
+const latlng =
+parseFloat(u.lat).toFixed(6) + " " +
+parseFloat(u.lng).toFixed(6);
+
 csv += [
 "USER",
 u.name,
 u.region || "",
-u.area || "",
+"",
 u.nodeName || "",
 u.sector || "",
 u.status || "UP",
-(n.lat / 1000000).toFixed(6),
-(n.lng / 1000000).toFixed(6)
+latlng
 ].join(",") + "\n";
 
 });
-
 
 /* =========================
    DOWNLOAD FILE
