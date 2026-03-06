@@ -234,12 +234,11 @@ text-align:center;
 <div id="coords">Lat: - | Lng: -</div>
 <div id="toggle" onclick="toggleTable()">▲ / ▼</div>
   <div id="node-section">
-    <table>
+    <table id="nodeTable">
       <thead>
         <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
       </thead>
-      <tbody id="node-table"></tbody>
-    </table>
+    <tbody id="nodeTableBody">    </table>
   </div>
 </div>
 
@@ -372,24 +371,23 @@ function searchTopology(){
     return;
   }
 
-  /* =================
-     SEARCH NODE
-  ================= */
+  /* SEARCH NODE */
 
   const node = nodes.find(n =>
     n.name.toUpperCase().includes(keyword)
   );
 
   if(node){
+
     map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
     node.marker.openPopup();
-    render([node]);
+
+    renderSearchResult(node);
+
     return;
   }
 
-  /* =================
-     SEARCH USER
-  ================= */
+  /* SEARCH USER */
 
   const user = usersData.find(u =>
     u.name.toUpperCase().includes(keyword)
@@ -403,15 +401,19 @@ function searchTopology(){
     );
 
     if(node){
+
       map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
       node.marker.openPopup();
-      render([node]);
+
+      renderSearchResult(node);
+
     }
 
     return;
   }
 
   alert("Node / User tidak ditemukan");
+
 }
   /* ENTER SEARCH */
 document
@@ -1164,7 +1166,9 @@ function renderSearchResult(node){
   tr.innerHTML = `
     <td>${node.name}</td>
     <td>${node.area}</td>
-    <td style="color:${node.status==="UP"?"#00ff88":"#ff4444"}">${node.status}</td>
+    <td style="color:${node.status==="UP"?"#00ff88":"#ff4444"}">
+      ${node.status}
+    </td>
   `;
 
   tbody.appendChild(tr);
