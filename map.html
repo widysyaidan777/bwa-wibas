@@ -381,31 +381,29 @@ function searchTopology(){
      SEARCH NODE
   ===================== */
 
-  const node = nodes.find(n =>
-    n.name.toUpperCase().includes(keyword)
-  );
+ const node = nodes.find(n =>
+  n.name.toUpperCase().includes(keyword)
+);
 
-  if(node){
+if(node){
 
-    focusNode(node.name);
+  focusNode(node.name);
 
-    const filtered = nodes.filter(n =>
-      n.name.toUpperCase().includes(keyword)
-    );
+  renderSearchResult(node);
 
-    render(filtered);
-
-    return;
-  }
+  return;
+}
 
   /* =====================
      SEARCH USER
   ===================== */
 
-  const user = usersData.find(u =>
-    u.name.toUpperCase().includes(keyword)
-  );
+ if(node){
+  map.flyTo([node.lat,node.lng],11,{animate:true,duration:1.2});
+  node.marker.openPopup();
 
+  renderSearchResult(node);
+}
   if(user){
 
     const node = nodes.find(n =>
@@ -1153,6 +1151,43 @@ await addDoc(collection(db,"topology_users"),{
   }
 
   alert("Data tidak ditemukan");
+
+}
+function renderSearchResult(node){
+
+  const tbody = document.querySelector("#nodeTable tbody");
+  tbody.innerHTML = "";
+
+  /* tampilkan node */
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+    <td>${node.name}</td>
+    <td>${node.area}</td>
+    <td style="color:${node.status==="UP"?"#00ff88":"#ff4444"}">${node.status}</td>
+  `;
+
+  tbody.appendChild(tr);
+
+  /* tampilkan user di node tersebut */
+  const users = usersData.filter(u => u.nodeName === node.name);
+
+  users.forEach(u => {
+
+    const trUser = document.createElement("tr");
+
+    trUser.innerHTML = `
+      <td colspan="3" style="padding-left:30px;color:#9fdcff">
+        ${u.name}<br>
+        Node: ${u.nodeName}<br>
+        Sector: ${u.sector || "-"}<br>
+        Status: ${u.status}
+      </td>
+    `;
+
+    tbody.appendChild(trUser);
+
+  });
 
 }
 console.log("🔥 Firebase Connected");
