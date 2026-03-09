@@ -380,39 +380,37 @@ function render(list){
 }
 function listenNodeUsers(nodeName){
 
-const container = document.getElementById("users-"+nodeName);
+const row=document.getElementById("users-"+nodeName);
+if(!row) return;
 
-if(!container) return;
+const container=row.children[0];
 
-container.innerHTML = "";
+container.innerHTML="";
 
 const list = usersData.filter(u =>
-(u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
+(u.nodeName||"").trim().toUpperCase() === nodeName.trim().toUpperCase()
 );
 
-if(list.length === 0){
+if(list.length===0){
 
-container.innerHTML =
-'<span style="color:#94a3b8;font-style:italic">Node ini tidak memiliki user</span>';
-
+container.innerHTML="<i style='color:#94a3b8'>Node ini tidak memiliki user</i>";
 return;
 
 }
 
 list.forEach(u=>{
 
-const div = document.createElement("div");
+const div=document.createElement("div");
 
-div.style.marginBottom="4px";
-
-div.innerHTML = `
+div.innerHTML=`
 <span style="color:#38bdf8">👤 ${u.name}</span>
-<span style="color:#94a3b8"> | Sector ${u.sector || "-"}</span>
+<span style="color:#94a3b8"> Sector ${u.sector||"-"}</span>
 `;
 
 container.appendChild(div);
 
 });
+
 }
 function renderWithUsers(list){
 
@@ -421,54 +419,63 @@ tb.innerHTML="";
 
 list.forEach(n=>{
 
-// default collapse
-if(nodeExpanded[n.name] === undefined){
-nodeExpanded[n.name] = false;
+if(nodeExpanded[n.name]===undefined){
+nodeExpanded[n.name]=false;
 }
 
 const arrow = nodeExpanded[n.name] ? "▼" : "▶";
 
-// ROW NODE
-const nodeRow = document.createElement("tr");
+const nodeRow=document.createElement("tr");
 
 nodeRow.innerHTML=`
 <td><b>${arrow} ${n.name}</b></td>
 <td>${n.region}</td>
-<td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+<td class="${n.status==="UP"?"up":"down"}">${n.status||"UP"}</td>
 `;
 
 nodeRow.style.cursor="pointer";
 
 nodeRow.onclick=()=>{
+focusNode(n.name);
+  
 nodeExpanded[n.name] = !nodeExpanded[n.name];
-renderWithUsers(nodes);
+
+const userRow=document.getElementById("users-"+n.name);
+
+if(userRow){
+
+if(userRow.style.display==="none"){
+
+userRow.style.display="table-row";
+listenNodeUsers(n.name);
+
+}else{
+
+userRow.style.display="none";
+
+}
+
+}
+
 };
 
 tb.appendChild(nodeRow);
 
 
-// USER ROW (hanya tampil jika expand)
-if(nodeExpanded[n.name]){
+/* USER ROW (hidden default) */
 
 const userRow=document.createElement("tr");
 
+userRow.id="users-"+n.name;
+userRow.style.display="none";
+
 userRow.innerHTML=`
-<td colspan="3">
-<div id="users-${n.name}" style="
-padding-left:25px;
-font-size:12px;
-color:#cbd5f5;
-">
+<td colspan="3" style="padding-left:25px;font-size:12px;color:#cbd5f5">
 Loading users...
-</div>
 </td>
 `;
 
 tb.appendChild(userRow);
-
-listenNodeUsers(n.name);
-
-}
 
 });
 
