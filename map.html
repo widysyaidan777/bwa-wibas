@@ -378,6 +378,92 @@ function render(list){
   });
 
 }
+  function renderWithUsers(list){
+
+const tb = document.getElementById("nodeTableBody");
+tb.innerHTML = "";
+
+list.forEach(n=>{
+
+const tr = document.createElement("tr");
+
+tr.innerHTML = `
+<td style="cursor:pointer"><b>${n.name}</b></td>
+<td>${n.region}</td>
+<td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+`;
+
+tr.onclick = ()=>toggleNodeUsers(n.name);
+
+tb.appendChild(tr);
+
+});
+
+}
+  function toggleNodeUsers(nodeName){
+
+const tb = document.getElementById("nodeTableBody");
+
+/* cari node */
+const node = nodes.find(n=>n.name===nodeName);
+if(!node) return;
+
+/* cari user di node */
+const users = usersData.filter(u =>
+(u.nodeName || "").toUpperCase() === nodeName.toUpperCase()
+);
+
+/* cari row node */
+const rows = [...tb.querySelectorAll("tr")];
+const rowIndex = rows.findIndex(r => r.innerText.includes(nodeName));
+
+if(rowIndex === -1) return;
+
+/* cek apakah sudah ada user list */
+if(rows[rowIndex+1] && rows[rowIndex+1].classList.contains("userRow")){
+rows[rowIndex+1].remove();
+return;
+}
+
+/* buat row baru */
+const trUser = document.createElement("tr");
+trUser.classList.add("userRow");
+
+let html = "";
+
+if(users.length === 0){
+
+html = `
+<td colspan="3" style="padding-left:40px;color:#94a3b8">
+Node ini belum memiliki user
+</td>
+`;
+
+}else{
+
+users.forEach(u=>{
+html += `
+<div style="margin-bottom:6px">
+👤 ${u.name}  
+<span style="color:#94a3b8">Sector ${u.sector || "-"}</span>
+</div>
+`;
+});
+
+html = `
+<td colspan="3" style="padding-left:40px;color:#9fdcff">
+${html}
+</td>
+`;
+
+}
+
+trUser.innerHTML = html;
+
+/* insert setelah node */
+rows[rowIndex].after(trUser);
+
+}
   function renderSearchResult(node){
 
 const tb = document.getElementById("nodeTableBody");
@@ -426,8 +512,8 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function showAll(){ renderWithUsers(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ renderWithUsers(nodes)(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
@@ -846,7 +932,7 @@ Toggle Coverage Node
 
   });
 
-  render(nodes);
+  renderWithUsers(nodes);
   redrawLinks();
 
 });
