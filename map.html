@@ -358,22 +358,103 @@ let coverageVisible=true;
 function render(list){
 
   const tb = document.getElementById("nodeTableBody");
-
   tb.innerHTML = "";
 
   list.forEach(n=>{
 
+    /* =========================
+       HITUNG USER DI NODE
+    ========================= */
+
+    const users = usersData.filter(u =>
+      u.nodeName &&
+      u.nodeName.trim().toUpperCase() === n.name.trim().toUpperCase()
+    );
+
+    const userCount = users.length;
+
+    /* =========================
+       BARIS NODE
+    ========================= */
+
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${n.name}</td>
+      <td style="cursor:pointer">
+        ▶ ${n.name} 
+        <span style="color:#9fdcff">(${userCount} user)</span>
+      </td>
       <td>${n.region}</td>
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = () => focusNode(n.name);
+    tr.onclick = () => toggleNodeUsers(n);
 
     tb.appendChild(tr);
+
+  });
+
+}
+  function toggleNodeUsers(node){
+
+  const tb = document.getElementById("nodeTableBody");
+
+  /* cari user di node */
+  const users = usersData.filter(u =>
+    u.nodeName &&
+    u.nodeName.trim().toUpperCase() === node.name.trim().toUpperCase()
+  );
+
+  /* cari posisi node di table */
+  const rows = [...tb.children];
+  const index = rows.findIndex(r => r.innerText.includes(node.name));
+
+  if(index === -1) return;
+
+  /* cek apakah sudah terbuka */
+  if(rows[index+1] && rows[index+1].classList.contains("userRow")){
+    
+    while(rows[index+1] && rows[index+1].classList.contains("userRow")){
+      tb.removeChild(rows[index+1]);
+    }
+
+    return;
+  }
+
+  /* =========================
+     TAMPILKAN USER
+  ========================= */
+
+  if(users.length === 0){
+
+    const tr = document.createElement("tr");
+    tr.className = "userRow";
+
+    tr.innerHTML = `
+      <td colspan="3" style="padding-left:40px;color:#f87171">
+        Tidak memiliki user
+      </td>
+    `;
+
+    tb.insertBefore(tr, rows[index+1] || null);
+
+    return;
+  }
+
+  users.forEach(u=>{
+
+    const tr = document.createElement("tr");
+    tr.className = "userRow";
+
+    tr.innerHTML = `
+      <td colspan="3" style="padding-left:40px;color:#9fdcff">
+        👤 ${u.name} |
+        Sector: ${u.sector || "-"} |
+        Status: ${u.status || "UP"}
+      </td>
+    `;
+
+    tb.insertBefore(tr, rows[index+1] || null);
 
   });
 
