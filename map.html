@@ -441,33 +441,25 @@ function toggleNodeUsers(nodeName){
 
   let insertAfter = nodeRow;
   users.forEach(u => {
-  const tr = document.createElement("tr");
-  tr.dataset.parent = nodeName;
-
-  tr.innerHTML = `
-    <td colspan="3" style="padding-left:40px;color:#9fdcff">
-      👤 ${u.name}<br>
-      Sector: ${u.sector !== null ? u.sector + "°" : "-"}<br>
-      Status: ${u.status || "UP"}<br>
-      Warna: ${u.color || "-"}
-    </td>
-  `;
-
-  // 🔹 Tambahkan klik ke row user supaya zoom
-  tr.style.cursor = "pointer";
-  tr.onclick = () => {
-    if(u.lat && u.lng){
-      map.flyTo([u.lat, u.lng], 14, { animate: true, duration: 1.2 });
-      L.popup()
-        .setLatLng([u.lat, u.lng])
-        .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}`)
-        .openOn(map);
-    }
-  };
-
-  insertAfter.after(tr);
-  insertAfter = tr;
-});
+    const tr = document.createElement("tr");
+    tr.dataset.parent = nodeName;
+    tr.innerHTML = `
+      <td colspan="3" style="padding-left:40px;color:#9fdcff">
+        👤 ${u.name}<br>
+        Sector: ${u.sector || "-"}<br>
+        Status: ${u.status || "UP"}
+      </td>
+    `;
+    tr.onclick = () => {
+    map.flyTo([u.lat, u.lng], 14, {animate:true, duration:1.2});
+    L.popup()
+      .setLatLng([u.lat, u.lng])
+      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sector || "-"}<br>Status: ${u.status || "UP"}`)
+      .openOn(map);
+};
+    insertAfter.after(tr);
+    insertAfter = tr;
+  });
 }
   function renderSearchResult(node){
 
@@ -752,11 +744,10 @@ map.on("click", async function(e){
    const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-  / 🔹 Pilih derajat sektor
 let sector = prompt("Masukkan azimuth sektor user (0-359°):");
 if(!sector || isNaN(sector)){
-  sector = null;
-}else{
+  sector = "-";
+} else {
   sector = parseInt(sector) % 360;
 }
   
@@ -1095,7 +1086,7 @@ function refreshMap(){
 
   alert("Node berhasil diupdate!");
 };
-    window.editFullUser = async function(docId){
+   window.editFullUser = async function(docId){
 
   const user = usersData.find(u => u.id === docId);
   if(!user) return;
@@ -1109,18 +1100,28 @@ function refreshMap(){
   const newStatus = prompt("Status (UP/OFF):", user.status);
   if(!newStatus) return;
 
+  // Tambah input sector / azimuth
+  let newSector = prompt("Azimuth user (0-359°):", user.sector ?? "");
+  if(!newSector || isNaN(newSector)){
+      newSector = "-";
+  } else {
+      newSector = parseInt(newSector) % 360;
+  }
+
   const { updateDoc, doc } = await import(
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
   );
 
   await updateDoc(doc(db,"topology_users",docId),{
-    name:newName,
-    nodeName:newNode,
-    status:newStatus.toUpperCase()
+      name: newName,
+      nodeName: newNode,
+      status: newStatus.toUpperCase(),
+      sector: newSector
   });
 
   alert("User berhasil diupdate!");
 };
+    
  window.editSectorStatus = async function(docId){
 
   const node = nodes.find(n => n.id === docId);
