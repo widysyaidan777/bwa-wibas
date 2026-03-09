@@ -378,7 +378,7 @@ function render(list){
   });
 
 }
-  function renderWithUsers(list){
+function renderWithUsers(list){
 
 const tb = document.getElementById("nodeTableBody");
 tb.innerHTML = "";
@@ -393,7 +393,10 @@ tr.innerHTML = `
 <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
 `;
 
-tr.onclick = ()=>toggleNodeUsers(n.name);
+tr.onclick = ()=>{
+focusNode(n.name);
+toggleNodeUsers(n.name);
+};
 
 tb.appendChild(tr);
 
@@ -415,8 +418,11 @@ const users = usersData.filter(u =>
 
 /* cari row node */
 const rows = [...tb.querySelectorAll("tr")];
-const rowIndex = rows.findIndex(r => r.innerText.includes(nodeName));
-
+const rowIndex = rows.findIndex(r =>
+r.children[0] &&
+r.children[0].innerText.trim() === nodeName
+);
+    
 if(rowIndex === -1) return;
 
 /* cek apakah sudah ada user list */
@@ -513,7 +519,25 @@ tb.appendChild(trUser);
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
 function showAll(){ renderWithUsers(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ renderWithUsers(nodes)(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function filterRegion(r){
+
+renderWithUsers(
+  nodes.filter(n=>n.region===r)
+);
+
+nodes.forEach(n=>{
+
+if(n.region===r){
+n.marker.addTo(map);
+n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+}else{
+map.removeLayer(n.marker);
+n.sectors.forEach(s=>map.removeLayer(s));
+}
+
+});
+
+}
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
