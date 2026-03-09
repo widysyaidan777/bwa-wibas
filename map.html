@@ -406,9 +406,17 @@ function toggleNodeUsers(nodeName){
 
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
-  const users = usersData.filter(u =>
-    (u.nodeName || "").toUpperCase() === nodeName.toUpperCase()
-  );
+const users = usersData.filter(u =>
+  (u.nodeName || "")
+  .trim()
+  .toUpperCase() ===
+  nodeName
+  .trim()
+  .toUpperCase()
+);
+console.log("NODE:", nodeName);
+console.log("USERS:", usersData);
+console.log("MATCH:", users);
 
   if(users.length === 0){
 
