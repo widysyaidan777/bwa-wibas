@@ -352,7 +352,7 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-
+let nodeExpanded = {};
 
 /* ================= TABLE & FILTER ================= */
 function render(list){
@@ -382,16 +382,19 @@ function listenNodeUsers(nodeName){
 
 const container = document.getElementById("users-"+nodeName);
 
+if(!container) return;
+
 container.innerHTML = "";
 
 const list = usersData.filter(u =>
-u.nodeName &&
-u.nodeName.trim().toUpperCase() === nodeName.trim().toUpperCase()
+(u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
 );
 
 if(list.length === 0){
 
-container.innerHTML = "<i>Node ini tidak memiliki user</i>";
+container.innerHTML =
+'<span style="color:#94a3b8;font-style:italic">Node ini tidak memiliki user</span>';
+
 return;
 
 }
@@ -400,15 +403,16 @@ list.forEach(u=>{
 
 const div = document.createElement("div");
 
+div.style.marginBottom="4px";
+
 div.innerHTML = `
 <span style="color:#38bdf8">👤 ${u.name}</span>
-<span style="color:#94a3b8">Sector ${u.sector || "-"}</span>
+<span style="color:#94a3b8"> | Sector ${u.sector || "-"}</span>
 `;
 
 container.appendChild(div);
 
 });
-
 }
 function renderWithUsers(list){
 
@@ -417,26 +421,44 @@ tb.innerHTML="";
 
 list.forEach(n=>{
 
+// default collapse
+if(nodeExpanded[n.name] === undefined){
+nodeExpanded[n.name] = false;
+}
+
+const arrow = nodeExpanded[n.name] ? "▼" : "▶";
+
 // ROW NODE
 const nodeRow = document.createElement("tr");
 
 nodeRow.innerHTML=`
-<td><b>${n.name}</b></td>
+<td><b>${arrow} ${n.name}</b></td>
 <td>${n.region}</td>
 <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
 `;
 
-nodeRow.onclick=()=>focusNode(n.name);
+nodeRow.style.cursor="pointer";
+
+nodeRow.onclick=()=>{
+nodeExpanded[n.name] = !nodeExpanded[n.name];
+renderWithUsers(nodes);
+};
 
 tb.appendChild(nodeRow);
 
 
-// ROW USER CONTAINER
+// USER ROW (hanya tampil jika expand)
+if(nodeExpanded[n.name]){
+
 const userRow=document.createElement("tr");
 
 userRow.innerHTML=`
 <td colspan="3">
-<div id="users-${n.name}" style="padding-left:25px">
+<div id="users-${n.name}" style="
+padding-left:25px;
+font-size:12px;
+color:#cbd5f5;
+">
 Loading users...
 </div>
 </td>
@@ -444,9 +466,9 @@ Loading users...
 
 tb.appendChild(userRow);
 
-
-// start realtime listener
 listenNodeUsers(n.name);
+
+}
 
 });
 
