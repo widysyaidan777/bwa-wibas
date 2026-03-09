@@ -1,40 +1,70 @@
-<h2>Login Topology</h2>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="loginUser()">Login</button>
-<div id="msg"></div>
+<h2 style="text-align:center;">Login Topology</h2>
+
+<div id="loginBox" style="
+    width:300px;
+    margin:50px auto;
+    padding:20px;
+    background:#f1f1f1;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+    font-family:Arial,sans-serif;
+    color:black;
+">
+  <input id="email" placeholder="Email" style="width:100%; padding:8px; margin:8px 0; border-radius:5px; border:1px solid #ccc;">
+  <input id="password" type="password" placeholder="Password" style="width:100%; padding:8px; margin:8px 0; border-radius:5px; border:1px solid #ccc;">
+  <button id="loginBtn" style="width:100%; padding:10px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer;">
+    Login
+  </button>
+  <div id="msg" style="margin-top:10px; color:red; text-align:center;"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = { /* config kamu */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
+  authDomain: "dashboard-bwa.firebaseapp.com",
+  projectId: "dashboard-bwa",
+  storageBucket: "dashboard-bwa.firebasestorage.app",
+  messagingSenderId: "1066238404578",
+  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
+};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-window.loginUser = async function(){
+async function loginUser(){
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const msgDiv = document.getElementById("msg");
+
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
 
-    // ambil role
     const docRef = doc(db, "users_roles", uid);
     const snapshot = await getDoc(docRef);
+
     if(snapshot.exists()){
       const role = snapshot.data().role;
       localStorage.setItem("userRole", role);
       localStorage.setItem("userName", snapshot.data().name);
       window.location.href = "topology.html"; // redirect ke map
     } else {
-      document.getElementById("msg").innerText = "Role tidak ditemukan!";
+      msgDiv.innerText = "Role tidak ditemukan!";
     }
-
   } catch(err) {
-    document.getElementById("msg").innerText = err.message;
+    msgDiv.innerText = err.message;
   }
-};
+}
+
+// Tombol login
+document.getElementById("loginBtn").addEventListener("click", loginUser);
+
+// Bisa submit pakai Enter
+document.getElementById("loginBox").addEventListener("keypress", function(e){
+  if(e.key === "Enter") loginUser();
+});
 </script>
