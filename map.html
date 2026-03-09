@@ -358,42 +358,33 @@ let coverageVisible=true;
 function render(list){
 
   const tb = document.getElementById("nodeTableBody");
+
   tb.innerHTML = "";
 
   list.forEach(n=>{
 
-    /* hitung user di node */
-    const users = usersData.filter(u =>
-      u.nodeName &&
-      u.nodeName.trim().toUpperCase() ===
-      n.name.trim().toUpperCase()
-    );
-
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td style="cursor:pointer">
-        ▶ ${n.name}
-        <span style="color:#9fdcff">(${users.length} user)</span>
-      </td>
+      <td style="cursor:pointer">▶ ${n.name}</td>
       <td>${n.region}</td>
-      <td class="${n.status==="UP"?"up":"down"}">${n.status || "UP"}</td>
+      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = () => toggleNodeUsers(n, tr);
+    tr.onclick = () => toggleNodeUsers(n,tr);
 
     tb.appendChild(tr);
 
   });
 
 }
-  function toggleNodeUsers(node, row){
+  function toggleNodeUsers(node,row){
 
   const tb = document.getElementById("nodeTableBody");
 
-  /* cek apakah sudah terbuka */
+  /* jika sudah terbuka -> tutup */
   if(row.nextSibling && row.nextSibling.classList.contains("userRow")){
-
+    
     while(row.nextSibling && row.nextSibling.classList.contains("userRow")){
       tb.removeChild(row.nextSibling);
     }
@@ -401,7 +392,7 @@ function render(list){
     return;
   }
 
-  /* cari user */
+  /* cari user di node ini */
   const users = usersData.filter(u =>
     u.nodeName &&
     u.nodeName.trim().toUpperCase() ===
@@ -420,9 +411,7 @@ function render(list){
     `;
 
     row.after(tr);
-
     focusNode(node.name);
-
     return;
   }
 
