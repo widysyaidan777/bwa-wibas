@@ -378,6 +378,38 @@ function render(list){
   });
 
 }
+  function listenNodeUsers(nodeName){
+
+const container=document.getElementById("users-"+nodeName);
+
+firebase.database()
+.ref("users/"+nodeName)
+.on("value",snapshot=>{
+
+container.innerHTML="";
+
+if(!snapshot.exists()){
+
+container.innerHTML="<i>Node ini tidak memiliki user</i>";
+return;
+
+}
+
+snapshot.forEach(child=>{
+
+const u=child.val();
+
+const div=document.createElement("div");
+
+div.innerHTML=`👤 ${u.name} — ${u.sector} — ${u.status}`;
+
+container.appendChild(div);
+
+});
+
+});
+
+}
 function renderWithUsers(list){
 
 const tb = document.getElementById("nodeTableBody");
@@ -385,20 +417,36 @@ tb.innerHTML="";
 
 list.forEach(n=>{
 
-const tr=document.createElement("tr");
+// ROW NODE
+const nodeRow = document.createElement("tr");
 
-tr.innerHTML=`
+nodeRow.innerHTML=`
 <td><b>${n.name}</b></td>
 <td>${n.region}</td>
 <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
 `;
 
-tr.onclick=()=>{
-focusNode(n.name);
-toggleNodeUsers(n.name);
-};
+nodeRow.onclick=()=>focusNode(n.name);
 
-tb.appendChild(tr);
+tb.appendChild(nodeRow);
+
+
+// ROW USER CONTAINER
+const userRow=document.createElement("tr");
+
+userRow.innerHTML=`
+<td colspan="3">
+<div id="users-${n.name}" style="padding-left:25px;color:#444">
+Loading users...
+</div>
+</td>
+`;
+
+tb.appendChild(userRow);
+
+
+// start realtime listener
+listenNodeUsers(n.name);
 
 });
 
