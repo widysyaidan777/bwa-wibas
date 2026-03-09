@@ -263,63 +263,38 @@ text-align:center;
     return;
   }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const { collection, query, where, getDocs } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
-  authDomain: "dashboard-bwa.firebaseapp.com",
-  projectId: "dashboard-bwa",
-  storageBucket: "dashboard-bwa.firebasestorage.app",
-  messagingSenderId: "1066238404578",
-  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
-};
+  const q = query(
+    collection(db, "users_login"),
+    where("username", "==", username),
+    where("password", "==", password)
+  );
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const snapshot = await getDocs(q);
 
-async function loginUser() {
-  const email = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if(!email || !password){
-    alert("Isi username & password");
+  if(snapshot.empty){
+    alert("Login gagal");
     return;
   }
 
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
+  const user = snapshot.docs[0].data();
+  window.currentUserRole = user.role; // simpan role global
+  document.getElementById("loginScreen").style.display = "none"; // sembunyi login
 
-    // Ambil role & nama user dari Firestore
-    const docRef = doc(db, "users_roles", uid);
-    const snapshot = await getDoc(docRef);
+  alert(`Login berhasil, role: ${user.role}`);
 
-    if(snapshot.exists()){
-      const data = snapshot.data();
-      window.currentUserRole = data.role;
-      window.currentUserName = data.name;
-
-      document.getElementById("loginScreen").style.display = "none"; // sembunyi login
-      alert(`Login berhasil! Role: ${data.role}`);
-      applyRolePermissions();
-    } else {
-      alert("Role user tidak ditemukan di Firestore!");
-    }
-
-  } catch(err) {
-    alert("Login gagal: " + err.message);
-  }
+  applyRolePermissions(); // aktifkan/hide tombol sesuai role
 }
-    function applyRolePermissions() {
-  // Contoh: hanya admin yang bisa tambah/edit node & user
-  if(window.currentUserRole !== "admin"){
-    document.querySelectorAll("#sidebar button").forEach(btn => {
-      const text = btn.innerText.toLowerCase();
-      if(text.includes("edit") || text.includes("tambah") || text.includes("delete")){
-        btn.style.display = "none"; // sembunyikan tombol
+
+function applyRolePermissions(){
+  if(window.currentUserRole === "view-only"){
+    // sembunyikan tombol edit
+    document.querySelectorAll("button").forEach(b=>{
+      if(b.innerText.includes("Edit") || b.innerText.includes("Tambah") || b.innerText.includes("Import") || b.innerText.includes("Delete")){
+        b.style.display = "none";
       }
     });
   }
@@ -749,12 +724,12 @@ window.usersData = [];
    REALTIME LOAD USERS
 ============================= */
 
-onSnapshot(collection(db, "topology_users"), snapshot => {
+onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
   userLayer.clearLayers();
 
-  snapshot.forEach(doc => {
+  snapshot.forEach(doc=>{
 
     const u = doc.data();
     u.id = doc.id;
@@ -762,46 +737,39 @@ onSnapshot(collection(db, "topology_users"), snapshot => {
     usersData.push(u);
 
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
+    
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
-
     // ===== LANGKAH 4: cek role sebelum tampilkan tombol =====
-    const canEdit = window.currentUserRole === "admin"; // admin / view-only
+  const canEdit = window.currentUserRole === "admin"; // misal admin / view-only
 
-    // buat konten popup
-    let popupContent = `
+     marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Sector: ${u.sector || "-"}<br>
       Status: ${u.status}<br><br>
-    `;
-
-    // tambahkan tombol hanya jika admin
-    if (canEdit) {
-      popupContent += `
-        <button onclick="editFullUser('${doc.id}')"
-          style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-          Edit User
-        </button><br>
-        <button onclick="deleteUser('${doc.id}')"
-          style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-          Delete User
-        </button>
-      `;
-    }
-
-    marker.bindPopup(popupContent);
-
+      
+      <button onclick="editFullUser('${doc.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+    
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+      
+   
+`);
   });
-
   redrawLinks();
-  renderNodeTable(); // supaya users muncul di tabel
+  renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
+    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
@@ -946,15 +914,13 @@ await addDoc(collection(db,"nodes"),{
    REALTIME LOAD NODE BARU
 ============================= */
 
-// =============================
-// LISTENER NODES
-// =============================
-onSnapshot(collection(db,"nodes"), snapshot => {
+onSnapshot(collection(db,"nodes"), snapshot=>{
 
   nodes.length = 0;          // reset array
   nodeLayer.clearLayers();   // reset layer
 
-  snapshot.forEach(doc => {
+  snapshot.forEach(doc=>{
+
     const n = doc.data();
     n.id = doc.id;
     n.coverageOn = true;
@@ -964,68 +930,59 @@ onSnapshot(collection(db,"nodes"), snapshot => {
       ? ['#dc2626','#f97316','#dc2626','#f97316']
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
-    const marker = L.marker([n.lat,n.lng], {
-      icon: icon(col, n.status === "OFF")
-    }).addTo(nodeLayer);
+    const marker = L.marker([n.lat,n.lng],{
+      icon:icon(col, n.status === "OFF")
+    }).addTo(nodeLayer)
+   let sectorButtons = "";
 
-    // ===== LANGKAH CEK ROLE ADMIN =====
-    const canEdit = window.currentUserRole === "admin";
+marker.bindPopup(`
+<b>${n.name}</b><br>
+Area: ${n.region}<br>
+Status: ${n.status}<br><br>
 
-    let popupContent = `
-      <b>${n.name}</b><br>
-      Area: ${n.region}<br>
-      Status: ${n.status}<br><br>
-    `;
+<button onclick="editFullNode('${doc.id}')"
+style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+Edit Node
+</button><br>
 
-    if (canEdit) {
-      popupContent += `
-        <button onclick="editFullNode('${doc.id}')"
-          style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-          Edit Node
-        </button><br>
+<button onclick="editSectorStatus('${doc.id}')"
+style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+Edit Sector Status
+</button><br>
 
-        <button onclick="editSectorStatus('${doc.id}')"
-          style="background:#6366f1;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-          Edit Sector Status
-        </button><br>
+<button onclick="toggleNodeCoverage('${n.name}')"
+style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
+Toggle Coverage Node
+</button><br>
 
-        <button onclick="toggleNodeCoverage('${n.name}')"
-          style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
-          Toggle Coverage Node
-        </button><br>
-
-        <button onclick="deleteNode('${doc.id}')"
-          style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-          Delete Node
-        </button>
-      `;
-    }
-
-    marker.bindPopup(popupContent);
-
+  <button onclick="deleteNode('${doc.id}')"
+  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+  Delete Node
+  </button>
+`);
     n.marker = marker;
     n.sectors = [];
 
-    if (n.sectorDefs) {
-      n.sectorDefs.forEach(sec => {
-        const c = sec.status === "OFF"
-          ? "#dc2626"
-          : (sec.color || "#22c55e");  // pakai warna Firestore
+    if(n.sectorDefs){
+  n.sectorDefs.forEach((sec)=>{
+
+    const c = sec.status === "OFF"
+      ? "#dc2626"
+      : (sec.color || "#22c55e");  // ✅ pakai warna firestore
 
         const s = createSector(
-          L.latLng(n.lat, n.lng),
+          L.latLng(n.lat,n.lng),
           5000,
           sec.start,
           sec.end,
           {
-            color: c,
-            fillColor: c,
-            fillOpacity: 0.25,
-            weight: 1,
-            interactive: false
+            color:c,
+            fillColor:c,
+            fillOpacity:.25,
+            weight:1,
+            interactive:false
           }
         ).addTo(nodeLayer);
-
         s.sector = sec.azimuth;
         n.sectors.push(s);
       });
@@ -1035,85 +992,35 @@ onSnapshot(collection(db,"nodes"), snapshot => {
 
   render(nodes);
   redrawLinks();
+
 });
+    
+  window.editUser = async function(docId,currentData){
 
-// =============================
-// EDIT NODE
-// =============================
-window.editFullNode = async function(docId){
-  if (window.currentUserRole !== "admin") {
-    alert("Hanya admin yang bisa edit node!");
-    return;
-  }
-
-  const newName = prompt("Nama Node baru:");
-  if (!newName) return;
+  const newStatus = prompt("Status (UP / OFF):", currentData.status);
+  if(!newStatus) return;
 
   const { updateDoc, doc } = await import(
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
   );
 
-  await updateDoc(doc(db, "nodes", docId), { name: newName });
-};
-
-// =============================
-// EDIT SECTOR STATUS
-// =============================
-window.editSectorStatus = async function(docId){
-  if (window.currentUserRole !== "admin") {
-    alert("Hanya admin yang bisa edit sector!");
-    return;
-  }
-
-  const newStatus = prompt("Status Sector (ON/OFF):");
-  if (!newStatus) return;
-
-  const { updateDoc, doc } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-  );
-
-  await updateDoc(doc(db, "nodes", docId), { status: newStatus });
-};
-
-// =============================
-// TOGGLE NODE COVERAGE
-// =============================
-window.toggleNodeCoverage = function(nodeName){
-  if (window.currentUserRole !== "admin") {
-    alert("Hanya admin yang bisa toggle coverage!");
-    return;
-  }
-
-  const node = nodes.find(n => n.name === nodeName);
-  if (!node) return;
-
-  node.coverageOn = !node.coverageOn;
-  node.sectors.forEach(s => {
-    if (node.coverageOn) {
-      s.addTo(nodeLayer);
-    } else {
-      nodeLayer.removeLayer(s);
-    }
+  await updateDoc(doc(db,"topology_users",docId),{
+    status:newStatus
   });
 };
-
 // =============================
-// DELETE NODE
+// DELETE USER
 // =============================
-window.deleteNode = async function(docId){
-  if (window.currentUserRole !== "admin") {
-    alert("Hanya admin yang bisa hapus node!");
-    return;
-  }
-
-  if(!confirm("Yakin hapus node?")) return;
+window.deleteUser = async function(docId){
+  if(!confirm("Yakin hapus user?")) return;
 
   const { deleteDoc, doc } = await import(
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
   );
 
-  await deleteDoc(doc(db, "nodes", docId));
+  await deleteDoc(doc(db,"topology_users",docId));
 };
+
 
 // =============================
 // DELETE NODE
