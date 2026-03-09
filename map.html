@@ -440,26 +440,12 @@ nodeRow.innerHTML=`
 nodeRow.style.cursor="pointer";
 
 nodeRow.onclick=()=>{
+
 focusNode(n.name);
-  
+
 nodeExpanded[n.name] = !nodeExpanded[n.name];
 
-const userRow=document.getElementById("users-"+n.name);
-
-if(userRow){
-
-if(userRow.style.display==="none"){
-
-userRow.style.display="table-row";
-listenNodeUsers(n.name);
-
-}else{
-
-userRow.style.display="none";
-
-}
-
-}
+renderWithUsers(nodes);
 
 };
 
@@ -471,7 +457,10 @@ tb.appendChild(nodeRow);
 const userRow=document.createElement("tr");
 
 userRow.id="users-"+n.name;
+
+if(!nodeExpanded[n.name]){
 userRow.style.display="none";
+}
 
 userRow.innerHTML=`
 <td colspan="3">
@@ -482,6 +471,10 @@ Loading users...
 `;
 
 tb.appendChild(userRow);
+
+if(nodeExpanded[n.name]){
+listenNodeUsers(n.name);
+}
 
 });
 
@@ -797,6 +790,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
+renderWithUsers(nodes);
 
 });
     
