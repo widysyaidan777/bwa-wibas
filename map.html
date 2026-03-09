@@ -352,7 +352,6 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-let nodeExpanded = {};
 
 /* ================= TABLE & FILTER ================= */
 function render(list){
@@ -387,9 +386,14 @@ const container=row.children[0];
 
 container.innerHTML="";
 
-const list = usersData.filter(u =>
-(u.nodeName||"").trim().toUpperCase() === nodeName.trim().toUpperCase()
-);
+const list = usersData.filter(u => {
+
+if(!u.nodeName) return false;
+
+return u.nodeName.toString().trim().toUpperCase() ===
+nodeName.toString().trim().toUpperCase();
+
+});
 
 if(list.length===0){
 
@@ -743,6 +747,8 @@ const linkLayer = L.layerGroup().addTo(map);
 
 let nodesData = [];
 let usersData = [];
+let nodeExpanded = {};
+
 
 /* =============================
    REALTIME LOAD USERS
@@ -789,8 +795,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
-/* refresh user list */
-nodes.forEach(n=>listenNodeUsers(n.name));
+
 });
     
 /* =============================
@@ -838,14 +843,14 @@ map.on("click", async function(e){
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
     
-     await addDoc(collection(db,"topology_users"),{
-      name:name,
-      lat:lat,
-      lng:lng,
-      nodeName:nodeName,
-      sector:sector,
-      status:"UP"
-    });
+   await addDoc(collection(db,"topology_users"),{
+name:name,
+lat:lat,
+lng:lng,
+nodeName:nodeName.trim().toUpperCase(),
+sector:sector,
+status:"UP"
+});
 
     alert("User berhasil ditambahkan!");
   }catch(err){
