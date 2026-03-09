@@ -353,6 +353,7 @@ function createSector(center, radius, startAz, endAz, opt){
 let nodes = [];
 let coverageVisible=true;
 
+
 /* ================= TABLE & FILTER ================= */
 function render(list){
 
@@ -375,151 +376,6 @@ function render(list){
     tb.appendChild(tr);
 
   });
-
-}
-function listenNodeUsers(nodeName){
-
-const row=document.getElementById("users-"+nodeName);
-if(!row) return;
-
-const container=row.querySelector(".user-container");
-
-container.innerHTML="";
-
-const list = usersData.filter(u => {
-
-if(!u.nodeName) return false;
-
-return u.nodeName.toString().trim().toUpperCase() ===
-nodeName.toString().trim().toUpperCase();
-
-});
-
-if(list.length===0){
-
-container.innerHTML="<i style='color:#94a3b8'>Node ini tidak memiliki user</i>";
-return;
-
-}
-
-list.forEach(u=>{
-
-const div=document.createElement("div");
-
-div.innerHTML=`
-<span style="color:#38bdf8">👤 ${u.name}</span>
-<span style="color:#94a3b8"> Sector ${u.sector||"-"}</span>
-`;
-
-container.appendChild(div);
-
-});
-
-}
-function renderWithUsers(list){
-
-const tb = document.getElementById("nodeTableBody");
-tb.innerHTML="";
-
-list.forEach(n=>{
-
-if(nodeExpanded[n.name]===undefined){
-nodeExpanded[n.name]=false;
-}
-
-const arrow = nodeExpanded[n.name] ? "▼" : "▶";
-
-const nodeRow=document.createElement("tr");
-
-nodeRow.innerHTML=`
-<td><b>${arrow} ${n.name}</b></td>
-<td>${n.region}</td>
-<td class="${n.status==="UP"?"up":"down"}">${n.status||"UP"}</td>
-`;
-
-nodeRow.style.cursor="pointer";
-
-nodeRow.onclick=()=>{
-
-focusNode(n.name);
-
-nodeExpanded[n.name] = !nodeExpanded[n.name];
-
-renderWithUsers(nodes);
-
-};
-
-tb.appendChild(nodeRow);
-
-
-/* USER ROW (hidden default) */
-
-const userRow=document.createElement("tr");
-
-userRow.id="users-"+n.name;
-
-if(!nodeExpanded[n.name]){
-userRow.style.display="none";
-}
-
-userRow.innerHTML=`
-<td colspan="3">
-<div class="user-container" style="padding-left:25px;font-size:12px;color:#cbd5f5">
-Loading users...
-</div>
-</td>
-`;
-
-tb.appendChild(userRow);
-
-if(nodeExpanded[n.name]){
-listenNodeUsers(n.name);
-}
-
-});
-
-}
-function toggleNodeUsers(nodeName){
-
-const tb = document.getElementById("nodeTableBody");
-const rows = Array.from(tb.querySelectorAll("tr"));
-
-const rowIndex = rows.findIndex(r =>
-r.children[0] &&
-r.children[0].innerText.trim() === nodeName
-);
-
-if(rowIndex === -1) return;
-
-loadNodeUsers(nodeName,rowIndex);
-
-}
-  function loadNodeUsers(nodeName, rowIndex){
-
-const tb = document.getElementById("nodeTableBody");
-
-firebase.database()
-.ref("users/"+nodeName)
-.once("value")
-.then(snapshot=>{
-
-snapshot.forEach(child=>{
-
-const u = child.val();
-
-const tr = document.createElement("tr");
-
-tr.innerHTML = `
-<td style="padding-left:25px">👤 ${u.name}</td>
-<td>${u.sector}</td>
-<td>${u.status}</td>
-`;
-
-tb.insertBefore(tr, tb.rows[rowIndex+1]);
-
-});
-
-});
 
 }
   function renderSearchResult(node){
@@ -570,26 +426,8 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ renderWithUsers(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){
-
-renderWithUsers(
-  nodes.filter(n=>n.region===r)
-);
-
-nodes.forEach(n=>{
-
-if(n.region===r){
-n.marker.addTo(map);
-n.sectors.forEach(s=>coverageVisible && s.addTo(map));
-}else{
-map.removeLayer(n.marker);
-n.sectors.forEach(s=>map.removeLayer(s));
-}
-
-});
-
-}
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
@@ -742,8 +580,6 @@ const linkLayer = L.layerGroup().addTo(map);
 
 let nodesData = [];
 let usersData = [];
-let nodeExpanded = {};
-
 
 /* =============================
    REALTIME LOAD USERS
@@ -790,8 +626,6 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
-renderWithUsers(nodes);
-
 });
     
 /* =============================
@@ -839,14 +673,14 @@ map.on("click", async function(e){
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
     
-   await addDoc(collection(db,"topology_users"),{
-name:name,
-lat:lat,
-lng:lng,
-nodeName:nodeName.trim().toUpperCase(),
-sector:sector,
-status:"UP"
-});
+     await addDoc(collection(db,"topology_users"),{
+      name:name,
+      lat:lat,
+      lng:lng,
+      nodeName:nodeName,
+      sector:sector,
+      status:"UP"
+    });
 
     alert("User berhasil ditambahkan!");
   }catch(err){
@@ -1012,7 +846,7 @@ Toggle Coverage Node
 
   });
 
-  renderWithUsers(nodes);
+  render(nodes);
   redrawLinks();
 
 });
