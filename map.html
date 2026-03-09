@@ -381,81 +381,78 @@ function render(list){
   });
 
 }
-function toggleNodeUsers(nodeName){
-
+  function renderNodeTable(){
   const tb = document.getElementById("nodeTableBody");
+  tb.innerHTML = "";
 
+  nodes.forEach(n => {
+    const tr = document.createElement("tr");
+    tr.dataset.node = n.name;
+
+    tr.innerHTML = `
+      <td style="cursor:pointer">▶ ${n.name}</td>
+      <td>${n.region}</td>
+      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+    `;
+
+    tr.onclick = () => {
+      focusNode(n.name);      // zoom ke node
+      toggleNodeUsers(n.name);
+    };
+
+    tb.appendChild(tr);
+  });
+}
+function toggleNodeUsers(nodeName){
+  const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
   if(!nodeRow) return;
 
-  // cek apakah sudah terbuka
+  // collapse jika sudah terbuka
   const next = nodeRow.nextElementSibling;
   if(next && next.dataset.parent === nodeName){
-
-    // collapse
     let row = next;
     while(row && row.dataset.parent === nodeName){
       const temp = row.nextElementSibling;
       row.remove();
       row = temp;
     }
-
     nodeRow.children[0].innerHTML = "▶ " + nodeName;
     return;
   }
 
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
-const users = usersData.filter(u =>
-  (u.nodeName || "")
-  .trim()
-  .toUpperCase() ===
-  (nodeName || "")
-  .trim()
-  .toUpperCase()
-);
-console.log("NODE:", nodeName);
-console.log("USERS:", usersData);
-console.log("MATCH:", users);
+  const users = usersData.filter(u =>
+    (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
+  );
 
   if(users.length === 0){
-
     const tr = document.createElement("tr");
     tr.dataset.parent = nodeName;
-
     tr.innerHTML = `
-      <td colspan="3" style="
-      padding-left:40px;
-      color:#94a3b8;
-      font-style:italic">
-      Node ini tidak memiliki user
+      <td colspan="3" style="padding-left:40px;color:#94a3b8;font-style:italic">
+        Node ini tidak memiliki user
       </td>
     `;
-
     nodeRow.after(tr);
     return;
   }
 
   let insertAfter = nodeRow;
-
-  users.forEach(u=>{
-
+  users.forEach(u => {
     const tr = document.createElement("tr");
     tr.dataset.parent = nodeName;
-
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
-      👤 ${u.name}<br>
-      Sector: ${u.sector || "-"}<br>
-      Status: ${u.status || "UP"}
+        👤 ${u.name}<br>
+        Sector: ${u.sector || "-"}<br>
+        Status: ${u.status || "UP"}
       </td>
     `;
-
     insertAfter.after(tr);
     insertAfter = tr;
-
   });
-
 }
   function renderSearchResult(node){
 
@@ -661,8 +658,8 @@ const nodeLayer = L.layerGroup().addTo(map);
 const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
-let nodesData = [];
-let usersData = [];
+window.nodesData = [];
+window.usersData = [];
 
 /* =============================
    REALTIME LOAD USERS
@@ -709,7 +706,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
-  render(nodes);
+  renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
     
 /* =============================
