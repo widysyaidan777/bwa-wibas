@@ -358,11 +358,11 @@ let coverageVisible=true;
 function render(list){
 
   const tb = document.getElementById("nodeTableBody");
+
   tb.innerHTML = "";
 
   list.forEach(n=>{
 
-    /* ===== BARIS NODE (TETAP SAMA SEPERTI SEBELUMNYA) ===== */
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
@@ -374,94 +374,6 @@ function render(list){
     tr.onclick = () => focusNode(n.name);
 
     tb.appendChild(tr);
-
-    /* ===== TAMBAHAN: LIST USER DI BAWAH NODE ===== */
-    const users = usersData.filter(u =>
-      (u.nodeName || "").trim().toUpperCase() ===
-      n.name.trim().toUpperCase()
-    );
-
-    users.forEach(u=>{
-
-      const trUser = document.createElement("tr");
-
-      trUser.innerHTML = `
-        <td colspan="3" style="padding-left:40px;color:#9fdcff">
-          👤 ${u.name} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
-        </td>
-      `;
-
-      tb.appendChild(trUser);
-
-    });
-
-  });
-
-}
- function toggleNodeUsers(nodeName){
-
-  const nodeNameClean = nodeName.trim().toUpperCase();
-
-  const users = usersData.filter(u =>
-    (u.nodeName || "").trim().toUpperCase() === nodeNameClean
-  );
-
-  const tbody = document.getElementById("nodeTableBody");
-
-  /* cek apakah sudah terbuka */
-  const existing = document.querySelectorAll(`[data-parent="${nodeNameClean}"]`);
-
-  if(existing.length){
-    existing.forEach(e=>e.remove());
-    return;
-  }
-
-  const nodeRows = [...tbody.querySelectorAll("tr")];
-
-  nodeRows.forEach((row,index)=>{
-
-    const nameCell = row.children[0];
-
-    if(!nameCell) return;
-
-    if(nameCell.innerText.trim().toUpperCase() === nodeNameClean){
-
-      /* jika tidak ada user */
-      if(users.length === 0){
-
-        const tr = document.createElement("tr");
-
-        tr.setAttribute("data-parent",nodeNameClean);
-
-        tr.innerHTML = `
-          <td colspan="3" style="padding-left:40px;color:#aaa">
-          ⚠ Tidak memiliki user
-          </td>
-        `;
-
-        row.after(tr);
-        return;
-
-      }
-
-      /* jika ada user */
-      users.forEach(u=>{
-
-        const tr = document.createElement("tr");
-
-        tr.setAttribute("data-parent",nodeNameClean);
-
-        tr.innerHTML = `
-          <td colspan="3" style="padding-left:40px;color:#9fdcff">
-          👤 ${u.name} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
-          </td>
-        `;
-
-        row.after(tr);
-
-      });
-
-    }
 
   });
 
