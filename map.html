@@ -358,7 +358,6 @@ let coverageVisible=true;
 function render(list){
 
   const tb = document.getElementById("nodeTableBody");
-
   tb.innerHTML = "";
 
   list.forEach(n=>{
@@ -366,14 +365,78 @@ function render(list){
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${n.name}</td>
+      <td style="cursor:pointer">▶ ${n.name}</td>
       <td>${n.region}</td>
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = () => focusNode(n.name);
+    tr.onclick = ()=>toggleNodeUsers(n.name);
 
     tb.appendChild(tr);
+
+  });
+
+}
+  function toggleNodeUsers(nodeName){
+
+  const tb = document.getElementById("nodeTableBody");
+
+  const node = nodes.find(n => n.name === nodeName);
+  if(!node) return;
+
+  const users = usersData.filter(u =>
+    (u.nodeName || "").toUpperCase() === nodeName.toUpperCase()
+  );
+
+  const rows = tb.querySelectorAll("tr");
+
+  rows.forEach(r=>{
+    if(r.dataset.parent === nodeName){
+      r.remove();
+    }
+  });
+
+  const nodeRow = [...rows].find(r => r.innerText.includes(nodeName));
+
+  if(!nodeRow) return;
+
+  if(users.length === 0){
+
+    const tr = document.createElement("tr");
+
+    tr.dataset.parent = nodeName;
+
+    tr.innerHTML = `
+      <td colspan="3" style="
+      padding-left:40px;
+      color:#94a3b8;
+      font-style:italic">
+      Node ini tidak memiliki user
+      </td>
+    `;
+
+    nodeRow.after(tr);
+
+    return;
+  }
+
+  users.forEach(u=>{
+
+    const tr = document.createElement("tr");
+
+    tr.dataset.parent = nodeName;
+
+    tr.innerHTML = `
+      <td colspan="3" style="
+      padding-left:40px;
+      color:#9fdcff">
+      👤 ${u.name}<br>
+      Sector: ${u.sector || "-"}<br>
+      Status: ${u.status || "UP"}
+      </td>
+    `;
+
+    nodeRow.after(tr);
 
   });
 
