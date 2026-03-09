@@ -381,19 +381,19 @@ function render(list){
 function renderWithUsers(list){
 
 const tb = document.getElementById("nodeTableBody");
-tb.innerHTML = "";
+tb.innerHTML="";
 
 list.forEach(n=>{
 
-const tr = document.createElement("tr");
+const tr=document.createElement("tr");
 
-tr.innerHTML = `
-<td style="cursor:pointer"><b>${n.name}</b></td>
+tr.innerHTML=`
+<td><b>${n.name}</b></td>
 <td>${n.region}</td>
 <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
 `;
 
-tr.onclick = ()=>{
+tr.onclick=()=>{
 focusNode(n.name);
 toggleNodeUsers(n.name);
 };
@@ -403,71 +403,47 @@ tb.appendChild(tr);
 });
 
 }
-  function toggleNodeUsers(nodeName){
+function toggleNodeUsers(nodeName){
 
 const tb = document.getElementById("nodeTableBody");
+const rows = Array.from(tb.querySelectorAll("tr"));
 
-/* cari node */
-const node = nodes.find(n=>n.name===nodeName);
-if(!node) return;
-
-/* cari user di node */
-const users = usersData.filter(u =>
-(u.nodeName || "").toUpperCase() === nodeName.toUpperCase()
-);
-
-/* cari row node */
-const rows = [...tb.querySelectorAll("tr")];
 const rowIndex = rows.findIndex(r =>
 r.children[0] &&
 r.children[0].innerText.trim() === nodeName
 );
-    
+
 if(rowIndex === -1) return;
 
-/* cek apakah sudah ada user list */
-if(rows[rowIndex+1] && rows[rowIndex+1].classList.contains("userRow")){
-rows[rowIndex+1].remove();
-return;
+loadNodeUsers(nodeName,rowIndex);
+
 }
+  function loadNodeUsers(nodeName, rowIndex){
 
-/* buat row baru */
-const trUser = document.createElement("tr");
-trUser.classList.add("userRow");
+const tb = document.getElementById("nodeTableBody");
 
-let html = "";
+firebase.database()
+.ref("users/"+nodeName)
+.once("value")
+.then(snapshot=>{
 
-if(users.length === 0){
+snapshot.forEach(child=>{
 
-html = `
-<td colspan="3" style="padding-left:40px;color:#94a3b8">
-Node ini belum memiliki user
-</td>
+const u = child.val();
+
+const tr = document.createElement("tr");
+
+tr.innerHTML = `
+<td style="padding-left:25px">👤 ${u.name}</td>
+<td>${u.sector}</td>
+<td>${u.status}</td>
 `;
 
-}else{
+tb.insertBefore(tr, tb.rows[rowIndex+1]);
 
-users.forEach(u=>{
-html += `
-<div style="margin-bottom:6px">
-👤 ${u.name}  
-<span style="color:#94a3b8">Sector ${u.sector || "-"}</span>
-</div>
-`;
 });
 
-html = `
-<td colspan="3" style="padding-left:40px;color:#9fdcff">
-${html}
-</td>
-`;
-
-}
-
-trUser.innerHTML = html;
-
-/* insert setelah node */
-rows[rowIndex].after(trUser);
+});
 
 }
   function renderSearchResult(node){
