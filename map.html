@@ -366,7 +366,7 @@ function render(list){
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td style="cursor:pointer">▶ ${n.name}</td>
+      <td style="cursor:pointer" class="nodeCell">▶ ${n.name}</td>
       <td>${n.region}</td>
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
@@ -378,26 +378,30 @@ function render(list){
   });
 
 }
-  function toggleNodeUsers(node,row){
+ function toggleNodeUsers(node,row){
 
   const tb = document.getElementById("nodeTableBody");
 
-  /* jika sudah terbuka -> tutup */
+  const nodeName = node.name.trim().toUpperCase();
+
+  /* cek jika sudah terbuka -> tutup */
   if(row.nextSibling && row.nextSibling.classList.contains("userRow")){
-    
+
     while(row.nextSibling && row.nextSibling.classList.contains("userRow")){
       tb.removeChild(row.nextSibling);
     }
 
+    row.children[0].innerHTML = "▶ " + node.name;
+
     return;
   }
 
-  /* cari user di node ini */
+  /* cari user */
   const users = usersData.filter(u =>
-    u.nodeName &&
-    u.nodeName.trim().toUpperCase() ===
-    node.name.trim().toUpperCase()
+    (u.nodeName || "").trim().toUpperCase() === nodeName
   );
+
+  row.children[0].innerHTML = "▼ " + node.name;
 
   if(users.length === 0){
 
@@ -411,7 +415,9 @@ function render(list){
     `;
 
     row.after(tr);
+
     focusNode(node.name);
+
     return;
   }
 
@@ -422,9 +428,7 @@ function render(list){
 
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
-      👤 ${u.name} |
-      Sector: ${u.sector || "-"} |
-      Status: ${u.status || "UP"}
+      👤 ${u.name} | Node: ${u.nodeName} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
       </td>
     `;
 
