@@ -441,18 +441,33 @@ function toggleNodeUsers(nodeName){
 
   let insertAfter = nodeRow;
   users.forEach(u => {
-    const tr = document.createElement("tr");
-    tr.dataset.parent = nodeName;
-    tr.innerHTML = `
-      <td colspan="3" style="padding-left:40px;color:#9fdcff">
-        👤 ${u.name}<br>
-        Sector: ${u.sector || "-"}<br>
-        Status: ${u.status || "UP"}
-      </td>
-    `;
-    insertAfter.after(tr);
-    insertAfter = tr;
-  });
+  const tr = document.createElement("tr");
+  tr.dataset.parent = nodeName;
+
+  tr.innerHTML = `
+    <td colspan="3" style="padding-left:40px;color:#9fdcff">
+      👤 ${u.name}<br>
+      Sector: ${u.sector !== null ? u.sector + "°" : "-"}<br>
+      Status: ${u.status || "UP"}<br>
+      Warna: ${u.color || "-"}
+    </td>
+  `;
+
+  // 🔹 Tambahkan klik ke row user supaya zoom
+  tr.style.cursor = "pointer";
+  tr.onclick = () => {
+    if(u.lat && u.lng){
+      map.flyTo([u.lat, u.lng], 14, { animate: true, duration: 1.2 });
+      L.popup()
+        .setLatLng([u.lat, u.lng])
+        .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}`)
+        .openOn(map);
+    }
+  };
+
+  insertAfter.after(tr);
+  insertAfter = tr;
+});
 }
   function renderSearchResult(node){
 
@@ -737,10 +752,13 @@ map.on("click", async function(e){
    const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-  let sector = prompt("Masuk ke sector berapa? (1-4)");
-  if(!sector){
-  sector = "-";
-  }
+  / 🔹 Pilih derajat sektor
+let sector = prompt("Masukkan azimuth sektor user (0-359°):");
+if(!sector || isNaN(sector)){
+  sector = null;
+}else{
+  sector = parseInt(sector) % 360;
+}
   
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
