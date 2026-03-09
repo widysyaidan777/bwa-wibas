@@ -400,7 +400,10 @@ list.forEach(u=>{
 
 const div = document.createElement("div");
 
-div.innerHTML = `👤 ${u.name} — Sector ${u.sector || "-"}`;
+div.innerHTML = `
+<span style="color:#38bdf8">👤 ${u.name}</span>
+<span style="color:#94a3b8">Sector ${u.sector || "-"}</span>
+`;
 
 container.appendChild(div);
 
@@ -757,9 +760,8 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
-  /* 🔥 UPDATE LIST USER */
-renderWithUsers(nodes);
-
+/* refresh user list */
+nodes.forEach(n=>listenNodeUsers(n.name));
 });
     
 /* =============================
