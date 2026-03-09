@@ -358,22 +358,42 @@ let coverageVisible=true;
 function render(list){
 
   const tb = document.getElementById("nodeTableBody");
-
   tb.innerHTML = "";
 
   list.forEach(n=>{
 
+    /* ===== BARIS NODE (TETAP SAMA SEPERTI SEBELUMNYA) ===== */
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td style="cursor:pointer" class="nodeCell">▶ ${n.name}</td>
+      <td>${n.name}</td>
       <td>${n.region}</td>
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = () => toggleNodeUsers(n,tr);
+    tr.onclick = () => focusNode(n.name);
 
     tb.appendChild(tr);
+
+    /* ===== TAMBAHAN: LIST USER DI BAWAH NODE ===== */
+    const users = usersData.filter(u =>
+      (u.nodeName || "").trim().toUpperCase() ===
+      n.name.trim().toUpperCase()
+    );
+
+    users.forEach(u=>{
+
+      const trUser = document.createElement("tr");
+
+      trUser.innerHTML = `
+        <td colspan="3" style="padding-left:40px;color:#9fdcff">
+          👤 ${u.name} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
+        </td>
+      `;
+
+      tb.appendChild(trUser);
+
+    });
 
   });
 
