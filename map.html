@@ -378,34 +378,31 @@ function render(list){
   });
 
 }
-  function listenNodeUsers(nodeName){
+function listenNodeUsers(nodeName){
 
-const container=document.getElementById("users-"+nodeName);
+const container = document.getElementById("users-"+nodeName);
 
-firebase.database()
-.ref("users/"+nodeName)
-.on("value",snapshot=>{
+container.innerHTML = "";
 
-container.innerHTML="";
+const list = usersData.filter(u =>
+u.nodeName &&
+u.nodeName.trim().toUpperCase() === nodeName.trim().toUpperCase()
+);
 
-if(!snapshot.exists()){
+if(list.length === 0){
 
-container.innerHTML="<i>Node ini tidak memiliki user</i>";
+container.innerHTML = "<i>Node ini tidak memiliki user</i>";
 return;
 
 }
 
-snapshot.forEach(child=>{
+list.forEach(u=>{
 
-const u=child.val();
+const div = document.createElement("div");
 
-const div=document.createElement("div");
-
-div.innerHTML=`👤 ${u.name} — ${u.sector} — ${u.status}`;
+div.innerHTML = `👤 ${u.name} — Sector ${u.sector || "-"}`;
 
 container.appendChild(div);
-
-});
 
 });
 
@@ -436,7 +433,7 @@ const userRow=document.createElement("tr");
 
 userRow.innerHTML=`
 <td colspan="3">
-<div id="users-${n.name}" style="padding-left:25px;color:#444">
+<div id="users-${n.name}" style="padding-left:25px">
 Loading users...
 </div>
 </td>
@@ -760,6 +757,9 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
+  /* 🔥 UPDATE LIST USER */
+renderWithUsers(nodes);
+
 });
     
 /* =============================
