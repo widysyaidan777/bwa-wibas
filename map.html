@@ -410,7 +410,7 @@ const users = usersData.filter(u =>
   (u.nodeName || "")
   .trim()
   .toUpperCase() ===
-  nodeName
+  (nodeName || "")
   .trim()
   .toUpperCase()
 );
@@ -479,8 +479,12 @@ tb.appendChild(tr);
 /* cari user yang ada di node ini */
 
 const users = usersData.filter(u =>
-u.nodeName &&
-u.nodeName.toUpperCase() === node.name.toUpperCase()
+  (u.nodeName || "")
+  .trim()
+  .toUpperCase() ===
+  (nodeName || "")
+  .trim()
+  .toUpperCase()
 );
 
 
@@ -705,6 +709,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
+  render(nodes);
 });
     
 /* =============================
