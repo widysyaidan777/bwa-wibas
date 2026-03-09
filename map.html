@@ -362,68 +362,51 @@ function render(list){
 
   list.forEach(n=>{
 
-    /* =========================
-       HITUNG USER DI NODE
-    ========================= */
-
+    /* hitung user di node */
     const users = usersData.filter(u =>
       u.nodeName &&
-      u.nodeName.trim().toUpperCase() === n.name.trim().toUpperCase()
+      u.nodeName.trim().toUpperCase() ===
+      n.name.trim().toUpperCase()
     );
-
-    const userCount = users.length;
-
-    /* =========================
-       BARIS NODE
-    ========================= */
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td style="cursor:pointer">
-        ▶ ${n.name} 
-        <span style="color:#9fdcff">(${userCount} user)</span>
+        ▶ ${n.name}
+        <span style="color:#9fdcff">(${users.length} user)</span>
       </td>
       <td>${n.region}</td>
-      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+      <td class="${n.status==="UP"?"up":"down"}">${n.status || "UP"}</td>
     `;
 
-    tr.onclick = () => toggleNodeUsers(n);
+    tr.onclick = () => toggleNodeUsers(n, tr);
 
     tb.appendChild(tr);
 
   });
 
 }
-  function toggleNodeUsers(node){
+  function toggleNodeUsers(node, row){
 
   const tb = document.getElementById("nodeTableBody");
 
-  /* cari user di node */
-  const users = usersData.filter(u =>
-    u.nodeName &&
-    u.nodeName.trim().toUpperCase() === node.name.trim().toUpperCase()
-  );
-
-  /* cari posisi node di table */
-  const rows = [...tb.children];
-  const index = rows.findIndex(r => r.innerText.includes(node.name));
-
-  if(index === -1) return;
-
   /* cek apakah sudah terbuka */
-  if(rows[index+1] && rows[index+1].classList.contains("userRow")){
-    
-    while(rows[index+1] && rows[index+1].classList.contains("userRow")){
-      tb.removeChild(rows[index+1]);
+  if(row.nextSibling && row.nextSibling.classList.contains("userRow")){
+
+    while(row.nextSibling && row.nextSibling.classList.contains("userRow")){
+      tb.removeChild(row.nextSibling);
     }
 
     return;
   }
 
-  /* =========================
-     TAMPILKAN USER
-  ========================= */
+  /* cari user */
+  const users = usersData.filter(u =>
+    u.nodeName &&
+    u.nodeName.trim().toUpperCase() ===
+    node.name.trim().toUpperCase()
+  );
 
   if(users.length === 0){
 
@@ -432,11 +415,13 @@ function render(list){
 
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#f87171">
-        Tidak memiliki user
+      Tidak memiliki user
       </td>
     `;
 
-    tb.insertBefore(tr, rows[index+1] || null);
+    row.after(tr);
+
+    focusNode(node.name);
 
     return;
   }
@@ -448,16 +433,17 @@ function render(list){
 
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
-        👤 ${u.name} |
-        Sector: ${u.sector || "-"} |
-        Status: ${u.status || "UP"}
+      👤 ${u.name} |
+      Sector: ${u.sector || "-"} |
+      Status: ${u.status || "UP"}
       </td>
     `;
 
-    tb.insertBefore(tr, rows[index+1] || null);
+    row.after(tr);
 
   });
 
+  focusNode(node.name);
 }
   function renderSearchResult(node){
 
