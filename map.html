@@ -398,65 +398,73 @@ function render(list){
   });
 
 }
- function toggleNodeUsers(node,row){
+ function toggleNodeUsers(nodeName){
 
-  const tb = document.getElementById("nodeTableBody");
+  const nodeNameClean = nodeName.trim().toUpperCase();
 
-  const nodeName = node.name.trim().toUpperCase();
-
-  /* cek jika sudah terbuka -> tutup */
-  if(row.nextSibling && row.nextSibling.classList.contains("userRow")){
-
-    while(row.nextSibling && row.nextSibling.classList.contains("userRow")){
-      tb.removeChild(row.nextSibling);
-    }
-
-    row.children[0].innerHTML = "▶ " + node.name;
-
-    return;
-  }
-
-  /* cari user */
   const users = usersData.filter(u =>
-    (u.nodeName || "").trim().toUpperCase() === nodeName
+    (u.nodeName || "").trim().toUpperCase() === nodeNameClean
   );
 
-  row.children[0].innerHTML = "▼ " + node.name;
+  const tbody = document.getElementById("nodeTableBody");
 
-  if(users.length === 0){
+  /* cek apakah sudah terbuka */
+  const existing = document.querySelectorAll(`[data-parent="${nodeNameClean}"]`);
 
-    const tr = document.createElement("tr");
-    tr.className = "userRow";
-
-    tr.innerHTML = `
-      <td colspan="3" style="padding-left:40px;color:#f87171">
-      Tidak memiliki user
-      </td>
-    `;
-
-    row.after(tr);
-
-    focusNode(node.name);
-
+  if(existing.length){
+    existing.forEach(e=>e.remove());
     return;
   }
 
-  users.forEach(u=>{
+  const nodeRows = [...tbody.querySelectorAll("tr")];
 
-    const tr = document.createElement("tr");
-    tr.className = "userRow";
+  nodeRows.forEach((row,index)=>{
 
-    tr.innerHTML = `
-      <td colspan="3" style="padding-left:40px;color:#9fdcff">
-      👤 ${u.name} | Node: ${u.nodeName} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
-      </td>
-    `;
+    const nameCell = row.children[0];
 
-    row.after(tr);
+    if(!nameCell) return;
+
+    if(nameCell.innerText.trim().toUpperCase() === nodeNameClean){
+
+      /* jika tidak ada user */
+      if(users.length === 0){
+
+        const tr = document.createElement("tr");
+
+        tr.setAttribute("data-parent",nodeNameClean);
+
+        tr.innerHTML = `
+          <td colspan="3" style="padding-left:40px;color:#aaa">
+          ⚠ Tidak memiliki user
+          </td>
+        `;
+
+        row.after(tr);
+        return;
+
+      }
+
+      /* jika ada user */
+      users.forEach(u=>{
+
+        const tr = document.createElement("tr");
+
+        tr.setAttribute("data-parent",nodeNameClean);
+
+        tr.innerHTML = `
+          <td colspan="3" style="padding-left:40px;color:#9fdcff">
+          👤 ${u.name} | Sector: ${u.sector || "-"} | Status: ${u.status || "UP"}
+          </td>
+        `;
+
+        row.after(tr);
+
+      });
+
+    }
 
   });
 
-  focusNode(node.name);
 }
   function renderSearchResult(node){
 
