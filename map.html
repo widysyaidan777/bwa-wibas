@@ -373,6 +373,7 @@ function render(list){
 
     tr.onclick = ()=>{
       focusNode(n.name);      // 🔥 zoom ke node tetap jalan
+      toggleNodeUsers(n.name);
     };
 
     tb.appendChild(tr);
@@ -396,6 +397,7 @@ function render(list){
 
     tr.onclick = () => {
       focusNode(n.name);      // zoom ke node
+      toggleNodeUsers(n.name);
     };
 
     tb.appendChild(tr);
@@ -510,99 +512,8 @@ tb.appendChild(trUser);
 });
 
 }
-  function showUsersByNode(nodeName){
-
-  userLayer.clearLayers();
-  linkLayer.clearLayers();
-
-  usersData.forEach(u=>{
-
-    if(
-      (u.nodeName || "")
-      .trim()
-      .toUpperCase() ===
-      nodeName.trim().toUpperCase()
-    ){
-
-      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-      const marker = L.circleMarker([u.lat, u.lng],{
-        radius:6,
-        color:userColor,
-        fillColor:userColor,
-        fillOpacity:1
-      }).addTo(userLayer);
-
-      const node = nodes.find(n =>
-        n.name.trim().toUpperCase() ===
-        nodeName.trim().toUpperCase()
-      );
-
-      if(node){
-        const line = L.polyline(
-          [[u.lat,u.lng],[node.lat,node.lng]],
-          {color:"#facc15",weight:2,dashArray:"4"}
-        ).addTo(linkLayer);
-      }
-
-    }
-
-  });
-
-}
-function focusNode(name){
-
-  const n = nodes.find(x=>x.name===name);
-
-  if(!n) return;
-
-  // sembunyikan semua node lain
-  nodes.forEach(node=>{
-    map.removeLayer(node.marker);
-    node.sectors.forEach(s=>map.removeLayer(s));
-  });
-
-  // tampilkan node yang dipilih
-  n.marker.addTo(map);
-  n.sectors.forEach(s=>{
-    if(coverageVisible) s.addTo(map);
-  });
-
-  map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
-  n.marker.openPopup();
-
-  // tampilkan user hanya node ini
-  showUsersByNode(name);
-
-}
-function showAll(){
-
-  render(nodes);
-
-  nodes.forEach(n=>{
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
-  });
-
-  userLayer.clearLayers();
-  linkLayer.clearLayers();
-
-  usersData.forEach(u=>{
-
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-    const marker = L.circleMarker([u.lat,u.lng],{
-      radius:6,
-      color:userColor,
-      fillColor:userColor,
-      fillOpacity:1
-    }).addTo(userLayer);
-
-  });
-
-  redrawLinks();
-
-}
+function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
