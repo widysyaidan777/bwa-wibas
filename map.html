@@ -371,12 +371,15 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-   tr.onclick = () => {
+  tr.onclick = () => {
 
-  nodeFocus = n.name;   // node yang sedang dilihat
+  nodeFocus = n.name;
 
   focusNode(n.name);
   toggleNodeUsers(n.name);
+
+  userLayer.clearLayers();   // 🔥 refresh user
+  redrawLinks();             // 🔥 refresh link
 
 };
 
@@ -399,12 +402,15 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-     tr.onclick = () => {
+   tr.onclick = () => {
 
-  nodeFocus = n.name;   // node yang sedang dilihat
+  nodeFocus = n.name;
 
   focusNode(n.name);
   toggleNodeUsers(n.name);
+
+  userLayer.clearLayers();   // 🔥 refresh user
+  redrawLinks();             // 🔥 refresh link
 
 };
     tb.appendChild(tr);
@@ -522,7 +528,10 @@ tb.appendChild(trUser);
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
 function showAll(){
 
-  nodeFocus = null;   // reset filter
+  nodeFocus = null;
+
+  userLayer.clearLayers();
+  redrawLinks();
 
   render(nodes);
 
@@ -530,7 +539,6 @@ function showAll(){
     n.marker.addTo(map);
     n.sectors.forEach(s=>coverageVisible && s.addTo(map));
   });
-
 }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
