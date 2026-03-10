@@ -399,11 +399,14 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = () => {
-      focusNode(n.name);      // zoom ke node
-      toggleNodeUsers(n.name);
-    };
+     tr.onclick = () => {
 
+  nodeFocus = n.name;   // node yang sedang dilihat
+
+  focusNode(n.name);
+  toggleNodeUsers(n.name);
+
+};
     tb.appendChild(tr);
   });
 }
@@ -1008,28 +1011,26 @@ function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  usersData.forEach(u=>{   // 🔥 PAKAI usersData
+  linksData.forEach(l=>{
 
-    const node = nodes.find(n => n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase());
+    // hide link jika bukan node yang sedang dilihat
+    if(nodeFocus &&
+       l.from.trim().toUpperCase() !== nodeFocus.trim().toUpperCase() &&
+       l.to.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
+      return;
+    }
 
-    if(!node) return;
+    const line = L.polyline([
+      [l.lat1, l.lng1],
+      [l.lat2, l.lng2]
+    ],{
+      color:"#facc15",
+      weight:2
+    }).addTo(linkLayer);
 
-    const line = L.polyline(
-      [
-        [u.lat, u.lng],
-        [node.lat, node.lng]
-      ],
-      {
-        color: "#facc15",
-        weight: 2,
-        opacity: 0.9,
-        dashArray:"4"
-      }
-    );
-    linkLayer.addLayer(line);
   });
+
 }
-    
 function refreshMap(){
 
   // Clear semua layer
