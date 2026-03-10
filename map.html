@@ -512,8 +512,33 @@ tb.appendChild(trUser);
 });
 
 }
-function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function focusNode(name){
+
+const n = nodes.find(x=>x.name===name);
+if(!n) return;
+
+activeNodeFilter = name.trim().toUpperCase();
+
+map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+n.marker.openPopup();
+
+renderUsers();
+
+}
+function showAll(){
+
+activeNodeFilter = null;
+
+render(nodes);
+
+nodes.forEach(n=>{
+n.marker.addTo(map);
+n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+});
+
+renderUsers();
+
+}
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
@@ -667,7 +692,8 @@ const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
 window.usersData = [];
-
+let activeNodeFilter = null;
+    
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -683,16 +709,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
     u.id = doc.id;
 
     usersData.push(u);
-
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
-    
+     
      marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
@@ -713,7 +730,8 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 `);
   });
   redrawLinks();
-  renderNodeTable(); // ini baru, supaya users muncul di tabel
+  renderUsers();
+renderNodeTable();
 });
     
 /* =============================
@@ -1021,7 +1039,31 @@ function redrawLinks(){
     linkLayer.addLayer(line);
   });
 }
-    
+    function renderUsers(){
+
+userLayer.clearLayers();
+linkLayer.clearLayers();
+
+usersData.forEach(u=>{
+
+const nodeName = (u.nodeName || "").trim().toUpperCase();
+
+if(activeNodeFilter && nodeName !== activeNodeFilter) return;
+
+const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+const marker = L.circleMarker([u.lat, u.lng], {
+radius:6,
+color:userColor,
+fillColor:userColor,
+fillOpacity:1
+}).addTo(userLayer);
+
+});
+
+redrawLinks();
+
+}
 function refreshMap(){
 
   // Clear semua layer
