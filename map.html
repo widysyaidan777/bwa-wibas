@@ -371,10 +371,14 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-    tr.onclick = ()=>{
-      focusNode(n.name);      // 🔥 zoom ke node tetap jalan
-      toggleNodeUsers(n.name);
-    };
+   tr.onclick = () => {
+
+  nodeFocus = n.name;   // node yang sedang dilihat
+
+  focusNode(n.name);
+  toggleNodeUsers(n.name);
+
+};
 
     tb.appendChild(tr);
 
@@ -667,7 +671,7 @@ const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
 window.usersData = [];
-
+let nodeFocus = null;
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -682,8 +686,12 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
     const u = doc.data();
     u.id = doc.id;
 
-    usersData.push(u);
+  usersData.push(u);
 
+// jika sedang melihat node tertentu, hide user node lain
+if(nodeFocus && u.nodeName.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
+  return;
+}
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
     
     const marker = L.circleMarker([u.lat, u.lng], {
