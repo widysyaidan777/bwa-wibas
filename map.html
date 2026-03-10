@@ -373,7 +373,6 @@ function render(list){
 
     tr.onclick = ()=>{
       focusNode(n.name);      // 🔥 zoom ke node tetap jalan
-      toggleNodeUsers(n.name);
     };
 
     tb.appendChild(tr);
@@ -397,7 +396,6 @@ function render(list){
 
     tr.onclick = () => {
       focusNode(n.name);      // zoom ke node
-      toggleNodeUsers(n.name);
     };
 
     tb.appendChild(tr);
@@ -556,10 +554,25 @@ function focusNode(name){
 
   const n = nodes.find(x=>x.name===name);
 
+  if(!n) return;
+
+  // sembunyikan semua node lain
+  nodes.forEach(node=>{
+    map.removeLayer(node.marker);
+    node.sectors.forEach(s=>map.removeLayer(s));
+  });
+
+  // tampilkan node yang dipilih
+  n.marker.addTo(map);
+  n.sectors.forEach(s=>{
+    if(coverageVisible) s.addTo(map);
+  });
+
   map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
   n.marker.openPopup();
 
-  showUsersByNode(name); // 🔥 filter user sesuai node
+  // tampilkan user hanya node ini
+  showUsersByNode(name);
 
 }
 function showAll(){
