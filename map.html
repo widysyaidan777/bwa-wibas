@@ -137,6 +137,13 @@ th{background:#020617}
 <body>
 <header>Topology – BWA WiBAS</header>
 
+  <div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#020617;color:white;display:flex;justify-content:center;align-items:center;flex-direction:column;z-index:9999;">
+    <h2>Login Topology</h2>
+    <input id="username" placeholder="Username" style="margin:4px;padding:8px;width:200px"/>
+    <input id="password" type="password" placeholder="Password" style="margin:4px;padding:8px;width:200px"/>
+    <button onclick="loginUser()" style="margin-top:8px;padding:8px 16px;">Login</button>
+  </div>
+  
 <!-- SIDEBAR -->
 <div id="sidebar">
   <h4>Area</h4>
@@ -247,6 +254,51 @@ text-align:center;
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+  async function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  
+  if(!username || !password){
+    alert("Isi username & password");
+    return;
+  }
+
+  const { collection, query, where, getDocs } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+  );
+
+  const q = query(
+    collection(db, "users_login"),
+    where("username", "==", username),
+    where("password", "==", password)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if(snapshot.empty){
+    alert("Login gagal");
+    return;
+  }
+
+  const user = snapshot.docs[0].data();
+  window.currentUserRole = user.role; // simpan role global
+  document.getElementById("loginScreen").style.display = "none"; // sembunyi login
+
+  alert(`Login berhasil, role: ${user.role}`);
+
+  applyRolePermissions(); // aktifkan/hide tombol sesuai role
+}
+
+function applyRolePermissions(){
+  if(window.currentUserRole === "view-only"){
+    // sembunyikan tombol edit
+    document.querySelectorAll("button").forEach(b=>{
+      if(b.innerText.includes("Edit") || b.innerText.includes("Tambah") || b.innerText.includes("Import") || b.innerText.includes("Delete")){
+        b.style.display = "none";
+      }
+    });
+  }
+}
 /* ================= SUBMENU ================= */
 function toggleSubmenu(region){
   const el=document.getElementById('submenu-'+region);
@@ -371,17 +423,11 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
- tr.onclick = () => {
+    tr.onclick = ()=>{
+      focusNode(n.name);      // 🔥 zoom ke node tetap jalan
+      toggleNodeUsers(n.name);
+    };
 
-  nodeFocus = n.name;
-
-  focusNode(n.name);
-  toggleNodeUsers(n.name);
-
-  renderUsers();   // 🔥 ini yang penting
-  redrawLinks();
-
-};
     tb.appendChild(tr);
 
   });
@@ -401,17 +447,11 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-  tr.onclick = () => {
+    tr.onclick = () => {
+      focusNode(n.name);      // zoom ke node
+      toggleNodeUsers(n.name);
+    };
 
-  nodeFocus = n.name;
-
-  focusNode(n.name);
-  toggleNodeUsers(n.name);
-
-  renderUsers();   // 🔥 ini yang penting
-  redrawLinks();
-
-};
     tb.appendChild(tr);
   });
 }
@@ -525,20 +565,7 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){
-
-  nodeFocus = null;
-
-  userLayer.clearLayers();
-  redrawLinks();
-
-  render(nodes);
-
-  nodes.forEach(n=>{
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
-  });
-}
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
@@ -692,8 +719,7 @@ const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
 window.usersData = [];
-let nodeFocus = null;
-let linksData = [];
+
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -710,47 +736,38 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 
     usersData.push(u);
 
-    // 🔴 FILTER USER BERDASARKAN NODE YANG SEDANG DIFOKUS
-    if(nodeFocus){
-
-      const userNode = (u.nodeName || "").trim().toUpperCase();
-      const focusNode = nodeFocus.trim().toUpperCase();
-
-      if(userNode !== focusNode) return;
-
-    }
-
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
+    
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
+    // ===== LANGKAH 4: cek role sebelum tampilkan tombol =====
+  const canEdit = window.currentUserRole === "admin"; // misal admin / view-only
 
-    marker.bindPopup(`
+     marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Sector: ${u.sector || "-"}<br>
       Status: ${u.status}<br><br>
-
+      
       <button onclick="editFullUser('${doc.id}')"
       style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
       Edit User
       </button><br>
-
+    
       <button onclick="deleteUser('${doc.id}')"
       style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
       Delete User
       </button>
-    `);
-
+      
+   
+`);
   });
-
   redrawLinks();
-  renderNodeTable();
-
+  renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
     
 /* =============================
@@ -1033,64 +1050,32 @@ window.editNodeStatus = async function(docId,currentStatus){
     status:newStatus.toUpperCase()
   });
 };
-    function renderUsers(){
-
-  userLayer.clearLayers();
-
-  usersData.forEach(u=>{
-
-    if(nodeFocus){
-
-      const userNode = (u.nodeName || "").trim().toUpperCase();
-      const focusNode = nodeFocus.trim().toUpperCase();
-
-      if(userNode !== focusNode) return;
-
-    }
-
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
-
-  });
-
-}
 function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  usersData.forEach(u=>{
+  usersData.forEach(u=>{   // 🔥 PAKAI usersData
 
-    if(!u.nodeName) return;
-
-    const node = nodes.find(n =>
-      n.name.trim().toUpperCase() ===
-      u.nodeName.trim().toUpperCase()
-    );
+    const node = nodes.find(n => n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase());
 
     if(!node) return;
 
-    // FILTER NODE
-    if(nodeFocus && node.name.toUpperCase() !== nodeFocus.toUpperCase()){
-      return;
-    }
-
-    L.polyline([
-      [node.lat,node.lng],
-      [u.lat,u.lng]
-    ],{
-      color:"#facc15",
-      weight:2
-    }).addTo(linkLayer);
-
+    const line = L.polyline(
+      [
+        [u.lat, u.lng],
+        [node.lat, node.lng]
+      ],
+      {
+        color: "#facc15",
+        weight: 2,
+        opacity: 0.9,
+        dashArray:"4"
+      }
+    );
+    linkLayer.addLayer(line);
   });
-
 }
+    
 function refreshMap(){
 
   // Clear semua layer
