@@ -512,8 +512,84 @@ tb.appendChild(trUser);
 });
 
 }
-function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+  function showUsersByNode(nodeName){
+
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    if(
+      (u.nodeName || "")
+      .trim()
+      .toUpperCase() ===
+      nodeName.trim().toUpperCase()
+    ){
+
+      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+      const marker = L.circleMarker([u.lat, u.lng],{
+        radius:6,
+        color:userColor,
+        fillColor:userColor,
+        fillOpacity:1
+      }).addTo(userLayer);
+
+      const node = nodes.find(n =>
+        n.name.trim().toUpperCase() ===
+        nodeName.trim().toUpperCase()
+      );
+
+      if(node){
+        const line = L.polyline(
+          [[u.lat,u.lng],[node.lat,node.lng]],
+          {color:"#facc15",weight:2,dashArray:"4"}
+        ).addTo(linkLayer);
+      }
+
+    }
+
+  });
+
+}
+function focusNode(name){
+
+  const n = nodes.find(x=>x.name===name);
+
+  map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+  n.marker.openPopup();
+
+  showUsersByNode(name); // 🔥 filter user sesuai node
+
+}
+function showAll(){
+
+  render(nodes);
+
+  nodes.forEach(n=>{
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+  });
+
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    const marker = L.circleMarker([u.lat,u.lng],{
+      radius:6,
+      color:userColor,
+      fillColor:userColor,
+      fillOpacity:1
+    }).addTo(userLayer);
+
+  });
+
+  redrawLinks();
+
+}
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
