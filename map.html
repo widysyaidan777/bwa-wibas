@@ -520,7 +520,18 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function showAll(){
+
+  nodeFocus = null;   // reset filter
+
+  render(nodes);
+
+  nodes.forEach(n=>{
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+  });
+
+}
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
@@ -675,6 +686,7 @@ const linkLayer = L.layerGroup().addTo(map);
 window.nodesData = [];
 window.usersData = [];
 let nodeFocus = null;
+let linksData = [];
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -1011,18 +1023,25 @@ function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  linksData.forEach(l=>{
+  usersData.forEach(u=>{
 
-    // hide link jika bukan node yang sedang dilihat
-    if(nodeFocus &&
-       l.from.trim().toUpperCase() !== nodeFocus.trim().toUpperCase() &&
-       l.to.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
+    if(!u.nodeName) return;
+
+    const node = nodes.find(n =>
+      n.name.trim().toUpperCase() ===
+      u.nodeName.trim().toUpperCase()
+    );
+
+    if(!node) return;
+
+    // FILTER NODE
+    if(nodeFocus && node.name.toUpperCase() !== nodeFocus.toUpperCase()){
       return;
     }
 
-    const line = L.polyline([
-      [l.lat1, l.lng1],
-      [l.lat2, l.lng2]
+    L.polyline([
+      [node.lat,node.lng],
+      [u.lat,u.lng]
     ],{
       color:"#facc15",
       weight:2
