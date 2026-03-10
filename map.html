@@ -371,15 +371,15 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-  tr.onclick = () => {
+ tr.onclick = () => {
 
   nodeFocus = n.name;
 
   focusNode(n.name);
   toggleNodeUsers(n.name);
 
-  userLayer.clearLayers();   // 🔥 refresh user
-  redrawLinks();             // 🔥 refresh link
+  renderUsers();   // 🔥 penting
+  redrawLinks();
 
 };
 
@@ -409,8 +409,8 @@ function render(list){
   focusNode(n.name);
   toggleNodeUsers(n.name);
 
-  userLayer.clearLayers();   // 🔥 refresh user
-  redrawLinks();             // 🔥 refresh link
+  renderUsers();   // 🔥 penting
+  redrawLinks();
 
 };
     tb.appendChild(tr);
@@ -499,7 +499,7 @@ const users = usersData.filter(u =>
   (u.nodeName || "")
   .trim()
   .toUpperCase() ===
-  (nodeName || "")
+(node.name || "")
   .trim()
   .toUpperCase()
 );
@@ -702,7 +702,6 @@ let linksData = [];
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
-  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
 
@@ -743,6 +742,7 @@ if(nodeFocus && u.nodeName.trim().toUpperCase() !== nodeFocus.trim().toUpperCase
    
 `);
   });
+  renderUsers();
   redrawLinks();
   renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
@@ -1027,6 +1027,36 @@ window.editNodeStatus = async function(docId,currentStatus){
     status:newStatus.toUpperCase()
   });
 };
+    function renderUsers(){
+
+  userLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    if(nodeFocus && 
+       u.nodeName.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
+      return;
+    }
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    const marker = L.circleMarker([u.lat, u.lng],{
+      radius:6,
+      color:userColor,
+      fillColor:userColor,
+      fillOpacity:1
+    }).addTo(userLayer);
+
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sector || "-"}<br>
+      Status: ${u.status}
+    `);
+
+  });
+
+}
 function redrawLinks(){
 
   linkLayer.clearLayers();
