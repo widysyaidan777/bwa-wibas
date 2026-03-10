@@ -378,11 +378,10 @@ function render(list){
   focusNode(n.name);
   toggleNodeUsers(n.name);
 
-  renderUsers();   // 🔥 penting
+  renderUsers();   // 🔥 ini yang penting
   redrawLinks();
 
 };
-
     tb.appendChild(tr);
 
   });
@@ -402,14 +401,14 @@ function render(list){
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
     `;
 
-   tr.onclick = () => {
+  tr.onclick = () => {
 
   nodeFocus = n.name;
 
   focusNode(n.name);
   toggleNodeUsers(n.name);
 
-  renderUsers();   // 🔥 penting
+  renderUsers();   // 🔥 ini yang penting
   redrawLinks();
 
 };
@@ -499,7 +498,7 @@ const users = usersData.filter(u =>
   (u.nodeName || "")
   .trim()
   .toUpperCase() ===
-(node.name || "")
+  (nodeName || "")
   .trim()
   .toUpperCase()
 );
@@ -702,49 +701,56 @@ let linksData = [];
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
+  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
 
     const u = doc.data();
     u.id = doc.id;
 
-  usersData.push(u);
+    usersData.push(u);
 
-// jika sedang melihat node tertentu, hide user node lain
-if(nodeFocus && u.nodeName.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
-  return;
-}
+    // 🔴 FILTER USER BERDASARKAN NODE YANG SEDANG DIFOKUS
+    if(nodeFocus){
+
+      const userNode = (u.nodeName || "").trim().toUpperCase();
+      const focusNode = nodeFocus.trim().toUpperCase();
+
+      if(userNode !== focusNode) return;
+
+    }
+
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    
+
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
-    
-     marker.bindPopup(`
+
+    marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Sector: ${u.sector || "-"}<br>
       Status: ${u.status}<br><br>
-      
+
       <button onclick="editFullUser('${doc.id}')"
       style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
       Edit User
       </button><br>
-    
+
       <button onclick="deleteUser('${doc.id}')"
       style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
       Delete User
       </button>
-      
-   
-`);
+    `);
+
   });
-  renderUsers();
+
   redrawLinks();
-  renderNodeTable(); // ini baru, supaya users muncul di tabel
+  renderNodeTable();
+
 });
     
 /* =============================
@@ -1033,26 +1039,23 @@ window.editNodeStatus = async function(docId,currentStatus){
 
   usersData.forEach(u=>{
 
-    if(nodeFocus && 
-       u.nodeName.trim().toUpperCase() !== nodeFocus.trim().toUpperCase()){
-      return;
+    if(nodeFocus){
+
+      const userNode = (u.nodeName || "").trim().toUpperCase();
+      const focusNode = nodeFocus.trim().toUpperCase();
+
+      if(userNode !== focusNode) return;
+
     }
 
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
 
-    const marker = L.circleMarker([u.lat, u.lng],{
-      radius:6,
-      color:userColor,
-      fillColor:userColor,
-      fillOpacity:1
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
     }).addTo(userLayer);
-
-    marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Sector: ${u.sector || "-"}<br>
-      Status: ${u.status}
-    `);
 
   });
 
