@@ -366,23 +366,29 @@ let coverageVisible=true;
     .reduce((total, u) => total + (u.bandwidth || 0), 0);
 }
 
-function formatBandwidth(kbps){
+function formatBandwidth(raw){
 
-  if(!kbps) return "0 Kbps";
+  if(!raw) return "0 Kbps";
 
-  if(kbps >= 1024){
-    const mbps = kbps / 1024;
+  // 🔥 ambil angka saja (handle: "01 Mbps", "1024 Kbps", dll)
+  let num = parseInt(String(raw).replace(/[^\d]/g, ""));
 
-    // kalau bulat (1 Mbps, 2 Mbps)
+  if(isNaN(num) || num <= 0) return "0 Kbps";
+
+  // 🔥 jika >= 1024 → convert ke Mbps
+  if(num >= 1024){
+    const mbps = num / 1024;
+
+    // 🔥 bulat → tanpa desimal
     if(Number.isInteger(mbps)){
-      return mbps + " Mbps";
+      return `${mbps} Mbps`;
     }
 
-    // kalau desimal (1.5 Mbps, dll)
-    return mbps.toFixed(1).replace(/\.0$/, "") + " Mbps";
+    return `${mbps.toFixed(1)} Mbps`;
   }
 
-  return kbps + " Kbps";
+  // 🔥 kalau masih Kbps
+  return `${num} Kbps`;
 }
 
 /* ================= TABLE & FILTER ================= */
@@ -1297,7 +1303,10 @@ if(cols[4]){
 }
 
 const sectorName = cols[5] || "-";
-let bandwidth = parseInt(cols[6] || 1024);
+let rawBw = cols[6] || "1024";
+// 🔥 ambil angka saja
+let bandwidth = parseInt(String(rawBw).replace(/[^\d]/g, ""));
+
 if(isNaN(bandwidth)) bandwidth = 1024;
         
 if(!name || !nodeName) continue;
