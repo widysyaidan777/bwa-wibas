@@ -367,9 +367,21 @@ let coverageVisible=true;
 }
 
 function formatBandwidth(kbps){
+
+  if(!kbps) return "0 Kbps";
+
   if(kbps >= 1024){
-    return (kbps/1024).toFixed(1) + " Mbps";
+    const mbps = kbps / 1024;
+
+    // kalau bulat (1 Mbps, 2 Mbps)
+    if(Number.isInteger(mbps)){
+      return mbps + " Mbps";
+    }
+
+    // kalau desimal (1.5 Mbps, dll)
+    return mbps.toFixed(1).replace(/\.0$/, "") + " Mbps";
   }
+
   return kbps + " Kbps";
 }
 
@@ -498,12 +510,14 @@ tb.innerHTML = "";
 
 const tr = document.createElement("tr");
 
+const capacity = calculateNodeCapacity(node.name);
+
 tr.innerHTML = `
 <td>${node.name}</td>
 <td>${node.region}</td>
 <td class="${node.status==="UP"?"up":"down"}">${node.status}</td>
+<td>${formatBandwidth(capacity)}</td>
 `;
-
 tb.appendChild(tr);
 
 
@@ -528,6 +542,7 @@ const trUser = document.createElement("tr");
 trUser.innerHTML = `
 <td colspan="3" style="padding-left:40px;color:#9fdcff">
 ${u.name}<br>
+Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
 Node: ${u.nodeName}<br>
 Sector: ${u.sectorName || u.sector || "-"}<br>
 Status: ${u.status || "UP"}
