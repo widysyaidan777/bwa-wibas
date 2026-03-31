@@ -238,7 +238,12 @@ text-align:center;
   <div id="node-section">
     <table id="nodeTable">
       <thead>
-        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
+       <tr>
+        <th>Node / Kota</th>
+        <th>Area</th>
+        <th>Status</th>
+        <th>Kapasitas</th>
+      </tr>
       </thead>
     <tbody id="nodeTableBody"></tbody>
     </table>
@@ -353,6 +358,20 @@ function createSector(center, radius, startAz, endAz, opt){
 let nodes = [];
 let coverageVisible=true;
 
+  function calculateNodeCapacity(nodeName){
+  return usersData
+    .filter(u =>
+      (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
+    )
+    .reduce((total, u) => total + (u.bandwidth || 0), 0);
+}
+
+function formatBandwidth(kbps){
+  if(kbps >= 1024){
+    return (kbps/1024).toFixed(1) + " Mbps";
+  }
+  return kbps + " Kbps";
+}
 
 /* ================= TABLE & FILTER ================= */
 function render(list){
@@ -367,11 +386,14 @@ function render(list){
     const tr = document.createElement("tr");
     tr.dataset.node = n.name;
 
-    tr.innerHTML = `
-      <td style="cursor:pointer">▶ ${n.name}</td>
-      <td>${n.region}</td>
-      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
-    `;
+  const capacity = calculateNodeCapacity(n.name);
+  
+  tr.innerHTML = `
+    <td style="cursor:pointer">▶ ${n.name}</td>
+    <td>${n.region}</td>
+    <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+    <td>${formatBandwidth(capacity)}</td>
+  `;
 
     tr.onclick = ()=>{
       focusNode(n.name);      // 🔥 zoom ke node tetap jalan
@@ -391,12 +413,14 @@ function render(list){
     const tr = document.createElement("tr");
     tr.dataset.node = n.name;
 
+    const capacity = calculateNodeCapacity(n.name);
+
     tr.innerHTML = `
       <td style="cursor:pointer">▶ ${n.name}</td>
       <td>${n.region}</td>
       <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+      <td>${formatBandwidth(capacity)}</td>
     `;
-
     tr.onclick = () => {
       focusNode(n.name);      // zoom ke node
       toggleNodeUsers(n.name);
@@ -447,9 +471,10 @@ function toggleNodeUsers(nodeName){
     tr.dataset.parent = nodeName;
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
-        👤 ${u.name}<br>
-        Sector: ${u.sectorName || "-"}<br>
-        Status: ${u.status || "UP"}
+      👤 ${u.name}<br>
+      Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
+      Sector: ${u.sectorName || "-"}<br>
+      Status: ${u.status || "UP"}
       </td>
     `;
     tr.onclick = () => {
@@ -746,8 +771,16 @@ map.on("click", async function(e){
    const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-let sectorName = prompt("Masukkan nama sector (contoh: SLOSRHBI3H180)");
-if(!sectorName) sectorName = "-";
+  let sectorName = prompt("Masukkan nama sector (contoh: SLOSRHBI3H180)");
+  if(!sectorName) sectorName = "-";
+  
+  let bandwidth = prompt("Bandwidth (Kbps) contoh: 512 / 1024 / 2048 / 10240 sampai 61440", "1024");
+  bandwidth = parseInt(bandwidth);
+  
+  if(isNaN(bandwidth) || bandwidth < 512 || bandwidth > 61440){
+    alert("Bandwidth harus 512 Kbps - 60 Mbps (61440 Kbps)");
+    return;
+  }
   
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
@@ -761,13 +794,14 @@ if(!sectorName) sectorName = "-";
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
     
-   await addDoc(collection(db,"topology_users"),{
+ await addDoc(collection(db,"topology_users"),{
   name:name,
   lat:lat,
   lng:lng,
   nodeName:nodeName,
-  sectorName:sectorName, // 🔥 pakai nama sector
-  status:"UP"
+  sectorName:sectorName,
+  status:"UP",
+  bandwidth: bandwidth // 🔥 TAMBAHAN
 });
 
     alert("User berhasil ditambahkan!");
@@ -1102,6 +1136,14 @@ function refreshMap(){
 let newSectorName = prompt("Nama sector:", user.sectorName ?? "");
 if(!newSectorName) newSectorName = "-";
 
+let newBandwidth = prompt("Bandwidth (Kbps):", user.bandwidth || 1024);
+newBandwidth = parseInt(newBandwidth);
+
+if(isNaN(newBandwidth) || newBandwidth < 512 || newBandwidth > 61440){
+  alert("Bandwidth tidak valid");
+  return;
+}
+     
   const { updateDoc, doc } = await import(
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
   );
@@ -1110,7 +1152,8 @@ if(!newSectorName) newSectorName = "-";
   name: newName,
   nodeName: newNode,
   status: newStatus.toUpperCase(),
-  sectorName: newSectorName
+  sectorName: newSectorName,
+  bandwidth: newBandwidth // 🔥 TAMBAHAN
 });
 
   alert("User berhasil diupdate!");
@@ -1239,7 +1282,9 @@ if(cols[4]){
 }
 
 const sectorName = cols[5] || "-";
-
+let bandwidth = parseInt(cols[6] || 1024);
+if(isNaN(bandwidth)) bandwidth = 1024;
+        
 if(!name || !nodeName) continue;
 if(isNaN(lat) || isNaN(lng)) continue;
 
@@ -1249,7 +1294,8 @@ await addDoc(collection(db,"topology_users"),{
   lng,
   nodeName,
   status,
-  sectorName
+  sectorName,
+  bandwidth // 🔥 TAMBAHAN
 });
         success++;
 
@@ -1416,6 +1462,7 @@ u.region || "",
 u.nodeName || "",
 u.sector || "",
 u.status || "UP",
+u.bandwidth || 0,
 latlng
 ].join(",") + "\n";
 
