@@ -360,7 +360,9 @@ function render(list){
   const tb = document.getElementById("nodeTableBody");
   tb.innerHTML = "";
 
-  list.forEach(n=>{
+ list
+.sort((a,b)=> a.name.localeCompare(b.name)) // 🔥 SORT A-Z
+.forEach(n=>{
 
     const tr = document.createElement("tr");
     tr.dataset.node = n.name;
@@ -486,7 +488,7 @@ const users = usersData.filter(u =>
   (u.nodeName || "")
   .trim()
   .toUpperCase() ===
-  (nodeName || "")
+  (node.Name || "")
   .trim()
   .toUpperCase()
 );
@@ -1343,13 +1345,15 @@ await addDoc(collection(db,"topology_users"),{
   // =====================
   // PRIORITAS 2 : NODE
   // =====================
-  if(foundNode){
+ if(foundNode){
 
-    map.flyTo([foundNode.lat,foundNode.lng],12);
-    foundNode.marker.openPopup();
+  map.flyTo([foundNode.lat,foundNode.lng],12);
+  foundNode.marker.openPopup();
 
-    return;
-  }
+  // 🔥 tampilkan hanya 1 node di tabel
+renderSearchResult(foundNode);
+  return;
+}
 
   // =====================
   // PRIORITAS 3 : CUSTOMER / PARTIAL
