@@ -448,7 +448,7 @@ function toggleNodeUsers(nodeName){
     tr.innerHTML = `
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
         👤 ${u.name}<br>
-        Sector: ${u.sector || "-"}<br>
+        Sector: ${u.sectorName || "-"}<br>
         Status: ${u.status || "UP"}
       </td>
     `;
@@ -456,7 +456,7 @@ function toggleNodeUsers(nodeName){
     map.flyTo([u.lat, u.lng], 14, {animate:true, duration:1.2});
     L.popup()
       .setLatLng([u.lat, u.lng])
-      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sectorName || u.sector || "-"}<br>Status: ${u.status || "UP"}`)
+      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sectorName || "-"}<br>Status: ${u.status || "UP"}`)
       .openOn(map);
 };
     insertAfter.after(tr);
@@ -1106,12 +1106,12 @@ if(!newSectorName) newSectorName = "-";
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
   );
 
-  await updateDoc(doc(db,"topology_users",docId),{
-      name: newName,
-      nodeName: newNode,
-      status: newStatus.toUpperCase(),
-      sector: newSectorName
-  });
+ await updateDoc(doc(db,"topology_users",docId),{
+  name: newName,
+  nodeName: newNode,
+  status: newStatus.toUpperCase(),
+  sectorName: newSectorName
+});
 
   alert("User berhasil diupdate!");
 };
@@ -1238,7 +1238,7 @@ if(cols[4]){
   status = cols[4].trim().toUpperCase();
 }
 
-const sector = cols[5] ? parseInt(cols[5]) : null;
+const sectorName = cols[5] || "-";
 
 if(!name || !nodeName) continue;
 if(isNaN(lat) || isNaN(lng)) continue;
@@ -1249,7 +1249,7 @@ await addDoc(collection(db,"topology_users"),{
   lng,
   nodeName,
   status,
-  sector
+  sectorName
 });
         success++;
 
