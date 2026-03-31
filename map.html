@@ -238,12 +238,7 @@ text-align:center;
   <div id="node-section">
     <table id="nodeTable">
       <thead>
-        <tr>
-          <th>Node / Kota</th>
-          <th>Area</th>
-          <th>Kapasitas</th> <!-- 🔥 -->
-          <th>Status</th>
-        </tr>
+        <tr><th>Node / Kota</th><th>Area</th><th>Status</th></tr>
       </thead>
     <tbody id="nodeTableBody"></tbody>
     </table>
@@ -372,21 +367,11 @@ function render(list){
     const tr = document.createElement("tr");
     tr.dataset.node = n.name;
 
-   const totalBw = usersData
-  .filter(u => (u.nodeName || "").toUpperCase() === n.name.toUpperCase())
-  .reduce((sum, u) => sum + parseBandwidth(u.bandwidth), 0);
-
-// convert ke Mbps
-let bwText = totalBw >= 1024
-  ? (totalBw/1024).toFixed(1) + " Mbps"
-  : totalBw.toFixed(0) + " Kbps";
-
-tr.innerHTML = `
-  <td style="cursor:pointer">▶ ${n.name}</td>
-  <td>${n.region}</td>
-  <td>${bwText}</td> <!-- 🔥 kapasitas -->
-  <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
-`;
+    tr.innerHTML = `
+      <td style="cursor:pointer">▶ ${n.name}</td>
+      <td>${n.region}</td>
+      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
+    `;
 
     tr.onclick = ()=>{
       focusNode(n.name);      // 🔥 zoom ke node tetap jalan
@@ -464,7 +449,6 @@ function toggleNodeUsers(nodeName){
       <td colspan="3" style="padding-left:40px;color:#9fdcff">
         👤 ${u.name}<br>
         Sector: ${u.sectorName || "-"}<br>
-        Bandwidth: ${u.bandwidth || "-"}<br>
         Status: ${u.status || "UP"}
       </td>
     `;
@@ -521,7 +505,6 @@ trUser.innerHTML = `
 ${u.name}<br>
 Node: ${u.nodeName}<br>
 Sector: ${u.sectorName || u.sector || "-"}<br>
-Bandwidth: ${u.bandwidth || "-"}<br>
 Status: ${u.status || "UP"}
 </td>
 `;
@@ -716,7 +699,6 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
       Sector: ${u.sectorName || u.sector || "-"}<br>
-      Bandwidth: ${u.bandwidth || "-"}<br>
       Status: ${u.status}<br><br>
       
       <button onclick="editFullUser('${doc.id}')"
@@ -761,14 +743,11 @@ map.on("click", async function(e){
   const name = prompt("Masukkan nama user:");
   if(!name) return;
 
-  const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
+   const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-  let sectorName = prompt("Masukkan nama sector (contoh: SLOSRHBI3H180)");
-  if(!sectorName) sectorName = "-";
-  
-  let bandwidth = prompt("Masukkan bandwidth (contoh: 512 Kbps / 1 Mbps / 10 Mbps)");
-  if(!bandwidth) bandwidth = "-";
+let sectorName = prompt("Masukkan nama sector (contoh: SLOSRHBI3H180)");
+if(!sectorName) sectorName = "-";
   
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
@@ -787,8 +766,7 @@ map.on("click", async function(e){
   lat:lat,
   lng:lng,
   nodeName:nodeName,
-  sectorName:sectorName,
-  bandwidth: bandwidth, // 🔥 TAMBAHAN
+  sectorName:sectorName, // 🔥 pakai nama sector
   status:"UP"
 });
 
@@ -1460,22 +1438,6 @@ URL.revokeObjectURL(url);
 alert("Topology berhasil di export");
 
 };
-    function parseBandwidth(bw){
-
-  if(!bw) return 0;
-
-  bw = bw.toUpperCase();
-
-  if(bw.includes("MBPS")){
-    return parseFloat(bw) * 1024;
-  }
-
-  if(bw.includes("KBPS")){
-    return parseFloat(bw);
-  }
-
-  return 0;
-}
 console.log("🔥 Firebase Connected");
 console.log("deleteUser:", window.deleteUser);
 console.log("deleteNode:", window.deleteNode);
