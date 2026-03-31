@@ -456,7 +456,7 @@ function toggleNodeUsers(nodeName){
     map.flyTo([u.lat, u.lng], 14, {animate:true, duration:1.2});
     L.popup()
       .setLatLng([u.lat, u.lng])
-      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sector || "-"}<br>Status: ${u.status || "UP"}`)
+      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sectorName || u.sector || "-"}<br>Status: ${u.status || "UP"}`)
       .openOn(map);
 };
     insertAfter.after(tr);
@@ -504,7 +504,7 @@ trUser.innerHTML = `
 <td colspan="3" style="padding-left:40px;color:#9fdcff">
 ${u.name}<br>
 Node: ${u.nodeName}<br>
-Sector: ${u.sector || "-"}<br>
+Sector: ${u.sectorName || u.sector || "-"}<br>
 Status: ${u.status || "UP"}
 </td>
 `;
@@ -698,7 +698,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
      marker.bindPopup(`
       <b>${u.name}</b><br>
       Node: ${u.nodeName}<br>
-      Sector: ${u.sector || "-"}<br>
+      Sector: ${u.sectorName || u.sector || "-"}<br>
       Status: ${u.status}<br><br>
       
       <button onclick="editFullUser('${doc.id}')"
@@ -746,12 +746,8 @@ map.on("click", async function(e){
    const nodeName = prompt("Link ke node mana? (contoh: SLOSRH)");
   if(!nodeName) return;
   
-let sector = prompt("Masukkan azimuth sektor user (0-359°):");
-if(!sector || isNaN(sector)){
-  sector = "-";
-} else {
-  sector = parseInt(sector) % 360;
-}
+let sectorName = prompt("Masukkan nama sector (contoh: SLOSRHBI3H180)");
+if(!sectorName) sectorName = "-";
   
   // 🔥 OPSI EDIT MANUAL LAT LONG
   const manualLat = prompt("Latitude (enter untuk pakai titik klik):", lat);
@@ -765,14 +761,14 @@ if(!sector || isNaN(sector)){
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
     );
     
-     await addDoc(collection(db,"topology_users"),{
-      name:name,
-      lat:lat,
-      lng:lng,
-      nodeName:nodeName,
-      sector:sector,
-      status:"UP"
-    });
+   await addDoc(collection(db,"topology_users"),{
+  name:name,
+  lat:lat,
+  lng:lng,
+  nodeName:nodeName,
+  sectorName:sectorName, // 🔥 pakai nama sector
+  status:"UP"
+});
 
     alert("User berhasil ditambahkan!");
   }catch(err){
@@ -1103,12 +1099,8 @@ function refreshMap(){
   if(!newStatus) return;
 
   // Tambah input sector / azimuth
-  let newSector = prompt("Azimuth user (0-359°):", user.sector ?? "");
-  if(!newSector || isNaN(newSector)){
-      newSector = "-";
-  } else {
-      newSector = parseInt(newSector) % 360;
-  }
+let newSectorName = prompt("Nama sector:", user.sectorName ?? "");
+if(!newSectorName) newSectorName = "-";
 
   const { updateDoc, doc } = await import(
     "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
@@ -1118,7 +1110,7 @@ function refreshMap(){
       name: newName,
       nodeName: newNode,
       status: newStatus.toUpperCase(),
-      sector: newSector
+      sector: newSectorName
   });
 
   alert("User berhasil diupdate!");
