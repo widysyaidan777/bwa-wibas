@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <title>Data BWA WiBAS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
 }
 
 body {
@@ -17,120 +17,132 @@ body {
   background:#f1f5f9;
   color:#1e293b;
 }
+
+/* HEADER */
 header { 
   background:linear-gradient(90deg,#0f172a,#1e293b);
   color:white; 
   padding:16px 24px;
   font-size:20px;
   font-weight:700;
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 }
+
+/* NAV */
 nav {
   display:flex;
-  align-items:center;
+  padding:10px 20px;
+  background:#1e293b;
 }
 nav a {
   color: white;
   margin-right: 20px;
   text-decoration: none;
-  font-weight: bold;      /* ini bikin bold */
+  font-weight: bold;
   font-size: 14px;
-  letter-spacing: 0.5px;
 }
-nav a:hover {
-  opacity: 0.8;
+nav a:hover { opacity:0.8; }
+
+/* CONTAINER */
+.container { padding:20px; }
+
+/* TABLE */
+.table-wrapper {
+  overflow-x:auto;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
-.container { 
-  padding: 0 20px;
-}
+
 table {
   width:100%;
+  min-width:1600px;
   border-collapse:collapse;
   background:white;
   font-size:13px;
-  table-layout:fixed; /* 🔥 penting biar rapi */
+  table-layout:auto;
 }
 
+/* HEADER TABLE */
 th {
   background:#0f172a;
   color:#e2e8f0;
-  padding:10px 8px;
+  padding:10px;
   font-size:12px;
   text-transform:uppercase;
-  letter-spacing:.5px;
-  font-weight:600;
   border-bottom:2px solid #334155;
 }
+
 thead th {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 10; /* FIX modal ketiban */
 }
+
+/* CELL */
 td {
-  padding:10px 8px;
+  padding:10px;
   border-bottom:1px solid #e5e7eb;
-  color:#334155;
-  font-weight:500;
-  word-wrap:break-word;
+  word-break: break-word;
 }
 
-/* zebra row */
-tr:nth-child(even){
-  background:#f8fafc;
+/* ROW */
+tr:nth-child(even){ background:#f8fafc; }
+tr:hover{ background:#e2e8f0; }
+
+/* ACTION COLUMN */
+th:last-child, td:last-child {
+  width:180px;
+  text-align:center;
 }
 
-/* hover */
-tr:hover{
-  background:#e2e8f0;
-  transition:.2s;
+.action-btns {
+  display:flex;
+  gap:6px;
+  justify-content:center;
 }
-th, td {
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+
+/* BUTTON */
 button {
   padding:6px 12px;
   border:none;
   border-radius:6px;
   font-weight:600;
   cursor:pointer;
-  transition:.2s;
 }
 
-button:hover{
-  transform:scale(1.05);
-}
-  .toolbar { margin-bottom:10px; }
-input { padding:6px; margin:3px; width:180px; }
 .edit-btn { background:#2563eb; color:white; }
 .delete-btn { background:#dc2626; color:white; }
 .add-btn { background:#16a34a; color:white; }
 
+/* TOOLBAR */
+.toolbar { margin-bottom:10px; }
+input { padding:6px; margin:3px; width:180px; }
+
+/* MODAL */
 .modal {
   display:none;
   position:fixed;
   top:0; left:0;
   width:100%; height:100%;
   background:rgba(0,0,0,0.5);
-  overflow:auto;
-}
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  border-radius:10px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  z-index:99999; /* FIX utama */
 }
 
-table {
-  min-width: 1600px;
-}
 .modal-content {
   background:white;
   padding:20px;
   margin:50px auto;
   width:90%;
   max-width:900px;
+  max-height:80vh;
+  overflow-y:auto;
+  border-radius:10px;
+}
+
+/* FORM GRID */
+#formFields {
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:10px;
 }
 
 .close {
@@ -161,61 +173,50 @@ table {
 <input id="search" placeholder="Search...">
 <button class="add-btn" onclick="openModal()">Tambah Data</button>
 
-<div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
-     
-    <input type="file" id="importFile" accept=".csv">
-    <button onclick="importCSV()">Import CSV</button>
-    <button onclick="exportCSV()">Export CSV</button>
-    <!-- Refresh Icon -->
-    <button id="btnRefresh"
-            style="background:none;border:none;cursor:pointer;font-size:18px;">
-        🔄
-    </button>
-
-
+<div style="margin-top:10px; display:flex; gap:10px;">
+<input type="file" id="importFile" accept=".csv">
+<button onclick="importCSV()">Import CSV</button>
+<button onclick="exportCSV()">Export CSV</button>
+<button id="btnRefresh">🔄</button>
 </div>
+
 <div class="table-wrapper">
-  <table>
-    <thead><tr id="thead"></tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+<table>
+<thead><tr id="thead"></tr></thead>
+<tbody id="tbody"></tbody>
+</table>
 </div>
 
 </div>
 
-<!-- MODAL FORM -->
+<!-- MODAL -->
 <div id="modal" class="modal">
 <div class="modal-content">
 <span class="close" onclick="closeModal()">X</span>
-<h3 id="formTitle">Tambah Data</h3>
+<h3>Form Data</h3>
 <div id="formFields"></div>
 <button onclick="saveData()">Save</button>
 </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 <script type="module">
 
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getFirestore, collection, getDocs, addDoc, 
-updateDoc, deleteDoc, doc, query, orderBy } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA1XId1RBwjyv1_OUmbWy2reMm6eGMcV-M",
+const app = initializeApp({
+  apiKey: "AIza...",
   authDomain: "dashboard-bwa.firebaseapp.com",
-  projectId: "dashboard-bwa",
-  storageBucket: "dashboard-bwa.firebasestorage.app",
-  messagingSenderId: "1066238404578",
-  appId: "1:1066238404578:web:ad4b911ac3f155352e3bbb"
-};
+  projectId: "dashboard-bwa"
+});
 
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== KOLOM TETAP SESUAI CSV =====
 const columns = [
 "No","Region","Area","Node","Sector Name","ME",
 "User Label","Total Terminal","SW Version",
@@ -224,215 +225,153 @@ const columns = [
 "Distance (m)","Bandwidth","Service Remote"
 ];
 
-let data = [];
-let filtered = [];
-let editId = null;
+let data=[], filtered=[], editId=null;
 
-// ===== LOAD DATA =====
-async function loadData() {
-
-  const q = query(
-    collection(db, "wibas"),
-    orderBy("No", "asc")
-  );
-
-  const snapshot = await getDocs(q);
-
-  data = [];
-  snapshot.forEach(d => {
-    data.push({ id: d.id, ...d.data() });
-  });
-
-  filtered = [...data];
+/* LOAD */
+async function loadData(){
+  const q = query(collection(db,"wibas"), orderBy("No","asc"));
+  const snap = await getDocs(q);
+  data=[];
+  snap.forEach(d=>data.push({id:d.id,...d.data()}));
+  filtered=[...data];
   render();
 }
-
 loadData();
 
-// ===== RENDER TABLE =====
-function render() {
-  const thead = document.getElementById("thead");
-  const tbody = document.getElementById("tbody");
+/* RENDER */
+function render(){
+  const thead=document.getElementById("thead");
+  const tbody=document.getElementById("tbody");
+  thead.innerHTML=""; tbody.innerHTML="";
 
-  thead.innerHTML = "";
-  tbody.innerHTML = "";
-
-  columns.forEach(h => {
-    const th = document.createElement("th");
-    th.textContent = h;
+  columns.forEach(c=>{
+    const th=document.createElement("th");
+    th.textContent=c;
     thead.appendChild(th);
   });
 
-  const thAction = document.createElement("th");
-  thAction.textContent = "Action";
-  thead.appendChild(thAction);
+  const th=document.createElement("th");
+  th.textContent="Action";
+  thead.appendChild(th);
 
-  filtered.forEach(row => {
-    const tr = document.createElement("tr");
-    
-columns.forEach(h => {
-  const td = document.createElement("td");
-  td.textContent = row[h] || "";
+  filtered.forEach(row=>{
+    const tr=document.createElement("tr");
 
-  if (h === "State") {
-    const value = (row[h] || "").toLowerCase();
-    if (value.includes("inactive") || value.includes("dismantle")) {
-      td.style.color = "red";
-      td.style.fontWeight = "bold";
-    }
-  }
+    columns.forEach(c=>{
+      const td=document.createElement("td");
+      td.textContent=row[c]||"";
 
-  if (h === "Connectivity") {
-    const value = (row[h] || "").toLowerCase();
-    if (value.includes("unreachable")) {
-      td.style.color = "red";
-      td.style.fontWeight = "bold";
-    }
-  }
+      if(c==="State" && /inactive|dismantle/i.test(row[c]||"")){
+        td.style.color="red";
+        td.style.fontWeight="bold";
+      }
 
-  tr.appendChild(td);
-});
+      if(c==="Connectivity" && /unreachable/i.test(row[c]||"")){
+        td.style.color="red";
+        td.style.fontWeight="bold";
+      }
 
-    const actionTd = document.createElement("td");
+      tr.appendChild(td);
+    });
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.className = "edit-btn";
-    editBtn.onclick = () => openModal(row);
+    const td=document.createElement("td");
+    const wrap=document.createElement("div");
+    wrap.className="action-btns";
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.className = "delete-btn";
-    delBtn.onclick = async () => {
+    const edit=document.createElement("button");
+    edit.textContent="Edit";
+    edit.className="edit-btn";
+    edit.onclick=()=>openModal(row);
+
+    const del=document.createElement("button");
+    del.textContent="Delete";
+    del.className="delete-btn";
+    del.onclick=async()=>{
       if(confirm("Yakin hapus?")){
         await deleteDoc(doc(db,"wibas",row.id));
         loadData();
       }
     };
 
-    actionTd.appendChild(editBtn);
-    actionTd.appendChild(delBtn);
-    tr.appendChild(actionTd);
+    wrap.append(edit,del);
+    td.appendChild(wrap);
+    tr.appendChild(td);
+
     tbody.appendChild(tr);
   });
 }
 
-// ===== SEARCH =====
-document.getElementById("search").addEventListener("input", e => {
-  const q = e.target.value.toLowerCase();
-  filtered = data.filter(row =>
-    Object.values(row).join(" ").toLowerCase().includes(q)
-  );
+/* SEARCH */
+search.oninput=e=>{
+  const q=e.target.value.toLowerCase();
+  filtered=data.filter(r=>Object.values(r).join(" ").toLowerCase().includes(q));
   render();
-});
+};
 
-// ===== MODAL =====
-window.openModal = function(row=null){
-  document.getElementById("modal").style.display="block";
-  const form = document.getElementById("formFields");
-  form.innerHTML="";
-  editId = null;
+/* MODAL */
+window.openModal=row=>{
+  modal.style.display="block";
+  formFields.innerHTML="";
+  editId=row?.id||null;
 
-  columns.forEach(col=>{
-    const input = document.createElement("input");
-    input.placeholder = col;
-    input.id = col;
-    if(row) input.value = row[col] || "";
-    form.appendChild(input);
+  columns.forEach(c=>{
+    const i=document.createElement("input");
+    i.placeholder=c;
+    i.id=c;
+    i.value=row?.[c]||"";
+    formFields.appendChild(i);
   });
+};
 
-  if(row) editId = row.id;
-}
+window.closeModal=()=>modal.style.display="none";
 
-window.closeModal = function(){
-  document.getElementById("modal").style.display="none";
-}
+/* SAVE */
+window.saveData=async()=>{
+  let obj={};
+  columns.forEach(c=>obj[c]=document.getElementById(c).value);
 
-// ===== SAVE =====
-window.saveData = async function(){
-
-  let obj = {};
-  columns.forEach(col=>{
-    obj[col] = document.getElementById(col).value;
-  });
-
-  if(editId){
-    await updateDoc(doc(db,"wibas",editId),obj);
-  } else {
-    await addDoc(collection(db,"wibas"),obj);
-  }
+  if(editId) await updateDoc(doc(db,"wibas",editId),obj);
+  else await addDoc(collection(db,"wibas"),obj);
 
   closeModal();
   loadData();
-}
-window.importCSV = function() {
-  const file = document.getElementById("importFile").files[0]; // sesuai ID input
-  if (!file) {
-    alert("Pilih file CSV dulu!");
-    return;
-  }
+};
 
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: async function(results) {
+/* IMPORT */
+window.importCSV=()=>{
+  const file=importFile.files[0];
+  if(!file) return alert("Pilih file!");
 
-      const rows = results.data;
-
-      for (let row of rows) {
-        // Ubah No jadi number supaya bisa di-sort dengan benar
-        if (row["No"]) {
-          row["No"] = Number(row["No"]);
-        }
-        await addDoc(collection(db, "wibas"), row);
+  Papa.parse(file,{
+    header:true,
+    complete:async res=>{
+      for(let r of res.data){
+        if(r["No"]) r["No"]=Number(r["No"]);
+        await addDoc(collection(db,"wibas"),r);
       }
-
-      alert("Import selesai! Data sudah permanen.");
+      alert("Import selesai");
       loadData();
     }
   });
 };
-  
-  window.exportCSV = function() {
 
-  if (!filtered.length) {
-    alert("Tidak ada data untuk di-export");
-    return;
-  }
-
-  let csvContent = "";
-
-  // Header
-  csvContent += columns.join(",") + "\n";
-
-  // Data
-  filtered.forEach(row => {
-    let rowData = columns.map(col => {
-      let value = row[col] || "";
-      return `"${value}"`; // pakai tanda kutip supaya aman
-    });
-    csvContent += rowData.join(",") + "\n";
+/* EXPORT */
+window.exportCSV=()=>{
+  let csv=columns.join(",")+"\n";
+  filtered.forEach(r=>{
+    csv+=columns.map(c=>`"${r[c]||""}"`).join(",")+"\n";
   });
 
-  // Buat file
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-
-  link.href = URL.createObjectURL(blob);
-  link.download = "data_wibas_export.csv";
-  link.click();
+  const blob=new Blob([csv]);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="data.csv";
+  a.click();
 };
-document.getElementById("btnRefresh")
-  .addEventListener("click", async function() {
 
-      console.log("Manual refresh dijalankan");
+/* REFRESH */
+btnRefresh.onclick=loadData;
 
-      await loadData();
-
-      alert("Data berhasil direfresh");
-
-});
 </script>
-
 </body>
 </html>
