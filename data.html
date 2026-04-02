@@ -13,17 +13,21 @@ html, body {
 }
 
 body {
-  font-family: Arial;
-  background:#f4f6f8;
+  font-family: 'Inter', Arial, sans-serif;
+  background:#f1f5f9;
+  color:#1e293b;
 }
 header { 
-  background:#0f172a; 
+  background:linear-gradient(90deg,#0f172a,#1e293b);
   color:white; 
-  padding:16px; 
+  padding:16px 24px;
+  font-size:20px;
+  font-weight:700;
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 }
 nav {
-  background: #1e293b;
-  padding: 12px 24px;
+  display:flex;
+  align-items:center;
 }
 nav a {
   color: white;
@@ -39,11 +43,65 @@ nav a:hover {
 .container { 
   padding: 0 20px;
 }
-table { width:100%; border-collapse:collapse; background:white; font-size:12px; }
-th, td { padding:6px; border:1px solid #ddd; }
-th { background:#f1f5f9; }
-button { padding:6px 10px; cursor:pointer; }
-.toolbar { margin-bottom:10px; }
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  font-size:13px;
+  table-layout:fixed; /* 🔥 penting biar rapi */
+}
+
+th {
+  background:#0f172a;
+  color:#e2e8f0;
+  padding:10px 8px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-weight:600;
+  border-bottom:2px solid #334155;
+}
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+td {
+  padding:10px 8px;
+  border-bottom:1px solid #e5e7eb;
+  color:#334155;
+  font-weight:500;
+  word-wrap:break-word;
+}
+
+/* zebra row */
+tr:nth-child(even){
+  background:#f8fafc;
+}
+
+/* hover */
+tr:hover{
+  background:#e2e8f0;
+  transition:.2s;
+}
+th, td {
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+button {
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+  .toolbar { margin-bottom:10px; }
 input { padding:6px; margin:3px; width:180px; }
 .edit-btn { background:#2563eb; color:white; }
 .delete-btn { background:#dc2626; color:white; }
@@ -60,6 +118,8 @@ input { padding:6px; margin:3px; width:180px; }
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
 
 table {
