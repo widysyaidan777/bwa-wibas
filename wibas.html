@@ -50,6 +50,11 @@ nav a {
   box-shadow: 0 4px 8px rgba(0,0,0,.08);
 }
 
+.card h2.total { color: #2563eb; }     /* biru */
+.card h2.active { color: #16a34a; }    /* hijau */
+.card h2.inactive { color: #dc2626; }  /* merah */
+.card h2.black { color: #0f172a; }     /* default */
+  
 .card h2 {
   margin: 0;
   font-size: 28px;
@@ -141,58 +146,66 @@ footer {
   <!-- OVERVIEW -->
 <div class="cards">
 <div class="card">
-  <h2 id="totalNetworkElement">0</h2>
+  <h2 id="totalNetworkElement" class="black">0</h2>
   <p>Total Network Element</p>
 </div>
-  
+
 <div class="card">
-  <h2 id="totalNode">0</h2>
-  <p>Total Node</p>
+  <h2 id="centralActive" class="active">0</h2>
+  <p>Central Active</p>
 </div>
+
 <div class="card">
-  <h2 id="nodeActive">0</h2>
-  <p>Node Active</p>
+  <h2 id="centralInactive" class="inactive">0</h2>
+  <p>Central Inactive</p>
 </div>
+
 <div class="card">
-  <h2 id="nodeInactive">0</h2>
-  <p>Node Inactive</p>
-</div>
-  
-<div class="card">
-  <h2 id="totalSector">0</h2>
-  <p>Total Sector</p>
-</div>
-<div class="card">
-  <h2 id="sectorActive">0</h2>
+  <h2 id="sectorActive" class="active">0</h2>
   <p>Sector Active</p>
 </div>
+
 <div class="card">
-  <h2 id="sectorInactive">0</h2>
+  <h2 id="sectorInactive" class="inactive">0</h2>
   <p>Sector Inactive</p>
 </div>
-      
-<div class="card">
-  <h2 id="totalUser">0</h2>
-  <p>Total User</p>
-</div>  
-<div class="card">
-  <h2 id="userActive">0</h2>
-  <p>User Active</p>
-</div>
-<div class="card">
-  <h2 id="userInactive">0</h2>
-  <p>User Inactive</p>
-</div>
-  </div>
 
+<div class="card">
+  <h2 id="remoteActive" class="active">0</h2>
+  <p>Remote Active</p>
+</div>
+
+<div class="card">
+  <h2 id="remoteInactive" class="inactive">0</h2>
+  <p>Remote Inactive</p>
+</div>
+
+<div class="card">
+  <h2 id="totalCentral" class="total">0</h2>
+  <p>Total Central</p>
+</div>
+
+<div class="card">
+  <h2 id="totalSector" class="total">0</h2>
+  <p>Total Sector</p>
+</div>
+
+<div class="card">
+  <h2 id="totalRemote" class="total">0</h2>
+  <p>Total Remote</p>
+</div>
+
+</div>
+
+  
   <!-- CHARTS -->
   <div class="charts">
 <div class="chart-box">
-  <h3>Node per Region - Active</h3>
+  <h3>Central per Region - Active</h3>
   <canvas id="nodeRegionActiveChart"></canvas>
 </div>
 <div class="chart-box">
-  <h3>Node per Region - Inactive</h3>
+  <h3>Central per Region - Inactive</h3>
   <canvas id="nodeRegionInactiveChart"></canvas>
 </div>
     
@@ -206,11 +219,11 @@ footer {
 </div>
     
 <div class="chart-box">
-  <h3>User per Area - Active</h3>
+  <h3>Remote per Area - Active</h3>
   <canvas id="userAreaActiveChart"></canvas>
 </div>
 <div class="chart-box">
-  <h3>User per Area - Inactive</h3>
+  <h3>Remote per Area - Inactive</h3>
   <canvas id="userAreaInactiveChart"></canvas>
 </div>
 </div>
@@ -350,17 +363,19 @@ async function loadDashboard() {
   });
 
   // ===== UPDATE CARDS =====
-  document.getElementById('nodeActive').textContent = nodeActive;
-  document.getElementById('nodeInactive').textContent = nodeInactive;
-  document.getElementById('userActive').textContent = userActive;
-  document.getElementById('userInactive').textContent = userInactive;
-
+  document.getElementById('centralActive').textContent = nodeActive;
+  document.getElementById('centralInactive').textContent = nodeInactive;
+  
+  document.getElementById('remoteActive').textContent = userActive;
+  document.getElementById('remoteInactive').textContent = userInactive;
+  
+  document.getElementById('totalCentral').textContent = nodes.size;
   document.getElementById('totalSector').textContent = sectors.size;
-  document.getElementById('totalNode').textContent = nodes.size;
-  document.getElementById('totalUser').textContent = userActive + userInactive;
+  document.getElementById('totalRemote').textContent = userActive + userInactive;
+  
   document.getElementById('sectorActive').textContent = sectorStatusData.Active;
   document.getElementById('sectorInactive').textContent = sectorStatusData.Inactive;
-
+  
   const totalNetworkElement = sectors.size + (userActive + userInactive);
   document.getElementById('totalNetworkElement').textContent = totalNetworkElement;
   
