@@ -473,87 +473,153 @@ function toggleNodeUsers(nodeName){
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
   // =============================
-  // AMBIL USER DI NODE INI
+  // AMBIL USER
   // =============================
   const users = usersData.filter(u =>
     (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
   );
 
+  // =============================
+  // GROUP USER BY SECTOR
+  // =============================
+  const sectorMap = {};
+  users.forEach(u=>{
+    const sector = (u.sectorName || "-").toUpperCase();
+    if(!sectorMap[sector]) sectorMap[sector] = [];
+    sectorMap[sector].push(u);
+  });
+
+  // =============================
+  // AMBIL NODE
+  // =============================
+  const node = nodes.find(n => n.name === nodeName);
+  const sectorDefs = node?.sectorDefs || [];
+
   let insertAfter = nodeRow;
 
   // =============================
-  // HEADER SEKTOR (SINGLE)
+  // LOOP SEKTOR SESUAI AZIMUTH
   // =============================
-  let sectorName = `${nodeName} SEKTOR`;
+  sectorDefs.forEach((sec, index)=>{
 
-  const trSector = document.createElement("tr");
-  trSector.dataset.parent = nodeName;
+    const az = sec.azimuth ?? 0;
 
-  trSector.innerHTML = `
-    <td colspan="4" style="
-      padding-left:30px;
-      font-weight:bold;
-      color:#facc15;
-    ">
-    📡 ${sectorName}
-    </td>
-  `;
+    // =============================
+    // MAP AZIMUTH → SEKTOR 1–4
+    // =============================
+    let sectorNumber = 1;
 
-  insertAfter.after(trSector);
-  insertAfter = trSector;
+    if(az >= 315 || az < 45) sectorNumber = 1;
+    else if(az >= 45 && az < 135) sectorNumber = 2;
+    else if(az >= 135 && az < 225) sectorNumber = 3;
+    else if(az >= 225 && az < 315) sectorNumber = 4;
 
-  // =============================
-  // JIKA TIDAK ADA USER
-  // =============================
-  if(users.length === 0){
+    let sectorName = `${nodeName}SEKTOR${sectorNumber}`;
 
-    const trEmpty = document.createElement("tr");
-    trEmpty.dataset.parent = nodeName;
+    // =============================
+    // CARI USER DI SEKTOR INI
+    // =============================
+    let sectorUsers = users.filter(u=>{
+      const s = (u.sectorName || "").toUpperCase();
+      return s.includes(`SEKTOR${sectorNumber}`);
+    });
 
-    trEmpty.innerHTML = `
+    // fallback kalau pakai nama custom lama
+    if(sectorUsers.length === 0){
+      sectorUsers = Object.values(sectorMap)[index] || [];
+    }
+
+    // =============================
+    // HEADER SEKTOR (BISA DI EDIT)
+    // =============================
+    const trSector = document.createElement("tr");
+    trSector.dataset.parent = nodeName;
+
+    trSector.innerHTML = `
       <td colspan="4" style="
-        padding-left:50px;
-        color:#94a3b8;
-        font-style:italic;
-      ">
-      Tidak ada user / remote
-      </td>
-    `;
-
-    insertAfter.after(trEmpty);
-    insertAfter = trEmpty;
-
-    return;
-  }
-
-  // =============================
-  // LIST USER
-  // =============================
-  users.forEach(u=>{
-
-    const trUser = document.createElement("tr");
-    trUser.dataset.parent = nodeName;
-
-    trUser.innerHTML = `
-      <td colspan="4" style="
-        padding-left:50px;
-        color:#9fdcff;
+        padding-left:30px;
+        font-weight:bold;
+        color:#facc15;
         cursor:pointer;
       ">
-      👤 ${u.name}<br>
-      Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
-      Status: ${u.status || "UP"}
+      📡 ${sectorName}
       </td>
     `;
 
-    trUser.onclick = ()=>{
-      map.flyTo([u.lat, u.lng], 14);
+    // 🔥 RENAME SEKTOR
+    trSector.onclick = ()=>{
+
+      const newName = prompt("Rename sector:", sectorName);
+      if(!newName) return;
+
+      usersData.forEach(u=>{
+        if(
+          (u.nodeName || "").toUpperCase() === nodeName.toUpperCase() &&
+          (u.sectorName || "").toUpperCase().includes(`SEKTOR${sectorNumber}`)
+        ){
+          u.sectorName = newName.toUpperCase();
+        }
+      });
+
+      toggleNodeUsers(nodeName);
+      toggleNodeUsers(nodeName);
     };
 
-    insertAfter.after(trUser);
-    insertAfter = trUser;
-  });
+    insertAfter.after(trSector);
+    insertAfter = trSector;
 
+    // =============================
+    // JIKA TIDAK ADA USER
+    // =============================
+    if(sectorUsers.length === 0){
+
+      const trEmpty = document.createElement("tr");
+      trEmpty.dataset.parent = nodeName;
+
+      trEmpty.innerHTML = `
+        <td colspan="4" style="
+          padding-left:50px;
+          color:#94a3b8;
+          font-style:italic;
+        ">
+        TIDAK MEMILIKI USER
+        </td>
+      `;
+
+      insertAfter.after(trEmpty);
+      insertAfter = trEmpty;
+      return;
+    }
+
+    // =============================
+    // LIST USER
+    // =============================
+    sectorUsers.forEach(u=>{
+
+      const trUser = document.createElement("tr");
+      trUser.dataset.parent = nodeName;
+
+      trUser.innerHTML = `
+        <td colspan="4" style="
+          padding-left:50px;
+          color:#9fdcff;
+          cursor:pointer;
+        ">
+        👤 ${u.name}<br>
+        Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
+        Status: ${u.status || "UP"}
+        </td>
+      `;
+
+      trUser.onclick = ()=>{
+        map.flyTo([u.lat, u.lng], 14);
+      };
+
+      insertAfter.after(trUser);
+      insertAfter = trUser;
+    });
+
+  });
 }
   function renderSearchResult(node){
 
