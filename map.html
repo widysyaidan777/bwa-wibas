@@ -322,8 +322,25 @@ function addRulerPoint(latlng){
 map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
 
 /* ================= NODE ICON ================= */
-function icon(colors,fast=false){ return L.divIcon({className:`node-blink ${fast?'fast':''}`,iconSize:[36,36],iconAnchor:[18,18],html:`<svg width="36" height="36" viewBox="0 0 100 100"><path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/><path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/><path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/><path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/><circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/></svg>`});}
+function icon(colors, azimuth=0, fast=false){
 
+  return L.divIcon({
+    className:`node-blink ${fast?'fast':''}`,
+    iconSize:[36,36],
+    iconAnchor:[18,18],
+    html:`
+    <div style="transform: rotate(${azimuth}deg);">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
+        <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
+        <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
+        <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
+        <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
+      </svg>
+    </div>
+    `
+  });
+}
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
 
@@ -989,8 +1006,11 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
       ? ['#dc2626','#f97316','#dc2626','#f97316']
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
+    const mainAzimuth = n.sectorDefs?.[0]?.azimuth || 0;
+    
     const marker = L.marker([n.lat,n.lng],{
-      icon:icon(col, n.status === "OFF")
+      icon: icon(col, mainAzimuth, n.status === "OFF")
+    });
     }).addTo(nodeLayer)
    let sectorButtons = "";
 
