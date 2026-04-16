@@ -357,6 +357,8 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
+// 🔥 MASTER SECTOR GLOBAL (bisa kamu edit manual / nanti bisa disimpan ke Firebase)
+let masterSectors = {};
 
   function calculateNodeCapacity(nodeName){
   return usersData
@@ -446,7 +448,8 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}function toggleNodeUsers(nodeName){
+}
+ function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
@@ -467,17 +470,24 @@ function render(list){
 
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
+  // =============================
+  // 🔥 FILTER USER PER NODE
+  // =============================
   const users = usersData.filter(u =>
     (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
   );
 
   // =============================
-  // 🔥 GROUPING BY SECTOR
+  // 🔥 GROUPING SECTOR
   // =============================
   const sectorMap = {};
 
   users.forEach(u => {
-    const sector = (u.sectorName || "-").toUpperCase();
+    let sector = (u.sectorName || "").trim().toUpperCase();
+
+    if(!sector){
+      sector = "SEKTOR_KOSONG";
+    }
 
     if(!sectorMap[sector]){
       sectorMap[sector] = [];
@@ -486,30 +496,19 @@ function render(list){
     sectorMap[sector].push(u);
   });
 
-  // 🔥 ambil semua sector dari node (biar yang kosong tetap muncul)
-  const node = nodes.find(n => n.name === nodeName);
-  let allSectors = [];
-
-  if(node && node.sectorDefs){
-    node.sectorDefs.forEach((s, i) => {
-      // contoh naming otomatis
-      const secName = `${nodeName}SECTOR${i+1}`;
-      allSectors.push(secName);
-    });
+  // =============================
+  // 🔥 JIKA TIDAK ADA USER SAMA SEKALI
+  // =============================
+  if(users.length === 0){
+    sectorMap["SEKTOR_KOSONG"] = [];
   }
-
-  // gabungkan dengan sector dari user
-  allSectors = [...new Set([
-    ...allSectors,
-    ...Object.keys(sectorMap)
-  ])];
 
   let insertAfter = nodeRow;
 
-  allSectors.forEach(sectorName => {
+  Object.keys(sectorMap).forEach(sectorName => {
 
     // =============================
-    // 🔥 HEADER SECTOR
+    // 🔥 HEADER SECTOR (BISA DI EDIT)
     // =============================
     const trSector = document.createElement("tr");
     trSector.dataset.parent = nodeName;
@@ -519,18 +518,38 @@ function render(list){
         padding-left:30px;
         font-weight:bold;
         color:#facc15;
+        cursor:pointer;
       ">
       📡 ${sectorName}
       </td>
     `;
 
+    // 🔥 DOUBLE CLICK UNTUK EDIT NAMA SECTOR
+    trSector.ondblclick = () => {
+      const newName = prompt("Edit nama sector:", sectorName);
+      if(!newName) return;
+
+      // update global
+      masterSectors[sectorName] = newName.toUpperCase();
+
+      // update semua user yg pakai sector ini
+      usersData.forEach(u => {
+        if((u.sectorName || "").toUpperCase() === sectorName){
+          u.sectorName = newName.toUpperCase();
+        }
+      });
+
+      // refresh tampilan
+      toggleNodeUsers(nodeName);
+    };
+
     insertAfter.after(trSector);
     insertAfter = trSector;
 
-    const sectorUsers = sectorMap[sectorName] || [];
+    const sectorUsers = sectorMap[sectorName];
 
     // =============================
-    // 🔥 JIKA TIDAK ADA USER
+    // 🔥 JIKA KOSONG
     // =============================
     if(sectorUsers.length === 0){
 
@@ -581,7 +600,8 @@ function render(list){
 
   });
 }
-  function renderSearchResult(node){
+
+function renderSearchResult(node){
 
 const tb = document.getElementById("nodeTableBody");
 
