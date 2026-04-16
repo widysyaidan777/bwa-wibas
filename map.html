@@ -329,7 +329,7 @@ function icon(colors, azimuth=0, fast=false){
     iconSize:[36,36],
     iconAnchor:[18,18],
     html:`
-    <div style="transform: rotate(${azimuth}deg);">
+    <div style="transform: rotate(${azimuth - 90}deg);">
       <svg width="36" height="36" viewBox="0 0 100 100">
         <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
         <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
@@ -340,7 +340,7 @@ function icon(colors, azimuth=0, fast=false){
     </div>
     `
   });
-}
+};
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
 
@@ -1007,11 +1007,9 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
     const mainAzimuth = n.sectorDefs?.[0]?.azimuth || 0;
-    
-    const marker = L.marker([n.lat,n.lng],{
-      icon: icon(col, mainAzimuth, n.status === "OFF")
-    });
-    }).addTo(nodeLayer)
+  const marker = L.marker([n.lat,n.lng],{
+  icon: icon(col, mainAzimuth, n.status === "OFF")
+}).addTo(nodeLayer);
    let sectorButtons = "";
 
 marker.bindPopup(`
