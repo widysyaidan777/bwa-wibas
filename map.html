@@ -357,8 +357,6 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-// 🔥 MASTER SECTOR GLOBAL (bisa kamu edit manual / nanti bisa disimpan ke Firebase)
-let masterSectors = {};
 
   function calculateNodeCapacity(nodeName){
   return usersData
@@ -448,16 +446,13 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}
-function toggleNodeUsers(nodeName){
+}function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
   if(!nodeRow) return;
 
-  // =============================
-  // COLLAPSE
-  // =============================
+  // collapse jika sudah terbuka
   const next = nodeRow.nextElementSibling;
   if(next && next.dataset.parent === nodeName){
     let row = next;
@@ -472,51 +467,49 @@ function toggleNodeUsers(nodeName){
 
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
-  // =============================
-  // AMBIL USER
-  // =============================
   const users = usersData.filter(u =>
     (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
   );
 
   // =============================
-  // AMBIL NODE
+  // 🔥 GROUPING BY SECTOR
   // =============================
+  const sectorMap = {};
+
+  users.forEach(u => {
+    const sector = (u.sectorName || "-").toUpperCase();
+
+    if(!sectorMap[sector]){
+      sectorMap[sector] = [];
+    }
+
+    sectorMap[sector].push(u);
+  });
+
+  // 🔥 ambil semua sector dari node (biar yang kosong tetap muncul)
   const node = nodes.find(n => n.name === nodeName);
-  const sectorDefs = node?.sectorDefs || [];
+  let allSectors = [];
+
+  if(node && node.sectorDefs){
+    node.sectorDefs.forEach((s, i) => {
+      // contoh naming otomatis
+      const secName = `${nodeName}SECTOR${i+1}`;
+      allSectors.push(secName);
+    });
+  }
+
+  // gabungkan dengan sector dari user
+  allSectors = [...new Set([
+    ...allSectors,
+    ...Object.keys(sectorMap)
+  ])];
 
   let insertAfter = nodeRow;
 
-  // =============================
-  // LOOP BERDASARKAN AZIMUTH
-  // =============================
-  sectorDefs.forEach(sec=>{
-
-    const az = String(sec.azimuth); // contoh: "90", "180"
+  allSectors.forEach(sectorName => {
 
     // =============================
-    // CARI USER YANG MATCH AZIMUTH
-    // =============================
-    let sectorUsers = users.filter(u=>{
-      const s = (u.sectorName || "").toUpperCase();
-      return s.includes(az); // 🔥 cocokkan angka azimuth
-    });
-
-    // =============================
-    // NAMA SEKTOR
-    // =============================
-    let sectorName;
-
-    if(sectorUsers.length > 0){
-      // pakai nama dari user pertama
-      sectorName = sectorUsers[0].sectorName.toUpperCase();
-    }else{
-      // 🔥 kosong → pakai NODE + AZIMUTH
-      sectorName = `${nodeName}${az}`;
-    }
-
-    // =============================
-    // HEADER SEKTOR
+    // 🔥 HEADER SECTOR
     // =============================
     const trSector = document.createElement("tr");
     trSector.dataset.parent = nodeName;
@@ -526,38 +519,18 @@ function toggleNodeUsers(nodeName){
         padding-left:30px;
         font-weight:bold;
         color:#facc15;
-        cursor:pointer;
       ">
       📡 ${sectorName}
       </td>
     `;
 
-    // =============================
-    // RENAME SEKTOR
-    // =============================
-    trSector.onclick = ()=>{
-
-      const newName = prompt("Rename sector:", sectorName);
-      if(!newName) return;
-
-      usersData.forEach(u=>{
-        if(
-          (u.nodeName || "").toUpperCase() === nodeName.toUpperCase() &&
-          (u.sectorName || "").toUpperCase().includes(az)
-        ){
-          u.sectorName = newName.toUpperCase();
-        }
-      });
-
-      toggleNodeUsers(nodeName);
-      toggleNodeUsers(nodeName);
-    };
-
     insertAfter.after(trSector);
     insertAfter = trSector;
 
+    const sectorUsers = sectorMap[sectorName] || [];
+
     // =============================
-    // JIKA KOSONG
+    // 🔥 JIKA TIDAK ADA USER
     // =============================
     if(sectorUsers.length === 0){
 
@@ -570,7 +543,7 @@ function toggleNodeUsers(nodeName){
           color:#94a3b8;
           font-style:italic;
         ">
-        TIDAK MEMILIKI USER
+        Tidak ada user / remote
         </td>
       `;
 
@@ -580,9 +553,9 @@ function toggleNodeUsers(nodeName){
     }
 
     // =============================
-    // LIST USER
+    // 🔥 LIST USER
     // =============================
-    sectorUsers.forEach(u=>{
+    sectorUsers.forEach(u => {
 
       const trUser = document.createElement("tr");
       trUser.dataset.parent = nodeName;
@@ -590,8 +563,7 @@ function toggleNodeUsers(nodeName){
       trUser.innerHTML = `
         <td colspan="4" style="
           padding-left:50px;
-          color:#9fdcff;
-          cursor:pointer;
+          color:#9fdcff
         ">
         👤 ${u.name}<br>
         Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
@@ -599,7 +571,7 @@ function toggleNodeUsers(nodeName){
         </td>
       `;
 
-      trUser.onclick = ()=>{
+      trUser.onclick = () => {
         map.flyTo([u.lat, u.lng], 14);
       };
 
@@ -609,7 +581,7 @@ function toggleNodeUsers(nodeName){
 
   });
 }
-function renderSearchResult(node){
+  function renderSearchResult(node){
 
 const tb = document.getElementById("nodeTableBody");
 
