@@ -452,7 +452,9 @@ function render(list){
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
   if(!nodeRow) return;
 
-  // collapse jika sudah terbuka
+  // =============================
+  // COLLAPSE JIKA SUDAH TERBUKA
+  // =============================
   const next = nodeRow.nextElementSibling;
   if(next && next.dataset.parent === nodeName){
     let row = next;
@@ -472,7 +474,7 @@ function render(list){
   );
 
   // =============================
-  // 🔥 GROUPING BY SECTOR
+  // GROUP USER BY SECTOR
   // =============================
   const sectorMap = {};
 
@@ -486,30 +488,17 @@ function render(list){
     sectorMap[sector].push(u);
   });
 
-  // 🔥 ambil semua sector dari node (biar yang kosong tetap muncul)
-  const node = nodes.find(n => n.name === nodeName);
-  let allSectors = [];
-
-  if(node && node.sectorDefs){
-    node.sectorDefs.forEach((s, i) => {
-      // contoh naming otomatis
-      const secName = `${nodeName}SECTOR${i+1}`;
-      allSectors.push(secName);
-    });
-  }
-
-  // gabungkan dengan sector dari user
-  allSectors = [...new Set([
-    ...allSectors,
-    ...Object.keys(sectorMap)
-  ])];
+  // 🔥 HANYA AMBIL SECTOR YANG ADA USER
+  const activeSectors = Object.keys(sectorMap);
 
   let insertAfter = nodeRow;
 
-  allSectors.forEach(sectorName => {
+  activeSectors.forEach(sectorName => {
+
+    const sectorUsers = sectorMap[sectorName];
 
     // =============================
-    // 🔥 HEADER SECTOR
+    // HEADER SECTOR
     // =============================
     const trSector = document.createElement("tr");
     trSector.dataset.parent = nodeName;
@@ -520,40 +509,15 @@ function render(list){
         font-weight:bold;
         color:#facc15;
       ">
-      📡 ${sectorName}
+      📡 ${sectorName} (${sectorUsers.length} user)
       </td>
     `;
 
     insertAfter.after(trSector);
     insertAfter = trSector;
 
-    const sectorUsers = sectorMap[sectorName] || [];
-
     // =============================
-    // 🔥 JIKA TIDAK ADA USER
-    // =============================
-    if(sectorUsers.length === 0){
-
-      const trEmpty = document.createElement("tr");
-      trEmpty.dataset.parent = nodeName;
-
-      trEmpty.innerHTML = `
-        <td colspan="4" style="
-          padding-left:50px;
-          color:#94a3b8;
-          font-style:italic;
-        ">
-        Tidak ada user / remote
-        </td>
-      `;
-
-      insertAfter.after(trEmpty);
-      insertAfter = trEmpty;
-      return;
-    }
-
-    // =============================
-    // 🔥 LIST USER
+    // LIST USER
     // =============================
     sectorUsers.forEach(u => {
 
@@ -580,6 +544,27 @@ function render(list){
     });
 
   });
+
+  // =============================
+  // JIKA BENAR-BENAR TIDAK ADA USER
+  // =============================
+  if(activeSectors.length === 0){
+
+    const trEmpty = document.createElement("tr");
+    trEmpty.dataset.parent = nodeName;
+
+    trEmpty.innerHTML = `
+      <td colspan="4" style="
+        padding-left:30px;
+        color:#94a3b8;
+        font-style:italic;
+      ">
+      Tidak ada user di node ini
+      </td>
+    `;
+
+    insertAfter.after(trEmpty);
+  }
 }
   function renderSearchResult(node){
 
