@@ -449,13 +449,13 @@ function render(list){
     tb.appendChild(tr);
   });
 }
- function toggleNodeUsers(nodeName){
+function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
   if(!nodeRow) return;
 
-  // collapse jika sudah terbuka
+  // collapse
   const next = nodeRow.nextElementSibling;
   if(next && next.dataset.parent === nodeName){
     let row = next;
@@ -470,45 +470,37 @@ function render(list){
 
   nodeRow.children[0].innerHTML = "▼ " + nodeName;
 
-  // =============================
-  // 🔥 FILTER USER PER NODE
-  // =============================
+  // ambil semua user di node ini
   const users = usersData.filter(u =>
     (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
   );
 
-  // =============================
-  // 🔥 GROUPING SECTOR
-  // =============================
+  // grouping sector dari user
   const sectorMap = {};
-
-  users.forEach(u => {
-    let sector = (u.sectorName || "").trim().toUpperCase();
-
-    if(!sector){
-      sector = "SEKTOR_KOSONG";
-    }
-
-    if(!sectorMap[sector]){
-      sectorMap[sector] = [];
-    }
-
+  users.forEach(u=>{
+    const sector = (u.sectorName || "").toUpperCase();
+    if(!sectorMap[sector]) sectorMap[sector] = [];
     sectorMap[sector].push(u);
   });
 
-  // =============================
-  // 🔥 JIKA TIDAK ADA USER SAMA SEKALI
-  // =============================
-  if(users.length === 0){
-    sectorMap["SEKTOR_KOSONG"] = [];
-  }
+  // 🔥 ambil sector dari node (JUMLAH SEKTOR)
+  const node = nodes.find(n => n.name === nodeName);
+
+  const sectorCount = node?.sectorDefs?.length || 1;
 
   let insertAfter = nodeRow;
 
-  Object.keys(sectorMap).forEach(sectorName => {
+  for(let i=0;i<sectorCount;i++){
+  let sectorName = `${nodeName} SEKTOR`;
+
+    // 🔥 ambil user berdasarkan nama asli ATAU alias
+    let sectorUsers = users.filter(u=>{
+      const s = (u.sectorName || "").toUpperCase();
+      return s === sectorName.toUpperCase() || s === defaultName.toUpperCase();
+    });
 
     // =============================
-    // 🔥 HEADER SECTOR (BISA DI EDIT)
+    // HEADER SECTOR (BISA DIKLIK)
     // =============================
     const trSector = document.createElement("tr");
     trSector.dataset.parent = nodeName;
@@ -524,32 +516,38 @@ function render(list){
       </td>
     `;
 
-    // 🔥 DOUBLE CLICK UNTUK EDIT NAMA SECTOR
-    trSector.ondblclick = () => {
+    // 🔥 FITUR EDIT SECTOR
+    trSector.onclick = ()=>{
+
       const newName = prompt("Edit nama sector:", sectorName);
       if(!newName) return;
 
-      // update global
-      masterSectors[sectorName] = newName.toUpperCase();
+      // simpan alias
+      window.sectorAlias[defaultName] = newName.toUpperCase();
 
-      // update semua user yg pakai sector ini
-      usersData.forEach(u => {
-        if((u.sectorName || "").toUpperCase() === sectorName){
+      // 🔥 update semua user sector ini
+      usersData.forEach(u=>{
+        if(
+          (u.nodeName || "").toUpperCase() === nodeName.toUpperCase() &&
+          (
+            (u.sectorName || "").toUpperCase() === defaultName ||
+            (u.sectorName || "").toUpperCase() === sectorName
+          )
+        ){
           u.sectorName = newName.toUpperCase();
         }
       });
 
-      // refresh tampilan
+      // refresh UI
+      toggleNodeUsers(nodeName);
       toggleNodeUsers(nodeName);
     };
 
     insertAfter.after(trSector);
     insertAfter = trSector;
 
-    const sectorUsers = sectorMap[sectorName];
-
     // =============================
-    // 🔥 JIKA KOSONG
+    // JIKA TIDAK ADA USER
     // =============================
     if(sectorUsers.length === 0){
 
@@ -568,13 +566,13 @@ function render(list){
 
       insertAfter.after(trEmpty);
       insertAfter = trEmpty;
-      return;
+      continue;
     }
 
     // =============================
-    // 🔥 LIST USER
+    // LIST USER
     // =============================
-    sectorUsers.forEach(u => {
+    sectorUsers.forEach(u=>{
 
       const trUser = document.createElement("tr");
       trUser.dataset.parent = nodeName;
@@ -590,7 +588,7 @@ function render(list){
         </td>
       `;
 
-      trUser.onclick = () => {
+      trUser.onclick = ()=>{
         map.flyTo([u.lat, u.lng], 14);
       };
 
@@ -598,9 +596,8 @@ function render(list){
       insertAfter = trUser;
     });
 
-  });
+  }
 }
-
 function renderSearchResult(node){
 
 const tb = document.getElementById("nodeTableBody");
