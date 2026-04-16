@@ -446,8 +446,8 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}
-function toggleNodeUsers(nodeName){
+}function toggleNodeUsers(nodeName){
+
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
   if(!nodeRow) return;
@@ -471,39 +471,114 @@ function toggleNodeUsers(nodeName){
     (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
   );
 
-  if(users.length === 0){
-    const tr = document.createElement("tr");
-    tr.dataset.parent = nodeName;
-    tr.innerHTML = `
-      <td colspan="3" style="padding-left:40px;color:#94a3b8;font-style:italic">
-        Node ini tidak memiliki user
-      </td>
-    `;
-    nodeRow.after(tr);
-    return;
+  // =============================
+  // 🔥 GROUPING BY SECTOR
+  // =============================
+  const sectorMap = {};
+
+  users.forEach(u => {
+    const sector = (u.sectorName || "-").toUpperCase();
+
+    if(!sectorMap[sector]){
+      sectorMap[sector] = [];
+    }
+
+    sectorMap[sector].push(u);
+  });
+
+  // 🔥 ambil semua sector dari node (biar yang kosong tetap muncul)
+  const node = nodes.find(n => n.name === nodeName);
+  let allSectors = [];
+
+  if(node && node.sectorDefs){
+    node.sectorDefs.forEach((s, i) => {
+      // contoh naming otomatis
+      const secName = `${nodeName}SECTOR${i+1}`;
+      allSectors.push(secName);
+    });
   }
 
+  // gabungkan dengan sector dari user
+  allSectors = [...new Set([
+    ...allSectors,
+    ...Object.keys(sectorMap)
+  ])];
+
   let insertAfter = nodeRow;
-  users.forEach(u => {
-    const tr = document.createElement("tr");
-    tr.dataset.parent = nodeName;
-    tr.innerHTML = `
-      <td colspan="3" style="padding-left:40px;color:#9fdcff">
-      👤 ${u.name}<br>
-      Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
-      Sector: ${u.sectorName || "-"}<br>
-      Status: ${u.status || "UP"}
+
+  allSectors.forEach(sectorName => {
+
+    // =============================
+    // 🔥 HEADER SECTOR
+    // =============================
+    const trSector = document.createElement("tr");
+    trSector.dataset.parent = nodeName;
+
+    trSector.innerHTML = `
+      <td colspan="4" style="
+        padding-left:30px;
+        font-weight:bold;
+        color:#facc15;
+      ">
+      📡 ${sectorName}
       </td>
     `;
-    tr.onclick = () => {
-    map.flyTo([u.lat, u.lng], 14, {animate:true, duration:1.2});
-    L.popup()
-      .setLatLng([u.lat, u.lng])
-      .setContent(`<b>${u.name}</b><br>Node: ${u.nodeName}<br>Sector: ${u.sectorName || "-"}<br>Status: ${u.status || "UP"}`)
-      .openOn(map);
-};
-    insertAfter.after(tr);
-    insertAfter = tr;
+
+    insertAfter.after(trSector);
+    insertAfter = trSector;
+
+    const sectorUsers = sectorMap[sectorName] || [];
+
+    // =============================
+    // 🔥 JIKA TIDAK ADA USER
+    // =============================
+    if(sectorUsers.length === 0){
+
+      const trEmpty = document.createElement("tr");
+      trEmpty.dataset.parent = nodeName;
+
+      trEmpty.innerHTML = `
+        <td colspan="4" style="
+          padding-left:50px;
+          color:#94a3b8;
+          font-style:italic;
+        ">
+        Tidak ada user / remote
+        </td>
+      `;
+
+      insertAfter.after(trEmpty);
+      insertAfter = trEmpty;
+      return;
+    }
+
+    // =============================
+    // 🔥 LIST USER
+    // =============================
+    sectorUsers.forEach(u => {
+
+      const trUser = document.createElement("tr");
+      trUser.dataset.parent = nodeName;
+
+      trUser.innerHTML = `
+        <td colspan="4" style="
+          padding-left:50px;
+          color:#9fdcff
+        ">
+        👤 ${u.name}<br>
+        Bandwidth: ${formatBandwidth(u.bandwidth || 0)}<br>
+        Status: ${u.status || "UP"}
+        </td>
+      `;
+
+      trUser.onclick = () => {
+        map.flyTo([u.lat, u.lng], 14);
+      };
+
+      insertAfter.after(trUser);
+      insertAfter = trUser;
+    });
+
   });
 }
   function renderSearchResult(node){
