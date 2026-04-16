@@ -830,61 +830,15 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 
 let addUserMode = false;
 
-window.activateAddUser = async function(){
-
-  let lat = prompt("Latitude:");
-  if(!lat) return;
-
-  let lng = prompt("Longitude:");
-  if(!lng) return;
-
-  lat = parseFloat(lat);
-  lng = parseFloat(lng);
-
-  if(isNaN(lat) || isNaN(lng)){
-    alert("Lat/Lng tidak valid");
-    return;
-  }
-
-  const name = prompt("Nama user:");
-  if(!name) return;
-
-  const nodeName = prompt("Node tujuan (contoh: SLOSRH):");
-  if(!nodeName) return;
-
-  let sectorName = prompt("Nama sector (contoh: SLOSRHBI3H180):");
-  if(!sectorName) sectorName = "-";
-
-  let bandwidth = prompt("Bandwidth (Kbps):", "1024");
-  bandwidth = parseInt(bandwidth);
-
-  if(isNaN(bandwidth) || bandwidth < 512 || bandwidth > 61440){
-    alert("Bandwidth tidak valid");
-    return;
-  }
-
-  try{
-    const { addDoc, collection } = await import(
-      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-    );
-
-    await addDoc(collection(db,"topology_users"),{
-      name,
-      lat,
-      lng,
-      nodeName,
-      sectorName,
-      status:"UP",
-      bandwidth
-    });
-
-    alert("User berhasil ditambahkan!");
-
-  }catch(err){
-    console.error(err);
-    alert("Gagal menambahkan user");
-  }
+window.activateAddUser = function(){
+  addUserMode = true;
+  alert("Klik lokasi di map untuk memilih posisi user");
+  map.getContainer().style.cursor = "crosshair";
 };
+
+map.on("click", async function(e){
+
+  if(!addUserMode) return;
 
   addUserMode = false;
   map.getContainer().style.cursor = "";
@@ -944,78 +898,15 @@ window.activateAddUser = async function(){
 
 let addNodeMode = false;
 
-window.activateAddNode = async function(){
-
-  let lat = prompt("Latitude Node:");
-  if(!lat) return;
-
-  let lng = prompt("Longitude Node:");
-  if(!lng) return;
-
-  lat = parseFloat(lat);
-  lng = parseFloat(lng);
-
-  if(isNaN(lat) || isNaN(lng)){
-    alert("Lat/Lng tidak valid");
-    return;
-  }
-
-  const name = prompt("Nama NODE:");
-  if(!name) return;
-
-  const region = prompt("Region (contoh: BWA / CJDA):");
-  if(!region) return;
-
-  const sectorCount = parseInt(prompt("Jumlah sektor (1-4):", "1"));
-  if(!sectorCount || sectorCount < 1 || sectorCount > 4){
-    alert("Jumlah sektor harus 1-4");
-    return;
-  }
-
-  let sectorDefs = [];
-
-  for(let i=0;i<sectorCount;i++){
-
-    let azimuth = parseInt(prompt(`Azimuth sektor ${i+1}`));
-    azimuth = ((azimuth % 360) + 360) % 360;
-
-    const beamwidth = 90;
-
-    let start = azimuth - (beamwidth/2);
-    let end   = azimuth + (beamwidth/2);
-
-    start = ((start % 360) + 360) % 360;
-    end   = ((end % 360) + 360) % 360;
-
-    sectorDefs.push({
-      azimuth,
-      start,
-      end,
-      status:"UP",
-      color:"#22c55e"
-    });
-  }
-
-  try{
-    const { addDoc, collection } = await import(
-      "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
-    );
-
-    await addDoc(collection(db,"nodes"),{
-      name,
-      region,
-      lat,
-      lng,
-      sectorDefs
-    });
-
-    alert("Node berhasil ditambahkan!");
-
-  }catch(err){
-    console.error(err);
-    alert("Gagal tambah node");
-  }
+window.activateAddNode = function(){
+  addNodeMode = true;
+  alert("Klik lokasi di map untuk menambahkan NODE");
+  map.getContainer().style.cursor = "crosshair";
 };
+
+map.on("click", async function(e){
+
+  if(!addNodeMode) return;
 
   addNodeMode = false;
   map.getContainer().style.cursor = "";
