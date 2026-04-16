@@ -480,16 +480,6 @@ function toggleNodeUsers(nodeName){
   );
 
   // =============================
-  // GROUP USER BY SECTOR
-  // =============================
-  const sectorMap = {};
-  users.forEach(u=>{
-    const sector = (u.sectorName || "-").toUpperCase();
-    if(!sectorMap[sector]) sectorMap[sector] = [];
-    sectorMap[sector].push(u);
-  });
-
-  // =============================
   // AMBIL NODE
   // =============================
   const node = nodes.find(n => n.name === nodeName);
@@ -498,39 +488,35 @@ function toggleNodeUsers(nodeName){
   let insertAfter = nodeRow;
 
   // =============================
-  // LOOP SEKTOR SESUAI AZIMUTH
+  // LOOP BERDASARKAN AZIMUTH
   // =============================
-  sectorDefs.forEach((sec, index)=>{
+  sectorDefs.forEach(sec=>{
 
-    const az = sec.azimuth ?? 0;
-
-    // =============================
-    // MAP AZIMUTH → SEKTOR 1–4
-    // =============================
-    let sectorNumber = 1;
-
-    if(az >= 315 || az < 45) sectorNumber = 1;
-    else if(az >= 45 && az < 135) sectorNumber = 2;
-    else if(az >= 135 && az < 225) sectorNumber = 3;
-    else if(az >= 225 && az < 315) sectorNumber = 4;
-
-    let sectorName = `${nodeName}SEKTOR${sectorNumber}`;
+    const az = String(sec.azimuth); // contoh: "90", "180"
 
     // =============================
-    // CARI USER DI SEKTOR INI
+    // CARI USER YANG MATCH AZIMUTH
     // =============================
     let sectorUsers = users.filter(u=>{
       const s = (u.sectorName || "").toUpperCase();
-      return s.includes(`SEKTOR${sectorNumber}`);
+      return s.includes(az); // 🔥 cocokkan angka azimuth
     });
 
-    // fallback kalau pakai nama custom lama
-    if(sectorUsers.length === 0){
-      sectorUsers = Object.values(sectorMap)[index] || [];
+    // =============================
+    // NAMA SEKTOR
+    // =============================
+    let sectorName;
+
+    if(sectorUsers.length > 0){
+      // pakai nama dari user pertama
+      sectorName = sectorUsers[0].sectorName.toUpperCase();
+    }else{
+      // 🔥 kosong → pakai NODE + AZIMUTH
+      sectorName = `${nodeName}${az}`;
     }
 
     // =============================
-    // HEADER SEKTOR (BISA DI EDIT)
+    // HEADER SEKTOR
     // =============================
     const trSector = document.createElement("tr");
     trSector.dataset.parent = nodeName;
@@ -546,7 +532,9 @@ function toggleNodeUsers(nodeName){
       </td>
     `;
 
-    // 🔥 RENAME SEKTOR
+    // =============================
+    // RENAME SEKTOR
+    // =============================
     trSector.onclick = ()=>{
 
       const newName = prompt("Rename sector:", sectorName);
@@ -555,7 +543,7 @@ function toggleNodeUsers(nodeName){
       usersData.forEach(u=>{
         if(
           (u.nodeName || "").toUpperCase() === nodeName.toUpperCase() &&
-          (u.sectorName || "").toUpperCase().includes(`SEKTOR${sectorNumber}`)
+          (u.sectorName || "").toUpperCase().includes(az)
         ){
           u.sectorName = newName.toUpperCase();
         }
@@ -569,7 +557,7 @@ function toggleNodeUsers(nodeName){
     insertAfter = trSector;
 
     // =============================
-    // JIKA TIDAK ADA USER
+    // JIKA KOSONG
     // =============================
     if(sectorUsers.length === 0){
 
@@ -621,7 +609,7 @@ function toggleNodeUsers(nodeName){
 
   });
 }
-  function renderSearchResult(node){
+function renderSearchResult(node){
 
 const tb = document.getElementById("nodeTableBody");
 
