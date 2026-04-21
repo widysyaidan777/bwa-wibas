@@ -322,10 +322,10 @@ function addRulerPoint(latlng){
 map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
 
 /* ================= NODE ICON ================= */
-function icon(colors, azimuth=0, fast=false){
+function icon(colors, azimuth=0, isDown=false){
 
   return L.divIcon({
-    className:`node-blink ${fast?'fast':''}`,
+    className: isDown ? 'node-blink fast' : '',  // 🔥 hanya blink kalau DOWN
     iconSize:[36,36],
     iconAnchor:[18,18],
     html:`
@@ -340,7 +340,7 @@ function icon(colors, azimuth=0, fast=false){
     </div>
     `
   });
-};
+}
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
 
@@ -991,8 +991,10 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
     const mainAzimuth = n.sectorDefs?.[0]?.azimuth || 0;
-  const marker = L.marker([n.lat,n.lng],{
-  icon: icon(col, mainAzimuth, n.status === "OFF")
+  const isDown = n.status === "OFF";
+
+const marker = L.marker([n.lat,n.lng],{
+  icon: icon(col, mainAzimuth, isDown)
 }).addTo(nodeLayer);
    let sectorButtons = "";
 
