@@ -321,82 +321,20 @@ function addRulerPoint(latlng){
 }
 map.on('click',e=>{if(rulerActive) addRulerPoint(e.latlng);});
 
-function snapAzimuth(az){
-  const targets = [0,45,90,135,180,225,270,315];
-
-  let closest = targets[0];
-  let minDiff = 999;
-
-  targets.forEach(t=>{
-    let diff = Math.abs(az - t);
-    if(diff > 180) diff = 360 - diff;
-
-    if(diff < minDiff){
-      minDiff = diff;
-      closest = t;
-    }
-  });
-
-  return closest;
-}
-
-function getMainAzimuth(sectors){
-  if(!sectors || sectors.length === 0) return 0;
-
-  let sum = 0;
-  sectors.forEach(s=>{
-    sum += s.azimuth || 0;
-  });
-
-  return sum / sectors.length;
-}
-  
-function detectPattern(sectorDefs){
-
-  if(!sectorDefs || sectorDefs.length === 0){
-    return "plus";
-  }
-
-  const az = sectorDefs.map(s => ((s.azimuth % 360)+360)%360).sort((a,b)=>a-b);
-
-  const plusPattern = [0,90,180,270];
-  const xPattern    = [45,135,225,315];
-
-  function matchPattern(arr, target){
-    if(arr.length !== target.length) return false;
-
-    return arr.every((v,i)=> Math.abs(v - target[i]) <= 10);
-  }
-
-  if(matchPattern(az, plusPattern)) return "plus";
-  if(matchPattern(az, xPattern)) return "x";
-
-  return "custom";
-}
-  
 /* ================= NODE ICON ================= */
 function icon(colors, azimuth=0, isDown=false){
 
   return L.divIcon({
-    className: isDown ? 'node-blink fast' : '',
+    className: isDown ? 'node-blink fast' : '',  // 🔥 hanya blink kalau DOWN
     iconSize:[36,36],
     iconAnchor:[18,18],
     html:`
-    <div style="transform: rotate(${azimuth}deg);">
+    <div style="transform: rotate(${azimuth - 90}deg);">
       <svg width="36" height="36" viewBox="0 0 100 100">
-
-        <!-- ATAS -->
         <path d="M50 50 L50 0 A50 50 0 0 1 100 50 Z" fill="${colors[0]}"/>
-
-        <!-- KANAN -->
         <path d="M50 50 L100 50 A50 50 0 0 1 50 100 Z" fill="${colors[1]}"/>
-
-        <!-- BAWAH -->
         <path d="M50 50 L50 100 A50 50 0 0 1 0 50 Z" fill="${colors[2]}"/>
-
-        <!-- KIRI -->
         <path d="M50 50 L0 50 A50 50 0 0 1 50 0 Z" fill="${colors[3]}"/>
-
         <circle cx="50" cy="50" r="9" fill="#020617" stroke="white" stroke-width="2"/>
       </svg>
     </div>
@@ -1052,13 +990,11 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
       ? ['#dc2626','#f97316','#dc2626','#f97316']
       : ['#2563eb','#22c55e','#2563eb','#22c55e'];
 
- 
-
-const mainAzimuth = getMainAzimuth(n.sectorDefs);
-const snapped = snapAzimuth(mainAzimuth);
+    const mainAzimuth = n.sectorDefs?.[0]?.azimuth || 0;
+  const isDown = n.status === "OFF";
 
 const marker = L.marker([n.lat,n.lng],{
-  icon: icon(col, snapped, isDown)
+  icon: icon(col, mainAzimuth, isDown)
 }).addTo(nodeLayer);
    let sectorButtons = "";
 
