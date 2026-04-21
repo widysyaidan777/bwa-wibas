@@ -849,6 +849,16 @@ let addUserMode = false;
 
 window.activateAddUser = async function(){
 
+  // 🔥 LAT LNG DULU
+  let lat = parseFloat(prompt("Masukkan Latitude:"));
+  let lng = parseFloat(prompt("Masukkan Longitude:"));
+
+  if(isNaN(lat) || isNaN(lng)){
+    alert("Lat/Lng tidak valid");
+    return;
+  }
+
+  // baru data lain
   const name = prompt("Masukkan nama user:");
   if(!name) return;
 
@@ -862,15 +872,6 @@ window.activateAddUser = async function(){
 
   if(isNaN(bandwidth) || bandwidth < 512 || bandwidth > 61440){
     alert("Bandwidth harus 512 - 61440 Kbps");
-    return;
-  }
-
-  // 🔥 INPUT LAT LNG DI AWAL
-  let lat = parseFloat(prompt("Masukkan Latitude:"));
-  let lng = parseFloat(prompt("Masukkan Longitude:"));
-
-  if(isNaN(lat) || isNaN(lng)){
-    alert("Lat/Lng tidak valid");
     return;
   }
 
@@ -904,12 +905,7 @@ let addNodeMode = false;
 
 window.activateAddNode = async function(){
 
-  const name = prompt("Masukkan nama NODE:");
-  if(!name) return;
-
-  const region = prompt("Masukkan region:");
-  if(!region) return;
-
+  // 🔥 LAT LNG DULU
   let lat = parseFloat(prompt("Masukkan Latitude:"));
   let lng = parseFloat(prompt("Masukkan Longitude:"));
 
@@ -917,6 +913,12 @@ window.activateAddNode = async function(){
     alert("Lat/Lng tidak valid");
     return;
   }
+
+  const name = prompt("Masukkan nama NODE:");
+  if(!name) return;
+
+  const region = prompt("Masukkan region:");
+  if(!region) return;
 
   const sectorCount = parseInt(prompt("Jumlah sektor? (1-4)", "1"));
   if(!sectorCount || sectorCount < 1 || sectorCount > 4){
@@ -967,7 +969,7 @@ window.activateAddNode = async function(){
     alert("Gagal menambahkan node");
   }
 };
-
+    
 /* =============================
    REALTIME LOAD NODE BARU
 ============================= */
