@@ -363,7 +363,17 @@ function detectPattern(sectorDefs){
 /* ================= NODE ICON ================= */
 function icon(colors, baseAzimuth=0, isDown=false, pattern="plus"){
 
-  const rotation = getPatternRotation(pattern);
+  let rotation = 0;
+
+  if(pattern === "plus"){
+    // arah lurus (0,90,180,270)
+    rotation = baseAzimuth;
+  }
+
+  if(pattern === "x"){
+    // arah silang (45,135,225,315)
+    rotation = baseAzimuth - 45;
+  }
 
   return L.divIcon({
     className: isDown ? 'node-blink fast' : '',
@@ -383,8 +393,7 @@ function icon(colors, baseAzimuth=0, isDown=false, pattern="plus"){
     </div>
     `
   });
-}
-  
+}  
 /* ================= SECTOR ================= */
 function createSector(center, radius, startAz, endAz, opt){
 
@@ -1041,7 +1050,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 const isDown = n.status === "OFF";
 
 const marker = L.marker([n.lat,n.lng],{
-  icon: icon(col, 0, isDown, pattern)
+icon: icon(col, mainAzimuth, isDown, pattern)
 }).addTo(nodeLayer);
    let sectorButtons = "";
 
