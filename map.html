@@ -646,9 +646,7 @@ function focusNode(name){
   showUsersByNode(name); // 🔥 TAMBAHAN DI SINI
 }
 function showAll(){
-
-  activeNodeFilter = null; // 🔥 RESET FILTER
-
+  activeNodeFilter = null; // 🔥 reset
   render(nodes);
 
   nodes.forEach(n=>{
@@ -656,6 +654,7 @@ function showAll(){
     n.sectors.forEach(s=>coverageVisible && s.addTo(map));
   });
 
+  renderUsers(); // 🔥 penting
 }
 function filterRegion(r){
 
@@ -677,14 +676,8 @@ function filterRegion(r){
   // =====================
   // 🔥 FILTER USER
   // =====================
-  userLayer.clearLayers();
-
-  usersData.forEach(u=>{
-
-    const node = nodes.find(n =>
-      n.name.trim().toUpperCase() ===
-      (u.nodeName || "").trim().toUpperCase()
-    );
+ activeNodeFilter = null; // 🔥 reset filter node
+renderUsers();
 
     // hanya tampilkan user yg node nya di region ini
     if(node && node.region === r){
@@ -857,8 +850,39 @@ const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
 window.usersData = [];
-let activeNodeFilter = null; // 🔥 FILTER GLOBAL
 
+
+let activeNodeFilter = null; // 🔥 FILTER GLOBAL
+function renderUsers(){
+
+  userLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    // 🔥 FILTER GLOBAL
+    if(activeNodeFilter){
+      if(
+        (u.nodeName || "").trim().toUpperCase() !==
+        activeNodeFilter.trim().toUpperCase()
+      ){
+        return;
+      }
+    }
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
+    }).addTo(userLayer);
+
+  });
+
+  redrawLinks();
+}
+    
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -888,12 +912,7 @@ if(activeNodeFilter){
 }
 
 const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
+usersData.push(u);
     
      marker.bindPopup(`
       <b>${u.name}</b><br>
@@ -914,6 +933,7 @@ const marker = L.circleMarker([u.lat, u.lng], {
    
 `);
   });
+  renderUsers(); // 🔥 hanya ini yang render
   redrawLinks();
   renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
@@ -1217,35 +1237,10 @@ function redrawLinks(){
 }
 
 function showUsersByNode(nodeName){
-
-  activeNodeFilter = nodeName; // 🔥 SET FILTER
-
-  userLayer.clearLayers();
-
-  usersData.forEach(u=>{
-
-    if(
-      (u.nodeName || "").trim().toUpperCase() === 
-      nodeName.trim().toUpperCase()
-    ){
-
-      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-      const marker = L.circleMarker([u.lat, u.lng], {
-        radius: 6,
-        color: userColor,
-        fillColor: userColor,
-        fillOpacity: 1
-      }).addTo(userLayer);
-
-      marker.bindPopup(`<b>${u.name}</b><br>Node: ${u.nodeName}`);
-    }
-
-  });
-
-  redrawLinks();
+  activeNodeFilter = nodeName;
+  renderUsers(); // 🔥 panggil central render
 }
-  
+    
 function refreshMap(){
 
   // Clear semua layer
