@@ -192,6 +192,7 @@ th{background:#020617}
   <hr style="border:1px solid #334155">
 
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
+  <button class="gray" onclick="toggleUsers()">Toggle Users</button>
 
 <hr style="border:1px solid #334155">
 
@@ -374,9 +375,11 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-
-  function calculateNodeCapacity(nodeName){
-  return usersData
+let usersVisible = true;
+let hiddenUserNodes = new Set(); // untuk hide per node
+  
+function calculateNodeCapacity(nodeName){
+return usersData
     .filter(u =>
       (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
     )
@@ -640,7 +643,13 @@ tb.appendChild(trUser);
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
 function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
-function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
+
+function toggleCoverage(){ 
+  coverageVisible=!coverageVisible; 
+    nodes.forEach(n=>n.sectors.forEach(s=>{ 
+      coverageVisible?s.addTo(map):map.removeLayer(s); 
+  })); 
+}
 function toggleNodeCoverage(nodeName){
 
 const node = nodes.find(n=>n.name===nodeName);
@@ -660,8 +669,34 @@ map.removeLayer(s);
 });
 
 }
-  
-function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
+
+function toggleTable(){ 
+  document.getElementById('node-section').classList.toggle('hidden'); 
+}
+
+function toggleUsers(){
+
+  usersVisible = !usersVisible;
+
+  if(usersVisible){
+    redrawUsers();
+  }else{
+    userLayer.clearLayers();
+  }
+
+}
+function toggleNodeUsersMap(nodeName){
+
+  if(hiddenUserNodes.has(nodeName)){
+    hiddenUserNodes.delete(nodeName);
+  }else{
+    hiddenUserNodes.add(nodeName);
+  }
+
+  redrawUsers();
+
+}
+
 function searchTopology(){
 
   const keyword = document
@@ -804,39 +839,42 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   snapshot.forEach(doc=>{
 
-    const u = doc.data();
-    u.id = doc.id;
+  const u = doc.data();
+  u.id = doc.id;
 
-    usersData.push(u);
+  usersData.push(u);
 
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+  // 🔥 FILTER VISIBILITY
+  if(!usersVisible) return;
+  if(hiddenUserNodes.has(u.nodeName)) return;
+
+  const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
     
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color: userColor,
-      fillColor: userColor,
-      fillOpacity: 1
-    }).addTo(userLayer);
+  const marker = L.circleMarker([u.lat, u.lng], {
+    radius: 6,
+    color: userColor,
+    fillColor: userColor,
+    fillOpacity: 1
+  }).addTo(userLayer);
     
-     marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Sector: ${u.sectorName || u.sector || "-"}<br>
-      Status: ${u.status}<br><br>
-      
-      <button onclick="editFullUser('${doc.id}')"
-      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Edit User
-      </button><br>
+  marker.bindPopup(`
+    <b>${u.name}</b><br>
+    Node: ${u.nodeName}<br>
+    Sector: ${u.sectorName || u.sector || "-"}<br>
+    Status: ${u.status}<br><br>
     
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-      
-   
-`);
-  });
+    <button onclick="editFullUser('${doc.id}')"
+    style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+    Edit User
+    </button><br>
+  
+    <button onclick="deleteUser('${doc.id}')"
+    style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+    Delete User
+    </button>
+  `);
+
+});
   redrawLinks();
   renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
@@ -1017,7 +1055,10 @@ Edit Sector Status
 style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
 Toggle Coverage Node
 </button><br>
-
+<button onclick="toggleNodeUsersMap('${n.name}')"
+style="background:#06b6d4;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
+Toggle Users Node
+</button>
   <button onclick="deleteNode('${doc.id}')"
   style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
   Delete Node
@@ -1137,6 +1178,27 @@ function redrawLinks(){
     );
     linkLayer.addLayer(line);
   });
+}
+function redrawUsers(){
+
+  userLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    if(!usersVisible) return;
+    if(hiddenUserNodes.has(u.nodeName)) return;
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
+    }).addTo(userLayer);
+
+  });
+
 }
     
 function refreshMap(){
