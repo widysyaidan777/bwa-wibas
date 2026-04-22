@@ -477,33 +477,19 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}function toggleNodeUsers(nodeName){
+}
+window.toggleNodeUsersMap = function(nodeName){
 
-  const tb = document.getElementById("nodeTableBody");
-  const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
-  if(!nodeRow) return;
-
-  // =============================
-  // COLLAPSE JIKA SUDAH TERBUKA
-  // =============================
-  const next = nodeRow.nextElementSibling;
-  if(next && next.dataset.parent === nodeName){
-    let row = next;
-    while(row && row.dataset.parent === nodeName){
-      const temp = row.nextElementSibling;
-      row.remove();
-      row = temp;
-    }
-    nodeRow.children[0].innerHTML = "▶ " + nodeName;
-    return;
+  if(window.hiddenUserNodes.has(nodeName)){
+    window.hiddenUserNodes.delete(nodeName);
+  } else {
+    window.hiddenUserNodes.add(nodeName);
   }
 
-  nodeRow.children[0].innerHTML = "▼ " + nodeName;
-
-  const users = usersData.filter(u =>
-    (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
-  );
-
+  redrawUsers();
+  redrawLinks();
+};
+  
   // =============================
   // GROUP USER BY SECTOR
   // =============================
@@ -652,8 +638,8 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(nodeLayer); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(nodeLayer); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ nodeLayer.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 
 window.toggleCoverage = function(){
   coverageVisible=!coverageVisible; 
@@ -663,36 +649,31 @@ window.toggleCoverage = function(){
 }
 function toggleNodeCoverage(nodeName){
 
-const node = nodes.find(n=>n.name===nodeName);
+  const node = nodes.find(n=>n.name===nodeName);
+  if(!node) return;
 
-if(!node) return;
+  node.coverageOn = !node.coverageOn;
 
-node.coverageOn = !node.coverageOn;
-
-node.sectors.forEach(s=>{
-
-if(node.coverageOn && coverageVisible){
-s.addTo(map);
-}else{
-map.removeLayer(s);
-}
-
-});
-
+  node.sectors.forEach(s=>{
+    if(node.coverageOn && coverageVisible){
+      s.addTo(nodeLayer);
+    }else{
+      nodeLayer.removeLayer(s);
+    }
+  });
 }
 
 window.toggleUsers = function () {
-console.log("Users Visible:", window.usersVisible);
+
   window.usersVisible = !window.usersVisible;
 
-  if (!window.usersVisible) {
-    userLayer.clearLayers();
-    linkLayer.clearLayers();
-    return;
-  }
+  userLayer.clearLayers();
+  linkLayer.clearLayers();
 
-  redrawUsers();
-  redrawLinks();
+  if(window.usersVisible){
+    redrawUsers();
+    redrawLinks();
+  }
 };
 
 window.toggleTable = function(){
@@ -736,10 +717,10 @@ function searchTopology(){
     /* sembunyikan node lain */
     nodes.forEach(n=>{
       if(n.name === node.name){
-        n.marker.addTo(map);
+        n.marker.addTo(nodeLayer);
         n.sectors.forEach(s=>coverageVisible && s.addTo(map));
       }else{
-        map.removeLayer(n.marker);
+       nodeLayer.removeLayer(n.marker);
         n.sectors.forEach(s=>map.removeLayer(s));
       }
     });
@@ -770,10 +751,10 @@ function searchTopology(){
       /* sembunyikan node lain */
       nodes.forEach(n=>{
         if(n.name === node.name){
-          n.marker.addTo(map);
+          n.marker.addTo(nodeLayer);
           n.sectors.forEach(s=>coverageVisible && s.addTo(map));
         }else{
-          map.removeLayer(n.marker);
+          nodeLayer.removeLayer(n.marker);
           n.sectors.forEach(s=>map.removeLayer(s));
         }
       });
@@ -1151,8 +1132,7 @@ function redrawLinks(){
   usersData.forEach(u=>{
 
     // 🔥 kalau node di-hide → jangan gambar link
-    if(hiddenUserNodes.has(u.nodeName)) return;
-
+if(window.hiddenUserNodes.has(u.nodeName)) return;
     const node = nodes.find(n => 
       n.name.trim().toUpperCase() === 
       u.nodeName.trim().toUpperCase()
@@ -1185,10 +1165,9 @@ function redrawUsers(){
 
   usersData.forEach(u => {
 
-    if(hiddenUserNodes.has(u.nodeName)) return;
+if(window.hiddenUserNodes.has(u.nodeName)) return;
 
     const color = u.status === "UP" ? "#22c55e" : "#ef4444";
-
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color,
