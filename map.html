@@ -439,31 +439,9 @@ function render(list){
 
   });
 
+  }
 }
-  function renderNodeTable(){
-  const tb = document.getElementById("nodeTableBody");
-  tb.innerHTML = "";
-
-  nodes.forEach(n => {
-    const tr = document.createElement("tr");
-    tr.dataset.node = n.name;
-
-    const capacity = calculateNodeCapacity(n.name);
-
-    tr.innerHTML = `
-      <td style="cursor:pointer">▶ ${n.name}</td>
-      <td>${n.region}</td>
-      <td class="${n.status==="UP"?"up":"down"}">${n.status}</td>
-      <td>${formatBandwidth(capacity)}</td>
-    `;
-    tr.onclick = () => {
-      focusNode(n.name);      // zoom ke node
-      toggleNodeUsers(n.name);
-    };
-
-    tb.appendChild(tr);
-  });
-}function toggleNodeUsers(nodeName){
+  function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
@@ -650,32 +628,45 @@ function showAll(){
   render(nodes);
 
   nodes.forEach(n=>{
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+  nodeLayer.addLayer(n.marker);
+  n.sectors.forEach(s=>coverageVisible && s.addTo(map));
   });
 
   renderUsers(); // 🔥 penting
 }
 function filterRegion(r){
+
   activeNodeFilter = null;
 
   render(nodes.filter(n=>n.region===r));
 
   nodes.forEach(n=>{
     if(n.region===r){
-      n.marker.addTo(map);
-      n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+
+      nodeLayer.addLayer(n.marker);
+
+      n.sectors.forEach(s=>{
+        if(coverageVisible) nodeLayer.addLayer(s);
+      });
+
     }else{
-      map.removeLayer(n.marker);
-      n.sectors.forEach(s=>map.removeLayer(s));
+
+      nodeLayer.removeLayer(n.marker);
+
+      n.sectors.forEach(s=>{
+        nodeLayer.removeLayer(s);
+      });
+
     }
   });
 
   renderUsers();
   redrawLinks();
-}}
-
-function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
+}
+  
+function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible
+  ? nodeLayer.addLayer(s)
+  : nodeLayer.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
 const node = nodes.find(n=>n.name===nodeName);
@@ -687,9 +678,9 @@ node.coverageOn = !node.coverageOn;
 node.sectors.forEach(s=>{
 
 if(node.coverageOn && coverageVisible){
-s.addTo(map);
+nodeLayer.addLayer(s);
 }else{
-map.removeLayer(s);
+nodeLayer.removeLayer(s);
 }
 
 });
@@ -697,25 +688,7 @@ map.removeLayer(s);
 }
   
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
-function searchTopology(){
-activeNodeFilter = null;
-  const keyword = document
-  .getElementById("searchBox")
-  .value
-  .trim()
-  .toUpperCase();
-
-  if(!keyword){
-    showAll();
-    return;
-  }
-
-  /* SEARCH NODE */
-
-  const node = nodes.find(n =>
-    n.name.toUpperCase().includes(keyword)
-  );
-
+  
   if(node){
 
     /* sembunyikan node lain */
@@ -825,12 +798,27 @@ const nodeLayer = L.layerGroup().addTo(map);
 const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
-let nodes = [];
-let usersData = [];    
-
 
 let activeNodeFilter = null; // 🔥 FILTER GLOBAL
-function renderUsers(){
+/* =============================
+   REALTIME LOAD USERS
+============================= */
+
+onSnapshot(collection(db,"topology_users"), snapshot=>{
+
+  usersData.length = 0;
+
+  snapshot.forEach(doc=>{
+    const u = doc.data();
+    u.id = doc.id;
+
+    usersData.push(u);
+  });
+
+  renderUsers();
+  render(nodes);
+});    
+    function renderUsers(){
 
   userLayer.clearLayers();
 
@@ -878,24 +866,7 @@ function renderUsers(){
   redrawLinks();
 }
     
-/* =============================
-   REALTIME LOAD USERS
-============================= */
 
-onSnapshot(collection(db,"topology_users"), snapshot=>{
-
-  usersData.length = 0;
-
-  snapshot.forEach(doc=>{
-    const u = doc.data();
-    u.id = doc.id;
-
-    usersData.push(u);
-  });
-
-  renderUsers();
-  renderNodeTable();
-});    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
