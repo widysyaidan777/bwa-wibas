@@ -637,7 +637,14 @@ tb.appendChild(trUser);
 });
 
 }
-function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
+function focusNode(name){
+  const n = nodes.find(x=>x.name===name);
+
+  map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+  n.marker.openPopup();
+
+  showUsersByNode(name); // 🔥 TAMBAHAN DI SINI
+}
 function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
@@ -1137,6 +1144,34 @@ function redrawLinks(){
     );
     linkLayer.addLayer(line);
   });
+}
+
+function showUsersByNode(nodeName){
+
+  userLayer.clearLayers(); // 🔥 hapus semua user dulu
+
+  usersData.forEach(u=>{
+
+    if(
+      (u.nodeName || "").trim().toUpperCase() === 
+      nodeName.trim().toUpperCase()
+    ){
+
+      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+      const marker = L.circleMarker([u.lat, u.lng], {
+        radius: 6,
+        color: userColor,
+        fillColor: userColor,
+        fillOpacity: 1
+      }).addTo(userLayer);
+
+      marker.bindPopup(`<b>${u.name}</b><br>Node: ${u.nodeName}`);
+    }
+
+  });
+
+  redrawLinks(); // 🔥 supaya line ikut sesuai
 }
     
 function refreshMap(){
