@@ -657,12 +657,10 @@ function showAll(){
   renderUsers(); // 🔥 penting
 }
 function filterRegion(r){
-activeNodeFilter = null;
+  activeNodeFilter = null;
+
   render(nodes.filter(n=>n.region===r));
 
-  // =====================
-  // FILTER NODE
-  // =====================
   nodes.forEach(n=>{
     if(n.region===r){
       n.marker.addTo(map);
@@ -673,16 +671,9 @@ activeNodeFilter = null;
     }
   });
 
-  // =====================
-  // 🔥 FILTER USER
-  // =====================
- activeNodeFilter = null; // 🔥 reset filter node
-renderUsers();
-
-  });
-
-  redrawLinks(); // 🔥 update link juga
-}
+  renderUsers();
+  redrawLinks();
+}}
 
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
@@ -834,8 +825,8 @@ const nodeLayer = L.layerGroup().addTo(map);
 const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
-window.nodesData = [];
-window.usersData = [];
+let nodes = [];
+let usersData = [];    
 
 
 let activeNodeFilter = null; // 🔥 FILTER GLOBAL
