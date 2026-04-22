@@ -858,7 +858,7 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
   renderNodeTable();
 
 });
-function renderUsers(){
+window.renderUsers = function(){
 console.log("=== RENDER USERS ===");
   console.log("activeRegion:", activeRegion);
   console.log("activeNode:", activeNode);
