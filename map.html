@@ -192,7 +192,7 @@ th{background:#020617}
   <hr style="border:1px solid #334155">
 
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-
+  <button class="gray" onclick="toggleUsers()">Toggle Users</button>
 <hr style="border:1px solid #334155">
 
 <h4>Topology Editor</h4>
@@ -463,7 +463,8 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}function toggleNodeUsers(nodeName){
+}
+  function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
@@ -704,7 +705,28 @@ map.removeLayer(s);
 });
 
 }
-  
+  function toggleUsers(){
+
+  usersVisible = !usersVisible;
+
+  if(!usersVisible){
+    userLayer.clearLayers();
+    linkLayer.clearLayers();
+  }else{
+    renderUsers();
+  }
+
+}
+function toggleNodeUsersMap(nodeName){
+
+  const node = nodes.find(n => n.name === nodeName);
+  if(!node) return;
+
+  node.hideUsers = !node.hideUsers;
+
+  renderUsers();
+}
+
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function searchTopology(){
 
@@ -839,7 +861,8 @@ window.usersData = [];
 
 let activeRegion = null;
 let activeNode = null;
-
+let usersVisible = true;
+    
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -861,26 +884,39 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 window.renderUsers = function(){
 
   userLayer.clearLayers();
+  linkLayer.clearLayers();
 
-  usersData.forEach(u => {
+  if(!usersVisible) return; // 🔥 global OFF
 
-    const userNodeName = (u.nodeName || "").trim().toUpperCase();
+  const list = usersData.filter(u => {
+
+    const userNode = (u.nodeName || "").trim().toUpperCase();
 
     const node = nodes.find(n =>
-      n.name.trim().toUpperCase() === userNodeName
+      n.name.trim().toUpperCase() === userNode
     );
 
-    if(!node) return;
+    if(!node) return false;
 
     // 🔥 FILTER REGION
     if(activeRegion && node.region !== activeRegion){
-      return;
+      return false;
     }
 
     // 🔥 FILTER NODE
-    if(activeNode && userNodeName !== activeNode.trim().toUpperCase()){
-      return;
+    if(activeNode && userNode !== activeNode.trim().toUpperCase()){
+      return false;
     }
+
+    // 🔥 FILTER PER NODE
+    if(node.hideUsers){
+      return false;
+    }
+
+    return true;
+  });
+
+  list.forEach(u => {
 
     const color = u.status === "UP" ? "#22c55e" : "#ef4444";
 
@@ -893,7 +929,7 @@ window.renderUsers = function(){
 
   });
 
-  redrawLinks();
+  redrawLinksFiltered(list);
 };
 
 /* =============================
@@ -1038,6 +1074,7 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
     const n = doc.data();
     n.id = doc.id;
+    n.hideUsers = false;
     n.coverageOn = true;
     nodes.push(n);
 
@@ -1073,10 +1110,16 @@ style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:
 Toggle Coverage Node
 </button><br>
 
-  <button onclick="deleteNode('${doc.id}')"
-  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-  Delete Node
-  </button>
+<button onclick="toggleNodeUsersMap('${n.name}')"
+style="background:#0ea5e9;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
+Toggle User Node
+</button>
+
+<button onclick="deleteNode('${doc.id}')"
+style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+Delete Node
+</button>  
+
 `);
     n.marker = marker;
     n.sectors = [];
