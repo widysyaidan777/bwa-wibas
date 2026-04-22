@@ -646,7 +646,54 @@ function focusNode(name){
   showUsersByNode(name); // 🔥 TAMBAHAN DI SINI
 }
 function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function filterRegion(r){
+
+  render(nodes.filter(n=>n.region===r));
+
+  // =====================
+  // FILTER NODE
+  // =====================
+  nodes.forEach(n=>{
+    if(n.region===r){
+      n.marker.addTo(map);
+      n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+    }else{
+      map.removeLayer(n.marker);
+      n.sectors.forEach(s=>map.removeLayer(s));
+    }
+  });
+
+  // =====================
+  // 🔥 FILTER USER
+  // =====================
+  userLayer.clearLayers();
+
+  usersData.forEach(u=>{
+
+    const node = nodes.find(n =>
+      n.name.trim().toUpperCase() ===
+      (u.nodeName || "").trim().toUpperCase()
+    );
+
+    // hanya tampilkan user yg node nya di region ini
+    if(node && node.region === r){
+
+      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+      const marker = L.circleMarker([u.lat, u.lng], {
+        radius: 6,
+        color: userColor,
+        fillColor: userColor,
+        fillOpacity: 1
+      }).addTo(userLayer);
+
+    }
+
+  });
+
+  redrawLinks(); // 🔥 update link juga
+}
+
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
