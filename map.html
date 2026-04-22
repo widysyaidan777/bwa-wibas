@@ -637,9 +637,53 @@ tb.appendChild(trUser);
 });
 
 }
-function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function focusNode(name){
+
+  activeNode = name;
+
+  const n = nodes.find(x=>x.name===name);
+
+  map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
+  n.marker.openPopup();
+
+  renderUsers(); // 🔥 FILTER USER SESUAI NODE
+}
+
+function showAll(){
+
+  activeRegion = null;
+  activeNode = null;
+
+  render(nodes);
+
+  nodes.forEach(n=>{
+    n.marker.addTo(map);
+    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+  });
+
+  renderUsers(); // 🔥 tampilkan semua lagi
+}
+
+function filterRegion(r){
+
+  activeRegion = r;
+  activeNode = null;
+
+  render(nodes.filter(n=>n.region===r));
+
+  nodes.forEach(n=>{
+    if(n.region===r){
+      n.marker.addTo(map);
+      n.sectors.forEach(s=>coverageVisible && s.addTo(map));
+    }else{
+      map.removeLayer(n.marker);
+      n.sectors.forEach(s=>map.removeLayer(s));
+    }
+  });
+
+  renderUsers(); // 🔥 PENTING
+}
+
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
@@ -793,6 +837,9 @@ const linkLayer = L.layerGroup().addTo(map);
 window.nodesData = [];
 window.usersData = [];
 
+let activeRegion = null;
+let activeNode = null;
+
 /* =============================
    REALTIME LOAD USERS
 ============================= */
@@ -800,47 +847,53 @@ window.usersData = [];
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
-  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
-
     const u = doc.data();
     u.id = doc.id;
-
     usersData.push(u);
+  });
 
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    
-    const marker = L.circleMarker([u.lat, u.lng], {
+  renderUsers();        // 🔥 panggil di sini
+  renderNodeTable();
+
+});
+function renderUsers(){
+
+  userLayer.clearLayers();
+
+  usersData.forEach(u => {
+
+    // 🔥 FILTER REGION
+    if(activeRegion){
+      const node = nodes.find(n =>
+        n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase()
+      );
+
+      if(!node || node.region !== activeRegion) return;
+    }
+
+    // 🔥 FILTER NODE
+    if(activeNode){
+      if(u.nodeName.trim().toUpperCase() !== activeNode.trim().toUpperCase()){
+        return;
+      }
+    }
+
+    const color = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    L.circleMarker([u.lat, u.lng], {
       radius: 6,
-      color: userColor,
-      fillColor: userColor,
+      color,
+      fillColor: color,
       fillOpacity: 1
     }).addTo(userLayer);
-    
-     marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Sector: ${u.sectorName || u.sector || "-"}<br>
-      Status: ${u.status}<br><br>
-      
-      <button onclick="editFullUser('${doc.id}')"
-      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Edit User
-      </button><br>
-    
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-      
-   
-`);
+
   });
-  redrawLinks();
-  renderNodeTable(); // ini baru, supaya users muncul di tabel
-});
-    
+
+  redrawLinks(); // ikut filter juga
+}
+
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
