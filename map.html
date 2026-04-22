@@ -682,19 +682,17 @@ map.removeLayer(s);
 }
 
 window.toggleUsers = function () {
-
+console.log("Users Visible:", window.usersVisible);
   window.usersVisible = !window.usersVisible;
 
-  // 🔥 reset layer biar bersih total
-  window.userLayer.clearLayers();
-  linkLayer.clearLayers();
-
-  // 🔥 kalau ON → render ulang semua
-  if (window.usersVisible) {
-    redrawUsers();
-    redrawLinks();
+  if (!window.usersVisible) {
+    userLayer.clearLayers();
+    linkLayer.clearLayers();
+    return;
   }
 
+  redrawUsers();
+  redrawLinks();
 };
 
 window.toggleTable = function(){
@@ -854,20 +852,20 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
   usersData.length = 0;
 
   snapshot.forEach(doc=>{
-
     const u = doc.data();
     u.id = doc.id;
-
     usersData.push(u);
-
   });
 
-  // 🔥 SEMUA RENDER DI SINI
-  redrawUsers();
-  redrawLinks();
-  renderNodeTable();
+  // 🔥 HANYA render kalau ON
+  if(window.usersVisible){
+    redrawUsers();
+    redrawLinks();
+  }
 
-});    
+  renderNodeTable();
+});
+    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
