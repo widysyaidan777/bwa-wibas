@@ -386,8 +386,8 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-let usersVisible = true;
-let hiddenUserNodes = new Set(); // untuk hide per node
+window.usersVisible = true;
+window.hiddenUserNodes = new Set();
   
 function calculateNodeCapacity(nodeName){
 return usersData
@@ -683,12 +683,12 @@ map.removeLayer(s);
 
 window.toggleUsers = function () {
 
-  usersVisible = !usersVisible;
+  window.usersVisible = !window.usersVisible;
 
-  if (usersVisible) {
+  if (window.usersVisible) {
     redrawUsers();
   } else {
-    userLayer.clearLayers();
+    window.userLayer.clearLayers();
   }
 
 };
@@ -835,7 +835,7 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 ============================= */
 
 const nodeLayer = L.layerGroup().addTo(map);
-const userLayer = L.layerGroup().addTo(map);
+window.userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
@@ -861,8 +861,8 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
     // FILTER LOGIC (FIXED)
     // =========================
     const isVisible =
-      usersVisible &&                      // global toggle
-      !hiddenUserNodes.has(u.nodeName);   // per-node toggle
+  window.usersVisible &&
+  !window.hiddenUserNodes.has(u.nodeName);
 
     if(!isVisible) return;
 
@@ -1201,10 +1201,9 @@ function redrawLinks(){
 }
 function redrawUsers(){
 
-  userLayer.clearLayers();
-
-  if(!usersVisible) return;
-
+window.userLayer.clearLayers();
+if(!window.usersVisible) return;
+  
   usersData.forEach(u => {
 
     // hide per node
