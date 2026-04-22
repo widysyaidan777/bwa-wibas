@@ -657,7 +657,7 @@ function showAll(){
   renderUsers(); // 🔥 penting
 }
 function filterRegion(r){
-
+activeNodeFilter = null;
   render(nodes.filter(n=>n.region===r));
 
   // =====================
@@ -678,20 +678,6 @@ function filterRegion(r){
   // =====================
  activeNodeFilter = null; // 🔥 reset filter node
 renderUsers();
-
-    // hanya tampilkan user yg node nya di region ini
-    if(node && node.region === r){
-
-      const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-      const marker = L.circleMarker([u.lat, u.lng], {
-        radius: 6,
-        color: userColor,
-        fillColor: userColor,
-        fillOpacity: 1
-      }).addTo(userLayer);
-
-    }
 
   });
 
@@ -721,7 +707,7 @@ map.removeLayer(s);
   
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function searchTopology(){
-
+activeNodeFilter = null;
   const keyword = document
   .getElementById("searchBox")
   .value
@@ -859,7 +845,7 @@ function renderUsers(){
 
   usersData.forEach(u=>{
 
-    // 🔥 FILTER GLOBAL
+    // 🔥 FILTER
     if(activeNodeFilter){
       if(
         (u.nodeName || "").trim().toUpperCase() !==
@@ -871,12 +857,30 @@ function renderUsers(){
 
     const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
 
-    L.circleMarker([u.lat, u.lng], {
+    const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
       color: userColor,
       fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
+
+    // ✅ POPUP DI SINI (BUKAN DI SNAPSHOT)
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sectorName || "-"}<br>
+      Status: ${u.status}<br><br>
+
+      <button onclick="editFullUser('${u.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+
+      <button onclick="deleteUser('${u.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+    `);
 
   });
 
@@ -890,54 +894,17 @@ function renderUsers(){
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
-  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
-
     const u = doc.data();
     u.id = doc.id;
 
     usersData.push(u);
-
-// 🔥 FILTER DI SINI
-if(activeNodeFilter){
-
-  if(
-    (u.nodeName || "").trim().toUpperCase() !== 
-    activeNodeFilter.trim().toUpperCase()
-  ){
-    return; // skip user lain
-  }
-
-}
-
-const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-usersData.push(u);
-    
-     marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Sector: ${u.sectorName || u.sector || "-"}<br>
-      Status: ${u.status}<br><br>
-      
-      <button onclick="editFullUser('${doc.id}')"
-      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Edit User
-      </button><br>
-    
-      <button onclick="deleteUser('${doc.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-      
-   
-`);
   });
-  renderUsers(); // 🔥 hanya ini yang render
-  redrawLinks();
-  renderNodeTable(); // ini baru, supaya users muncul di tabel
-});
-    
+
+  renderUsers();
+  renderNodeTable();
+});    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
