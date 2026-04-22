@@ -681,32 +681,34 @@ map.removeLayer(s);
 
 }
 
-window.toggleUsers = function(){ 
-  document.getElementById('node-section').classList.toggle('hidden'); 
-}
-
-window.toggleTable = function(){
+window.toggleUsers = function () {
 
   usersVisible = !usersVisible;
 
-  if(usersVisible){
+  if (usersVisible) {
     redrawUsers();
-  }else{
+  } else {
     userLayer.clearLayers();
   }
 
+};
+
+window.toggleTable = function(){
+
+  document.getElementById('node-section').classList.toggle('hidden');
+
 }
-function toggleNodeUsersMap(nodeName){
+window.toggleNodeUsersMap = function(nodeName){
 
   if(hiddenUserNodes.has(nodeName)){
     hiddenUserNodes.delete(nodeName);
-  }else{
+  } else {
     hiddenUserNodes.add(nodeName);
   }
 
   redrawUsers();
 
-}
+};
 
 function searchTopology(){
 
@@ -850,44 +852,51 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   snapshot.forEach(doc=>{
 
-  const u = doc.data();
-  u.id = doc.id;
+    const u = doc.data();
+    u.id = doc.id;
 
-  usersData.push(u);
+    usersData.push(u);
 
-  // 🔥 FILTER VISIBILITY
-  if(!usersVisible) return;
-  if(hiddenUserNodes.has(u.nodeName)) return;
+    // =========================
+    // FILTER LOGIC (FIXED)
+    // =========================
+    const isVisible =
+      usersVisible &&                      // global toggle
+      !hiddenUserNodes.has(u.nodeName);   // per-node toggle
 
-  const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
-    
-  const marker = L.circleMarker([u.lat, u.lng], {
-    radius: 6,
-    color: userColor,
-    fillColor: userColor,
-    fillOpacity: 1
-  }).addTo(userLayer);
-    
-  marker.bindPopup(`
-    <b>${u.name}</b><br>
-    Node: ${u.nodeName}<br>
-    Sector: ${u.sectorName || u.sector || "-"}<br>
-    Status: ${u.status}<br><br>
-    
-    <button onclick="editFullUser('${doc.id}')"
-    style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-    Edit User
-    </button><br>
-  
-    <button onclick="deleteUser('${doc.id}')"
-    style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-    Delete User
-    </button>
-  `);
+    if(!isVisible) return;
 
-});
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
+    }).addTo(userLayer);
+
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sectorName || u.sector || "-"}<br>
+      Status: ${u.status}<br><br>
+
+      <button onclick="editFullUser('${doc.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+    `);
+
+  });
+
   redrawLinks();
-  renderNodeTable(); // ini baru, supaya users muncul di tabel
+  renderNodeTable();
+
 });
     
 /* =============================
@@ -1194,19 +1203,28 @@ function redrawUsers(){
 
   userLayer.clearLayers();
 
-  usersData.forEach(u=>{
+  if(!usersVisible) return;
 
-    if(!usersVisible) return;
+  usersData.forEach(u => {
+
+    // hide per node
     if(hiddenUserNodes.has(u.nodeName)) return;
 
-    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+    const color = u.status === "UP" ? "#22c55e" : "#ef4444";
 
     const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
-      color: userColor,
-      fillColor: userColor,
+      color,
+      fillColor: color,
       fillOpacity: 1
     }).addTo(userLayer);
+
+    marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sectorName || "-"}<br>
+      Status: ${u.status}
+    `);
 
   });
 
