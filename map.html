@@ -192,7 +192,7 @@ th{background:#020617}
   <hr style="border:1px solid #334155">
 
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-  <button class="gray" onclick="toggleUsers()">Toggle Users</button>
+
 <hr style="border:1px solid #334155">
 
 <h4>Topology Editor</h4>
@@ -463,8 +463,7 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}
-  function toggleNodeUsers(nodeName){
+}function toggleNodeUsers(nodeName){
 
   const tb = document.getElementById("nodeTableBody");
   const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
@@ -638,53 +637,9 @@ tb.appendChild(trUser);
 });
 
 }
-function focusNode(name){
-  console.log("=== FOCUS NODE ===", name);
-  activeNode = name;
-
-  const n = nodes.find(x=>x.name===name);
-
-  map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2});
-  n.marker.openPopup();
-
-  renderUsers(); // 🔥 FILTER USER SESUAI NODE
-}
-
-function showAll(){
-
-  activeRegion = null;
-  activeNode = null;
-
-  render(nodes);
-
-  nodes.forEach(n=>{
-    n.marker.addTo(map);
-    n.sectors.forEach(s=>coverageVisible && s.addTo(map));
-  });
-
-  renderUsers(); // 🔥 tampilkan semua lagi
-}
-
-function filterRegion(r){
-  console.log("=== FILTER REGION ===", r);
-  activeRegion = r;
-  activeNode = null;
-
-  render(nodes.filter(n=>n.region===r));
-
-  nodes.forEach(n=>{
-    if(n.region===r){
-      n.marker.addTo(map);
-      n.sectors.forEach(s=>coverageVisible && s.addTo(map));
-    }else{
-      map.removeLayer(n.marker);
-      n.sectors.forEach(s=>map.removeLayer(s));
-    }
-  });
-
-  renderUsers(); // 🔥 PENTING
-}
-
+function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
@@ -705,28 +660,7 @@ map.removeLayer(s);
 });
 
 }
-  function toggleUsers(){
-
-  usersVisible = !usersVisible;
-
-  if(!usersVisible){
-    userLayer.clearLayers();
-    linkLayer.clearLayers();
-  }else{
-    renderUsers();
-  }
-
-}
-function toggleNodeUsersMap(nodeName){
-
-  const node = nodes.find(n => n.name === nodeName);
-  if(!node) return;
-
-  node.hideUsers = !node.hideUsers;
-
-  renderUsers();
-}
-
+  
 function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function searchTopology(){
 
@@ -859,79 +793,54 @@ const linkLayer = L.layerGroup().addTo(map);
 window.nodesData = [];
 window.usersData = [];
 
-let activeRegion = null;
-let activeNode = null;
-let usersVisible = true;
-    
 /* =============================
    REALTIME LOAD USERS
 ============================= */
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
-  console.log("🔥 USERS LOADED:", snapshot.size);
+
   usersData.length = 0;
+  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
+
     const u = doc.data();
     u.id = doc.id;
+
     usersData.push(u);
-  });
 
-  renderUsers();        // 🔥 panggil di sini
-  renderNodeTable();
-
-});
-window.renderUsers = function(){
-
-  userLayer.clearLayers();
-  linkLayer.clearLayers();
-
-  if(!usersVisible) return; // 🔥 global OFF
-
-  const list = usersData.filter(u => {
-
-    const userNode = (u.nodeName || "").trim().toUpperCase();
-
-    const node = nodes.find(n =>
-      n.name.trim().toUpperCase() === userNode
-    );
-
-    if(!node) return false;
-
-    // 🔥 FILTER REGION
-    if(activeRegion && node.region !== activeRegion){
-      return false;
-    }
-
-    // 🔥 FILTER NODE
-    if(activeNode && userNode !== activeNode.trim().toUpperCase()){
-      return false;
-    }
-
-    // 🔥 FILTER PER NODE
-    if(node.hideUsers){
-      return false;
-    }
-
-    return true;
-  });
-
-  list.forEach(u => {
-
-    const color = u.status === "UP" ? "#22c55e" : "#ef4444";
-
-    L.circleMarker([u.lat, u.lng], {
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+    
+    const marker = L.circleMarker([u.lat, u.lng], {
       radius: 6,
-      color,
-      fillColor: color,
+      color: userColor,
+      fillColor: userColor,
       fillOpacity: 1
     }).addTo(userLayer);
-
+    
+     marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sectorName || u.sector || "-"}<br>
+      Status: ${u.status}<br><br>
+      
+      <button onclick="editFullUser('${doc.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+    
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+      
+   
+`);
   });
-
-  redrawLinksFiltered(list);
-};
-
+  redrawLinks();
+  renderNodeTable(); // ini baru, supaya users muncul di tabel
+});
+    
 /* =============================
    MODE TAMBAH USER (UPGRADE)
 ============================= */
@@ -1074,7 +983,6 @@ onSnapshot(collection(db,"nodes"), snapshot=>{
 
     const n = doc.data();
     n.id = doc.id;
-    n.hideUsers = false;
     n.coverageOn = true;
     nodes.push(n);
 
@@ -1110,16 +1018,10 @@ style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:
 Toggle Coverage Node
 </button><br>
 
-<button onclick="toggleNodeUsersMap('${n.name}')"
-style="background:#0ea5e9;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
-Toggle User Node
-</button>
-
-<button onclick="deleteNode('${doc.id}')"
-style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-Delete Node
-</button>  
-
+  <button onclick="deleteNode('${doc.id}')"
+  style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+  Delete Node
+  </button>
 `);
     n.marker = marker;
     n.sectors = [];
