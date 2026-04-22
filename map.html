@@ -638,7 +638,7 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){
-
+  console.log("=== FOCUS NODE ===", name);
   activeNode = name;
 
   const n = nodes.find(x=>x.name===name);
@@ -665,7 +665,7 @@ function showAll(){
 }
 
 function filterRegion(r){
-
+  console.log("=== FILTER REGION ===", r);
   activeRegion = r;
   activeNode = null;
 
@@ -845,7 +845,7 @@ let activeNode = null;
 ============================= */
 
 onSnapshot(collection(db,"topology_users"), snapshot=>{
-
+  console.log("🔥 USERS LOADED:", snapshot.size);
   usersData.length = 0;
 
   snapshot.forEach(doc=>{
@@ -859,27 +859,31 @@ onSnapshot(collection(db,"topology_users"), snapshot=>{
 
 });
 function renderUsers(){
-
+console.log("=== RENDER USERS ===");
+  console.log("activeRegion:", activeRegion);
+  console.log("activeNode:", activeNode);
   userLayer.clearLayers();
 
   usersData.forEach(u => {
 
     // 🔥 FILTER REGION
+        // FILTER REGION
     if(activeRegion){
-      const node = nodes.find(n =>
-        n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase()
-      );
-
-      if(!node || node.region !== activeRegion) return;
-    }
-
-    // 🔥 FILTER NODE
-    if(activeNode){
-      if(u.nodeName.trim().toUpperCase() !== activeNode.trim().toUpperCase()){
+      if(!node || node.region !== activeRegion){
+        console.log("❌ SKIP (region tidak cocok)");
         return;
       }
     }
 
+    // FILTER NODE
+    if(activeNode){
+      if(userNode !== activeNode.trim().toUpperCase()){
+        console.log("❌ SKIP (node tidak cocok)");
+        return;
+      }
+    }
+
+    console.log("✅ TAMPIL:", u.name);
     const color = u.status === "UP" ? "#22c55e" : "#ef4444";
 
     L.circleMarker([u.lat, u.lng], {
