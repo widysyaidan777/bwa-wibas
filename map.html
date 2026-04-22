@@ -691,6 +691,8 @@ window.toggleUsers = function () {
     window.userLayer.clearLayers();
   }
 
+  // 🔥 WAJIB: refresh link juga
+  redrawLinks();
 };
 
 window.toggleTable = function(){
@@ -707,7 +709,7 @@ window.toggleNodeUsersMap = function(nodeName){
   }
 
   redrawUsers();
-
+  redrawLinks(); // 🔥 tambah ini
 };
 
 function searchTopology(){
@@ -1178,9 +1180,18 @@ function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  usersData.forEach(u=>{   // 🔥 PAKAI usersData
+  // 🔥 kalau users dimatikan → link juga ikut mati
+  if(!window.usersVisible) return;
 
-    const node = nodes.find(n => n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase());
+  usersData.forEach(u=>{
+
+    // 🔥 kalau node di-hide → jangan gambar link
+    if(hiddenUserNodes.has(u.nodeName)) return;
+
+    const node = nodes.find(n => 
+      n.name.trim().toUpperCase() === 
+      u.nodeName.trim().toUpperCase()
+    );
 
     if(!node) return;
 
@@ -1196,9 +1207,11 @@ function redrawLinks(){
         dashArray:"4"
       }
     );
+
     linkLayer.addLayer(line);
   });
 }
+
 function redrawUsers(){
 
 window.userLayer.clearLayers();
