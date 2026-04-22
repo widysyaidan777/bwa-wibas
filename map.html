@@ -302,8 +302,19 @@ L.control.layers(
 let rulerActive=false;
 let rulerPoints=[]; let rulerLine=null; let rulerMarkers=[]; let rulerLabel=null;
 
-function activateRuler(){ resetRuler(); rulerActive=true; map.getContainer().style.cursor='crosshair'; }
-function resetRuler(){ rulerActive=false; rulerPoints=[]; if(rulerLine) map.removeLayer(rulerLine); rulerMarkers.forEach(m=>map.removeLayer(m)); if(rulerLabel) map.removeLayer(rulerLabel); rulerLine=null; rulerMarkers=[]; rulerLabel=null; map.getContainer().style.cursor=''; }
+window.activateRuler = function(){
+  resetRuler(); rulerActive=true; 
+  map.getContainer().style.cursor='crosshair'; 
+}
+window.resetRuler = function(){ 
+  rulerActive=false; rulerPoints=[]; 
+  if(rulerLine) map.removeLayer(rulerLine); 
+  rulerMarkers.forEach(m=>map.removeLayer(m)); 
+  if(rulerLabel) map.removeLayer(rulerLabel); 
+  rulerLine=null; rulerMarkers=[]; 
+  rulerLabel=null; 
+  map.getContainer().style.cursor=''; 
+}
 function calculateAzimuth(p1,p2){ const lat1=p1.lat*Math.PI/180; const lat2=p2.lat*Math.PI/180; const dLon=(p2.lng-p1.lng)*Math.PI/180; const y=Math.sin(dLon)*Math.cos(lat2); const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon); return (Math.atan2(y,x)*180/Math.PI+360)%360; }
 function addRulerPoint(latlng){
   if(rulerPoints.length>=2) return;
@@ -644,7 +655,7 @@ function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat
 function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
 function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
 
-function toggleCoverage(){ 
+window.toggleCoverage = function(){
   coverageVisible=!coverageVisible; 
     nodes.forEach(n=>n.sectors.forEach(s=>{ 
       coverageVisible?s.addTo(map):map.removeLayer(s); 
@@ -670,11 +681,11 @@ map.removeLayer(s);
 
 }
 
-function toggleTable(){ 
+window.toggleUsers = function(){ 
   document.getElementById('node-section').classList.toggle('hidden'); 
 }
 
-function toggleUsers(){
+window.toggleTable = function(){
 
   usersVisible = !usersVisible;
 
