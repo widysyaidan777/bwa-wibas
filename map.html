@@ -192,7 +192,6 @@ th{background:#020617}
   <hr style="border:1px solid #334155">
 
   <button class="gray" onclick="toggleCoverage()">Toggle Coverage</button>
-  <button class="gray" onclick="toggleUsers()">Toggle Users</button>
 
 <hr style="border:1px solid #334155">
 
@@ -302,19 +301,8 @@ L.control.layers(
 let rulerActive=false;
 let rulerPoints=[]; let rulerLine=null; let rulerMarkers=[]; let rulerLabel=null;
 
-window.activateRuler = function(){
-  resetRuler(); rulerActive=true; 
-  map.getContainer().style.cursor='crosshair'; 
-}
-window.resetRuler = function(){ 
-  rulerActive=false; rulerPoints=[]; 
-  if(rulerLine) map.removeLayer(rulerLine); 
-  rulerMarkers.forEach(m=>map.removeLayer(m)); 
-  if(rulerLabel) map.removeLayer(rulerLabel); 
-  rulerLine=null; rulerMarkers=[]; 
-  rulerLabel=null; 
-  map.getContainer().style.cursor=''; 
-}
+function activateRuler(){ resetRuler(); rulerActive=true; map.getContainer().style.cursor='crosshair'; }
+function resetRuler(){ rulerActive=false; rulerPoints=[]; if(rulerLine) map.removeLayer(rulerLine); rulerMarkers.forEach(m=>map.removeLayer(m)); if(rulerLabel) map.removeLayer(rulerLabel); rulerLine=null; rulerMarkers=[]; rulerLabel=null; map.getContainer().style.cursor=''; }
 function calculateAzimuth(p1,p2){ const lat1=p1.lat*Math.PI/180; const lat2=p2.lat*Math.PI/180; const dLon=(p2.lng-p1.lng)*Math.PI/180; const y=Math.sin(dLon)*Math.cos(lat2); const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon); return (Math.atan2(y,x)*180/Math.PI+360)%360; }
 function addRulerPoint(latlng){
   if(rulerPoints.length>=2) return;
@@ -386,11 +374,9 @@ function createSector(center, radius, startAz, endAz, opt){
 
 let nodes = [];
 let coverageVisible=true;
-window.usersVisible = true;
-window.hiddenUserNodes = new Set();
-  
-function calculateNodeCapacity(nodeName){
-return usersData
+
+  function calculateNodeCapacity(nodeName){
+  return usersData
     .filter(u =>
       (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
     )
@@ -477,19 +463,33 @@ function render(list){
 
     tb.appendChild(tr);
   });
-}
-window.toggleNodeUsersMap = function(nodeName){
+}function toggleNodeUsers(nodeName){
 
-  if(window.hiddenUserNodes.has(nodeName)){
-    window.hiddenUserNodes.delete(nodeName);
-  } else {
-    window.hiddenUserNodes.add(nodeName);
+  const tb = document.getElementById("nodeTableBody");
+  const nodeRow = tb.querySelector(`tr[data-node="${nodeName}"]`);
+  if(!nodeRow) return;
+
+  // =============================
+  // COLLAPSE JIKA SUDAH TERBUKA
+  // =============================
+  const next = nodeRow.nextElementSibling;
+  if(next && next.dataset.parent === nodeName){
+    let row = next;
+    while(row && row.dataset.parent === nodeName){
+      const temp = row.nextElementSibling;
+      row.remove();
+      row = temp;
+    }
+    nodeRow.children[0].innerHTML = "▶ " + nodeName;
+    return;
   }
 
-  redrawUsers();
-  redrawLinks();
-};
-  
+  nodeRow.children[0].innerHTML = "▼ " + nodeName;
+
+  const users = usersData.filter(u =>
+    (u.nodeName || "").trim().toUpperCase() === nodeName.trim().toUpperCase()
+  );
+
   // =============================
   // GROUP USER BY SECTOR
   // =============================
@@ -638,61 +638,30 @@ tb.appendChild(trUser);
 
 }
 function focusNode(name){ const n=nodes.find(x=>x.name===name); map.flyTo([n.lat,n.lng],11,{animate:true,duration:1.2}); n.marker.openPopup(); }
-function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(nodeLayer); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
-function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(nodeLayer); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ nodeLayer.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
-
-window.toggleCoverage = function(){
-  coverageVisible=!coverageVisible; 
-    nodes.forEach(n=>n.sectors.forEach(s=>{ 
-      coverageVisible?s.addTo(map):map.removeLayer(s); 
-  })); 
-}
+function showAll(){ render(nodes); nodes.forEach(n=>{ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }); }
+function filterRegion(r){ render(nodes.filter(n=>n.region===r)); nodes.forEach(n=>{ if(n.region===r){ n.marker.addTo(map); n.sectors.forEach(s=>coverageVisible&&s.addTo(map)); }else{ map.removeLayer(n.marker); n.sectors.forEach(s=>map.removeLayer(s)); } }); }
+function toggleCoverage(){ coverageVisible=!coverageVisible; nodes.forEach(n=>n.sectors.forEach(s=>{ coverageVisible?s.addTo(map):map.removeLayer(s); })); }
 function toggleNodeCoverage(nodeName){
 
-  const node = nodes.find(n=>n.name===nodeName);
-  if(!node) return;
+const node = nodes.find(n=>n.name===nodeName);
 
-  node.coverageOn = !node.coverageOn;
+if(!node) return;
 
-  node.sectors.forEach(s=>{
-    if(node.coverageOn && coverageVisible){
-      s.addTo(nodeLayer);
-    }else{
-      nodeLayer.removeLayer(s);
-    }
-  });
+node.coverageOn = !node.coverageOn;
+
+node.sectors.forEach(s=>{
+
+if(node.coverageOn && coverageVisible){
+s.addTo(map);
+}else{
+map.removeLayer(s);
 }
 
-window.toggleUsers = function () {
-
-  window.usersVisible = !window.usersVisible;
-
-  userLayer.clearLayers();
-  linkLayer.clearLayers();
-
-  if(window.usersVisible){
-    redrawUsers();
-    redrawLinks();
-  }
-};
-
-window.toggleTable = function(){
-
-  document.getElementById('node-section').classList.toggle('hidden');
+});
 
 }
-window.toggleNodeUsersMap = function(nodeName){
-
-  if(hiddenUserNodes.has(nodeName)){
-    hiddenUserNodes.delete(nodeName);
-  } else {
-    hiddenUserNodes.add(nodeName);
-  }
-
-  redrawUsers();
-  redrawLinks(); // 🔥 tambah ini
-};
-
+  
+function toggleTable(){ document.getElementById('node-section').classList.toggle('hidden'); }
 function searchTopology(){
 
   const keyword = document
@@ -717,10 +686,10 @@ function searchTopology(){
     /* sembunyikan node lain */
     nodes.forEach(n=>{
       if(n.name === node.name){
-        n.marker.addTo(nodeLayer);
+        n.marker.addTo(map);
         n.sectors.forEach(s=>coverageVisible && s.addTo(map));
       }else{
-       nodeLayer.removeLayer(n.marker);
+        map.removeLayer(n.marker);
         n.sectors.forEach(s=>map.removeLayer(s));
       }
     });
@@ -751,10 +720,10 @@ function searchTopology(){
       /* sembunyikan node lain */
       nodes.forEach(n=>{
         if(n.name === node.name){
-          n.marker.addTo(nodeLayer);
+          n.marker.addTo(map);
           n.sectors.forEach(s=>coverageVisible && s.addTo(map));
         }else{
-          nodeLayer.removeLayer(n.marker);
+          map.removeLayer(n.marker);
           n.sectors.forEach(s=>map.removeLayer(s));
         }
       });
@@ -818,7 +787,7 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 ============================= */
 
 const nodeLayer = L.layerGroup().addTo(map);
-window.userLayer = L.layerGroup().addTo(map);
+const userLayer = L.layerGroup().addTo(map);
 const linkLayer = L.layerGroup().addTo(map);
 
 window.nodesData = [];
@@ -831,20 +800,45 @@ window.usersData = [];
 onSnapshot(collection(db,"topology_users"), snapshot=>{
 
   usersData.length = 0;
+  userLayer.clearLayers();
 
   snapshot.forEach(doc=>{
+
     const u = doc.data();
     u.id = doc.id;
+
     usersData.push(u);
+
+    const userColor = u.status === "UP" ? "#22c55e" : "#ef4444";
+    
+    const marker = L.circleMarker([u.lat, u.lng], {
+      radius: 6,
+      color: userColor,
+      fillColor: userColor,
+      fillOpacity: 1
+    }).addTo(userLayer);
+    
+     marker.bindPopup(`
+      <b>${u.name}</b><br>
+      Node: ${u.nodeName}<br>
+      Sector: ${u.sectorName || u.sector || "-"}<br>
+      Status: ${u.status}<br><br>
+      
+      <button onclick="editFullUser('${doc.id}')"
+      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
+      Edit User
+      </button><br>
+    
+      <button onclick="deleteUser('${doc.id}')"
+      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
+      Delete User
+      </button>
+      
+   
+`);
   });
-
-  // 🔥 HANYA render kalau ON
-  if(window.usersVisible){
-    redrawUsers();
-    redrawLinks();
-  }
-
-  renderNodeTable();
+  redrawLinks();
+  renderNodeTable(); // ini baru, supaya users muncul di tabel
 });
     
 /* =============================
@@ -1023,10 +1017,7 @@ Edit Sector Status
 style="background:#f59e0b;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
 Toggle Coverage Node
 </button><br>
-<button onclick="toggleNodeUsersMap('${n.name}')"
-style="background:#06b6d4;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:6px;">
-Toggle Users Node
-</button>
+
   <button onclick="deleteNode('${doc.id}')"
   style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
   Delete Node
@@ -1126,17 +1117,9 @@ function redrawLinks(){
 
   linkLayer.clearLayers();
 
-  // 🔥 HARD STOP (INI PENTING BANGET)
-  if(!window.usersVisible) return;
-  
-  usersData.forEach(u=>{
+  usersData.forEach(u=>{   // 🔥 PAKAI usersData
 
-    // 🔥 kalau node di-hide → jangan gambar link
-if(window.hiddenUserNodes.has(u.nodeName)) return;
-    const node = nodes.find(n => 
-      n.name.trim().toUpperCase() === 
-      u.nodeName.trim().toUpperCase()
-    );
+    const node = nodes.find(n => n.name.trim().toUpperCase() === u.nodeName.trim().toUpperCase());
 
     if(!node) return;
 
@@ -1152,49 +1135,10 @@ if(window.hiddenUserNodes.has(u.nodeName)) return;
         dashArray:"4"
       }
     );
-
     linkLayer.addLayer(line);
   });
 }
-
-function redrawUsers(){
-
-  window.userLayer.clearLayers();
-
-  if(!window.usersVisible) return;
-
-  usersData.forEach(u => {
-
-if(window.hiddenUserNodes.has(u.nodeName)) return;
-
-    const color = u.status === "UP" ? "#22c55e" : "#ef4444";
-    const marker = L.circleMarker([u.lat, u.lng], {
-      radius: 6,
-      color,
-      fillColor: color,
-      fillOpacity: 1
-    }).addTo(userLayer);
-
-    marker.bindPopup(`
-      <b>${u.name}</b><br>
-      Node: ${u.nodeName}<br>
-      Sector: ${u.sectorName || u.sector || "-"}<br>
-      Status: ${u.status}<br><br>
-
-      <button onclick="editFullUser('${u.id}')"
-      style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;margin-bottom:4px;">
-      Edit User
-      </button><br>
-
-      <button onclick="deleteUser('${u.id}')"
-      style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">
-      Delete User
-      </button>
-    `);
-
-  });
-
-}    
+    
 function refreshMap(){
 
   // Clear semua layer
